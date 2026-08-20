@@ -2,6 +2,7 @@
 ## 0.0.4-wip
 
 - find lib.xxx.dylib on mac
+- support compile linux target on mac
 
 
 ## 0.0.3
