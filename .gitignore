@@ -1,0 +1,10 @@
+.dart_tool
+dist
+build
+ref_code
+.codex
+node_modules
+.venv
+assets
+.cache
+.xmake

@@ -1,0 +1,1 @@
+export 'src/project_xmake.g.dart';
