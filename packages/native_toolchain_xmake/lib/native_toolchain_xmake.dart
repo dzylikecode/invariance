@@ -209,10 +209,11 @@ class XmakeBuilder {
             '--arch=$arch',
             '--mode=release',
             '--kind=shared',
-            '--cc=zig cc',
-            '--cxx=zig c++',
-            '--ld=zig c++',
-            '--sh=zig c++',
+            // '--cc=zig cc',
+            // '--cxx=zig c++',
+            // '--ld=zig c++',
+            // '--sh=zig c++',
+            '--toolchain=zigcc', // not zig but zigcc
             // '-c',
             '-y',
           ]);

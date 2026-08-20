@@ -8,3 +8,4 @@ node_modules
 assets
 .cache
 .xmake
+*.o
