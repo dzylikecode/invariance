@@ -58,6 +58,12 @@ void main(List<String> args) async {
 winget install -e --id zig.zig
 ```
 
+```bash
+brew install zig
+```
+
+应该用 zigcc 作为toolchain 而不是 zig
+
 
 mac 用bash安装会找不到命令，而用 brew install xmake 是可以的
 
