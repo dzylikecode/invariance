@@ -14,4 +14,9 @@ add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"}) -- used by clangd
 ```
 
+## toolchain
 
+- https://github.com/fzyzcjy/flutter_rust_bridge
+- https://github.com/boltffi/boltffi
+- https://github.com/rust-diplomat/diplomat
+- https://github.com/cunarist/rinf
