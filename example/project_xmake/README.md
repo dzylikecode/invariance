@@ -2,6 +2,12 @@
 
 dart is the first-class citizen in the project.
 
+## cross-compile
+
+```bash
+dart build cli --target example/call.dart --target-os linux --target-arch x64
+```
+
 ## notes
 
 ### add_headerfiles and add_includedirs
