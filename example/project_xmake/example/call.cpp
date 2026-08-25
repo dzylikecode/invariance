@@ -3,6 +3,6 @@
 
 int main() {
     int result = add(3, 5);
-    std::cout << "Result: " << result << std::endl;
+    std::cout << result << std::endl;
     return 0;
 }
