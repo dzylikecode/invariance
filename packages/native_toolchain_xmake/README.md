@@ -82,6 +82,7 @@ void main(List<String> args) async {
 
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)
 - [ ] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
+- [ ] tree-shaking
 
 忘记为什么不用 cmake 了。好像是 compile_commands.json 生成的问题？
 
