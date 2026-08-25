@@ -1,15 +1,14 @@
 
-## 0.0.4-wip
+## 0.0.4
 
 - find lib.xxx.dylib on mac
 - support compile linux target on mac
-
+- 重大改变：移除自动安装 xmake，而是通过命令安装
 
 ## 0.0.3
 
 - use zig to cross compile
 - find lib.so.xxx on linux
-
 
 ## 0.0.2
 

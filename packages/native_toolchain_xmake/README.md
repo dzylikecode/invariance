@@ -1,5 +1,40 @@
 # xmake
 
+## install
+
+```bash
+dart run native_toolchain_xmake:install
+```
+
+- windows:
+
+  ```bash
+  irm https://xmake.io/psget.text | iex
+  ```
+
+- linux
+
+  ```bash
+  curl -fsSL https://xmake.io/shget.text | bash
+  ```
+
+  或者
+
+  ```bash
+  wget https://xmake.io/shget.text -O - | bash
+  ```
+
+- mac:
+
+  ```bash
+  brew install xmake
+  ```
+
+  > [!NOTE]
+  >
+  > 用官网的 bash 反而会陷入找不到库
+
+
 ## config
 
 android
@@ -61,11 +96,6 @@ winget install -e --id zig.zig
 ```bash
 brew install zig
 ```
-
-应该用 zigcc 作为toolchain 而不是 zig
-
-
-mac 用bash安装会找不到命令，而用 brew install xmake 是可以的
 
 如果debug的时候，xmake正在下载程序，然后自己中断了，会导致比如curl子程序成为孤立的进程占用文件
 

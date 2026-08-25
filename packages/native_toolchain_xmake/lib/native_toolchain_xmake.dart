@@ -4,54 +4,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'android.dart';
 
-enum XmakeInstallMethod {
-  powershell("irm https://xmake.io/psget.text | iex"),
-  curl("curl -fsSL https://xmake.io/shget.text | bash"),
-  wget("wget https://xmake.io/shget.text -O - | bash");
-
-  final String command;
-  const XmakeInstallMethod(this.command);
-
-  Future<String?> install() async {
-    switch (this) {
-      case .powershell:
-        final result = await Process.run('powershell', [
-          '-NoProfile',
-          '-ExecutionPolicy',
-          'Bypass',
-          '-Command',
-          command,
-        ]);
-        if (result.exitCode == 0) {
-          return null;
-        }
-        return result.stderr;
-      case .curl:
-      case .wget:
-        final result = await Process.run('bash', ['-c', command]);
-        if (result.exitCode == 0) {
-          return null;
-        }
-        return result.stderr;
-    }
-  }
-}
-
 Future<String?> getXmakeVersion() async {
-  final output = await () async {
-    try {
-      final res = await Process.run('xmake', ['--version']);
-      if (res.exitCode != 0) {
-        return null;
-      }
-      return res.stdout.toString().trim();
-    } catch (e) {
-      return null;
-    }
-  }();
-  if (output == null) {
-    return null;
-  }
+  final output = await getXmakeInfo();
   final versionMatch = RegExp(r'xmake\s+(v[\d\.]+)').firstMatch(output);
   if (versionMatch == null) {
     return null;
@@ -59,49 +13,26 @@ Future<String?> getXmakeVersion() async {
   return versionMatch.group(1);
 }
 
-Future<bool> hasXmake() async {
-  final version = await getXmakeVersion();
-  return version != null;
+Future<String> getXmakeInfo() async {
+  final result = await Process.run('xmake', ['--version']);
+  if (result.exitCode != 0) {
+    throw Exception(
+      'Failed to get xmake info (exit ${result.exitCode}):\n'
+      '${result.stdout}\n${result.stderr}',
+    );
+  }
+  return result.stdout.toString().trim();
 }
 
-// see https://xmake.io/zh/guide/quick-start.html
-Future<bool> installXmake() async {
-  switch (Platform.operatingSystem) {
-    case 'windows':
-      final result = await XmakeInstallMethod.powershell.install();
-      if (result != null) {
-        return false;
-      }
-      return true;
-    case 'linux':
-    case 'macos':
-      final resultOfCurl = await XmakeInstallMethod.curl.install();
-      if (resultOfCurl == null) {
-        return true;
-      }
-      final resultOfWget = await XmakeInstallMethod.wget.install();
-      if (resultOfWget != null) {
-        return false;
-      }
-      return true;
-    default:
-      throw UnsupportedError(
-        'Unsupported platform: ${Platform.operatingSystem}',
-      );
-  }
-}
+Future<bool> hasXmake() =>
+    getXmakeInfo().then((_) => true).catchError((_) => false);
 
 Future<void> _ensureXmakeInstalled(Logger logger) async {
   if (!await hasXmake()) {
-    logger.info('xmake not found, attempting to install...');
-    final success = await installXmake();
-    if (!success) {
-      throw Exception(
-        'Failed to install xmake. Please install it manually and try again. '
-        'See https://xmake.io/guide/quick-start.html for installation instructions.',
-      );
-    }
-    logger.info('xmake installed successfully.');
+    throw Exception(
+      'Failed to install xmake. Please install it manually and try again. '
+      'See https://xmake.io/guide/quick-start.html for installation instructions.',
+    );
   }
   final xmakeVersion = await getXmakeVersion();
   if (xmakeVersion == null) {
