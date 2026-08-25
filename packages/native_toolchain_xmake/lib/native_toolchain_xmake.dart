@@ -166,70 +166,35 @@ class XmakeBuilder {
       codeConfig.targetOS,
       codeConfig.targetArchitecture,
     );
-    switch (codeConfig.targetOS) {
-      case .android:
-        final ndk = _androidTool.ndk;
-        final bin = _androidTool.bin;
-        return _xmake([
-          'f',
-          '-P',
-          '.',
-          '-v',
-          '--plat=$os',
-          '--arch=$arch',
+
+    return _xmake([
+      'f',
+      '-P',
+      '.',
+      '-v',
+      '--plat=$os',
+      '--arch=$arch',
+      ...switch (codeConfig.targetOS) {
+        .android => [
           '--toolchain=ndk',
-          if (ndk != null) '--ndk=$ndk',
-          if (bin != null) '--bin=$bin',
-          '--mode=release',
-          '--kind=shared',
-          '-y',
-        ]);
-      case .iOS:
-        final iosSdk = codeConfig.iOS.targetSdk;
-        return _xmake([
-          'f',
-          '-P',
-          '.',
-          '-v',
-          '--plat=$os',
-          '--arch=$arch',
-          if (iosSdk == .iPhoneSimulator) '--appledev=simulator',
-          '--mode=release',
-          '--kind=shared',
-          '-y',
-        ]);
-      default:
-        if (codeConfig.targetOS.name != Platform.operatingSystem) {
-          return _xmake([
-            'f',
-            '-P',
-            '.',
-            '-v',
-            '--plat=$os',
-            '--arch=$arch',
-            '--mode=release',
-            '--kind=shared',
-            // '--cc=zig cc',
-            // '--cxx=zig c++',
-            // '--ld=zig c++',
-            // '--sh=zig c++',
-            '--toolchain=zigcc', // not zig but zigcc
-            // '-c',
-            '-y',
-          ]);
-        }
-        return _xmake([
-          'f',
-          '-P',
-          '.',
-          '-v',
-          '--plat=$os',
-          '--arch=$arch',
-          '--mode=release',
-          '--kind=shared',
-          '-y',
-        ]);
-    }
+          if (_androidTool.ndk != null) '--ndk=${_androidTool.ndk}',
+          if (_androidTool.bin != null) '--bin=${_androidTool.bin}',
+        ],
+        .iOS => [
+          if (codeConfig.iOS.targetSdk == .iPhoneSimulator)
+            '--appledev=simulator',
+        ],
+        // desktop
+        _ => [
+          // cross compile
+          if (codeConfig.targetOS.name != Platform.operatingSystem)
+            '--toolchain=zigcc', // it's zigcc instead of zig !!!
+        ],
+      },
+      '--mode=release',
+      '--kind=shared',
+      '-y',
+    ]);
   }
 
   Future<void> build({String? target}) {
@@ -237,7 +202,7 @@ class XmakeBuilder {
   }
 
   /// export the library to the specified directory, and return the path of the installed library file.
-  /// 
+  ///
   /// [installDir] relative to the project root, default is 'dist'
   Future<String> install({
     String? target,
@@ -267,8 +232,10 @@ class XmakeBuilder {
       return libPath;
     }
 
-    // 由于 linux 会有 libxxx.so.xxx 这种版本号的文件，所以这里取最短的那个文件名
-    // mac 会有 libxxx.xxx.dylib 这种版本号的文件
+    // 特例：
+    // - linux: libName.so.1.2.3
+    // - mac: libName.1.2.3.dylib
+    // 用 libName 来搜索
     final dllBaseName = p.basenameWithoutExtension(dllName);
     final files = await Directory(libDir).list().where((file) {
       return file is File && p.basename(file.path).startsWith(dllBaseName);
