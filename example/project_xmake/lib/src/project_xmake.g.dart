@@ -6,19 +6,3 @@ import 'dart:ffi' as ffi;
 
 @ffi.Native<ffi.Int Function(ffi.Int, ffi.Int)>()
 external int add(int a, int b);
-
-final class Config extends ffi.Struct {
-  @ffi.Int()
-  external int value;
-
-  @ffi.Int()
-  external int is_mac;
-
-  static ffi.Pointer<Config> $allocate(
-    ffi.Allocator $allocator, {
-    required int value,
-    required int is_mac,
-  }) => $allocator<Config>()
-    ..ref.value = value
-    ..ref.is_mac = is_mac;
-}

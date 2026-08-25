@@ -7,7 +7,7 @@ local kind = get_config("kind") or "static"
 
 target("project_xmake")
   set_kind(kind)
-  add_defines("PROJECT_XMAKE_BUILD")
+  add_defines("PROJECT_XMAKE_BUILD")  -- export for api
   add_includedirs("include", {public = true}) -- visible to other targets
   add_headerfiles("include/*.h") -- export for installations
   add_files("src/*.cpp")
