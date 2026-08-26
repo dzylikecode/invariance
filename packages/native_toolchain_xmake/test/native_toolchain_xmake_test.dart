@@ -1,21 +1,15 @@
-// import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
-// import 'package:test/test.dart';
+import 'package:path/path.dart' as p;
+import 'package:test/test.dart';
+import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
 
-// void main() {
-//   group('NativeToolchainXmake', () {
-//     const toolchain = NativeToolchainXmake();
+void main() {
+  group('path', () {
+    // test('linux: libName.so.1.2.3', () async {
+    //   expect(getLibName('lib/libName.so.1.2.3'), equals('libName'));
+    // });
 
-//     test('hasXmake returns bool', () async {
-//       final ok = await toolchain.hasXmake();
-//       expect(ok, isA<bool>());
-//     });
-
-//     test('ensureXmakeInstalled check-only returns structured result', () async {
-//       final result = await toolchain.ensureXmakeInstalled(installIfMissing: false);
-//       expect(result.isAvailable, isA<bool>());
-//       expect(result.wasInstalled, isFalse);
-//       expect(result.method, isNull);
-//       expect(result.message, isNotEmpty);
-//     });
-//   });
-// }
+    // test('mac: libName.1.2.3.dylib', () async {
+    //   expect(getLibName('lib/libName.1.2.3.dylib'), equals('libName'));
+    // });
+  });
+}

@@ -7,9 +7,7 @@ import 'android.dart';
 Future<String?> getXmakeVersion() async {
   final output = await getXmakeInfo();
   final versionMatch = RegExp(r'xmake\s+(v[\d\.]+)').firstMatch(output);
-  if (versionMatch == null) {
-    return null;
-  }
+  if (versionMatch == null) return null;
   return versionMatch.group(1);
 }
 
@@ -105,23 +103,29 @@ class XmakeBuilder {
       '-v',
       '--plat=$os',
       '--arch=$arch',
+      // dart format off
       ...switch (codeConfig.targetOS) {
-        .android => [
-          '--toolchain=ndk',
-          if (_androidTool.ndk != null) '--ndk=${_androidTool.ndk}',
-          if (_androidTool.bin != null) '--bin=${_androidTool.bin}',
-        ],
-        .iOS => [
-          if (codeConfig.iOS.targetSdk == .iPhoneSimulator)
-            '--appledev=simulator',
-        ],
+        .android => () {
+                      final ndk = _androidTool.ndk;
+                      final bin = _androidTool.bin;
+                      return [
+                        '--toolchain=ndk',
+                        if (ndk != null) '--ndk=$ndk',
+                        if (bin != null) '--bin=$bin',
+                      ];
+                    }(),
+        .iOS     => [
+                      if (codeConfig.iOS.targetSdk == .iPhoneSimulator)
+                        '--appledev=simulator',
+                    ],
         // desktop
-        _ => [
-          // cross compile
-          if (codeConfig.targetOS.name != Platform.operatingSystem)
-            '--toolchain=zigcc', // it's zigcc instead of zig !!!
-        ],
+        _        => [
+                      // cross compile
+                      if (codeConfig.targetOS.name != Platform.operatingSystem)
+                        '--toolchain=zigcc', // it's zigcc instead of zig !!!
+                    ],
       },
+      // dart format on
       '--mode=release',
       '--kind=shared',
       '-y',
@@ -165,7 +169,7 @@ class XmakeBuilder {
 
     // 特例：
     // - linux: libName.so.1.2.3
-    // - mac: libName.1.2.3.dylib
+    // - mac  : libName.1.2.3.dylib
     // 用 libName 来搜索
     final dllBaseName = p.basenameWithoutExtension(dllName);
     final files = await Directory(libDir).list().where((file) {
