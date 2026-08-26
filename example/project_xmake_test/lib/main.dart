@@ -1,9 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:project_xmake/project_xmake.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
