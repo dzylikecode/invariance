@@ -3,29 +3,7 @@ import 'package:logging/logging.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'android.dart';
-
-Future<String> getXmakeVersion() async {
-  final output = await getXmakeInfo();
-  final versionMatch = RegExp(r'xmake\s+v([\d\.]+)').firstMatch(output);
-  return versionMatch!.group(1)!;
-}
-
-Future<String> getXmakeInfo() async {
-  final result = await Process.run('xmake', ['--version']);
-  if (result.exitCode != 0) {
-    throw Exception(
-      'Failed to get xmake info (exit ${result.exitCode}):\n'
-      '${result.stdout}\n${result.stderr}',
-    );
-  }
-  return result.stdout.toString().trim();
-}
-
-// dart format off
-Future<bool> hasXmake() =>  Process.run('xmake', ['--version'])
-                              .then((result) => result.exitCode == 0)
-                              .catchError((_) => false);
-// dart format on
+import 'xmake.dart';
 
 Future<void> _ensureXmakeInstalled(Logger logger) async {
   if (!await hasXmake()) {
