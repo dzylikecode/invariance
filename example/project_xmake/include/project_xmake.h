@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 PROJECT_XMAKE_API int add(int a, int b);
+PROJECT_XMAKE_API int subtract(int a, int b);
 
 #ifdef __cplusplus
 }

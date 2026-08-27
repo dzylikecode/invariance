@@ -1,7 +1,9 @@
-import 'dart:io';
-
 import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
 
-Future<void> main() async {
-	print(await getXmakeVersion());
+void main() async {
+  if (await hasXmake()) {
+    print(await getXmakeInfo());
+  } else {
+    print('xmake is not installed.');
+  }
 }

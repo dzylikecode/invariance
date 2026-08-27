@@ -12,6 +12,5 @@ void main() async {
     }
   } else {
     print('xmake is already installed.');
-    print(await getXmakeInfo());
   }
 }

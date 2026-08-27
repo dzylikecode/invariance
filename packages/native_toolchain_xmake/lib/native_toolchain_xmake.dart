@@ -4,11 +4,10 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'android.dart';
 
-Future<String?> getXmakeVersion() async {
+Future<String> getXmakeVersion() async {
   final output = await getXmakeInfo();
-  final versionMatch = RegExp(r'xmake\s+(v[\d\.]+)').firstMatch(output);
-  if (versionMatch == null) return null;
-  return versionMatch.group(1);
+  final versionMatch = RegExp(r'xmake\s+v([\d\.]+)').firstMatch(output);
+  return versionMatch!.group(1)!;
 }
 
 Future<String> getXmakeInfo() async {
@@ -22,23 +21,21 @@ Future<String> getXmakeInfo() async {
   return result.stdout.toString().trim();
 }
 
-Future<bool> hasXmake() =>
-    getXmakeInfo().then((_) => true).catchError((_) => false);
+// dart format off
+Future<bool> hasXmake() =>  Process.run('xmake', ['--version'])
+                              .then((result) => result.exitCode == 0)
+                              .catchError((_) => false);
+// dart format on
 
 Future<void> _ensureXmakeInstalled(Logger logger) async {
   if (!await hasXmake()) {
+    // TODO: 修改一下提示
     throw Exception(
       'Failed to install xmake. Please install it manually and try again. '
       'See https://xmake.io/guide/quick-start.html for installation instructions.',
     );
   }
   final xmakeVersion = await getXmakeVersion();
-  if (xmakeVersion == null) {
-    throw StateError(
-      'xmake is installed but not found in the current environment. '
-      'Restart the terminal or the system for PATH changes to take effect.',
-    );
-  }
   logger.info('Using xmake version: $xmakeVersion');
 }
 

@@ -4,5 +4,12 @@
 // ignore_for_file: type=lint, unused_import, unused_element, deprecated_member_use_from_same_package
 import 'dart:ffi' as ffi;
 
+import 'package:meta/meta.dart' as meta;
+
+@meta.RecordUse()
 @ffi.Native<ffi.Int Function(ffi.Int, ffi.Int)>()
 external int add(int a, int b);
+
+@meta.RecordUse()
+@ffi.Native<ffi.Int Function(ffi.Int, ffi.Int)>()
+external int subtract(int a, int b);
