@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
 import 'package:path/path.dart' as p;
+import 'package:logging/logging.dart';
 
 import 'android.dart';
 
@@ -28,9 +29,19 @@ Future<bool> hasXmake() =>  Process.run('xmake', ['--version'])
                               .catchError((_) => false);
 // dart format on
 
+enum Kind {
+  static,
+  shared;
+
+  @override
+  String toString() => name;
+}
+
 class Xmake({
   required final String projectRoot,
   required final CodeConfig codeConfig,
+  final Kind kind = .shared,
+  required final Logger logger,
 }) {
   final AndroidTool _androidTool = AndroidTool(codeConfig);
 
@@ -90,7 +101,7 @@ ${result.stderr}
       },
       // dart format on
       '--mode=release',
-      '--kind=shared',
+      '--kind=$kind',
       '-y',
     ]);
   }

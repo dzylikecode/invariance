@@ -10,3 +10,5 @@ assets
 .xmake
 *.o
 .vscode
+
+packages/native_toolchain_c

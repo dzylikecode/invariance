@@ -11,5 +11,17 @@ void main() {
     // test('mac: libName.1.2.3.dylib', () async {
     //   expect(getLibName('lib/libName.1.2.3.dylib'), equals('libName'));
     // });
+
+    test('resolve path', () async {
+      expect(
+        Uri.parse('a/b/').resolveUri(.directory('c')).resolve('d'),
+        equals(Uri.parse('a/b/c/d')),
+      );
+    });
+
+    test('kind', () async {
+      expect(Kind.static.toString(), equals('static'));
+      expect(Kind.shared.toString(), equals('shared'));
+    });
   });
 }

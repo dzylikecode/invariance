@@ -1,30 +1,12 @@
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
-import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
+import 'package:project_xmake/src/xmake.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
-    if (input.config.buildCodeAssets) { // flutter need to check this flag
-      final xmakeBuilder = await XmakeBuilder.create(
-        project: input.packageRoot.toFilePath(),
-        packageName: 'project_xmake',
-        codeConfig: input.config.code,
-      );
-
-      await xmakeBuilder.config();
-      await xmakeBuilder.build(target: 'project_xmake');
-      final installedPath = await xmakeBuilder.install(target: 'project_xmake');
-
-      output.assets.code.add(
-        CodeAsset(
-          package: input.packageName,
-          name: 'src/project_xmake.g.dart',
-          file: .file(installedPath),
-          linkMode: DynamicLoadingBundled(),
-        ),
-      );
-
-      output.dependencies.add(input.packageRoot.resolve('xmake.lua'));
+    if (input.config.buildCodeAssets) {
+      // flutter need to check this flag
+      await xmakeLibrary.build(input: input, output: output);
     }
   });
 }
