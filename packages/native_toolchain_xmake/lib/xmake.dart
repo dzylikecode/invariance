@@ -50,6 +50,10 @@ class Xmake({
       'xmake',
       args,
       workingDirectory: projectRoot,
+      // 1. 文本模式显示不了颜色
+      // 2. 报错的时候，显示的颜色只是红色
+      // 所以禁止颜色输出
+      environment: {...Platform.environment, 'XMAKE_COLORTERM': 'nocolor'},
     );
     if (result.exitCode != 0) {
       throw Exception("""
@@ -61,6 +65,10 @@ stderr:
 ${result.stderr}
 """);
     }
+    logger.info("""
+$projectRoot>xmake ${args.join(' ')}
+${result.stdout}
+""");
   }
 
   // see https://xmake.io/guide/basic-commands/build-configuration.html

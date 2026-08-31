@@ -35,7 +35,29 @@ dart run native_toolchain_xmake:install
   > 用官网的 bash 反而会陷入找不到库
 
 
-## config
+
+
+## example
+
+```dart
+void main(List<String> args) async {
+  await build(args, (input, output) async {
+    if (input.config.buildCodeAssets) {
+      // flutter need to check this flag
+      await XmakeLibrary(
+        target: 'project_xmake',
+        assetName: 'src/project_xmake.g.dart',
+      ).build(input: input, output: output);
+    }
+  });
+}
+```
+
+## xmake
+
+流程：configure -> build -> install
+
+### config
 
 android
 
@@ -49,34 +71,6 @@ windows:
 xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
 ```
 
-## example
-
-```dart
-void main(List<String> args) async {
-  await build(args, (input, output) async {
-    final xmakeBuilder = await XmakeBuilder.create(
-      project: input.packageRoot.toFilePath(),
-      packageName: input.packageName,
-      codeConfig: input.config.code,
-    );
-
-    await xmakeBuilder.config();
-    await xmakeBuilder.build(target: 'minimal');
-    final installedPath = await xmakeBuilder.install(target: 'minimal');
-
-    output.assets.code.add(
-      CodeAsset(
-        package: input.packageName,
-        name: 'src/cserialport.g.dart',
-        file: .file(installedPath),
-        linkMode: DynamicLoadingBundled(),
-      ),
-    );
-
-    output.dependencies.add(input.packageRoot.resolve('xmake.lua'));
-  });
-}
-```
 
 ## issue
 

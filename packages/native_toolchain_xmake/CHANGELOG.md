@@ -1,6 +1,5 @@
-## 0.0.5-wip
+## 0.0.5
 
-- 支持 treeshake
 - 与 native_toolchain_c 对齐，简化用户使用
 
 ## 0.0.4

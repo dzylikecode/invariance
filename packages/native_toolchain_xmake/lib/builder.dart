@@ -20,9 +20,8 @@ class XmakeBuilder({
     required BuildOutputBuilder output,
   }) async {
     if (!await hasXmake()) {
-      // TODO: 修改一下提示
       throw Exception(
-        'Failed to install xmake. Please install it manually and try again. '
+        'Xmake cannot be found in the system path. Please install xmake first or add it to the system path. '
         'See https://xmake.io/guide/quick-start.html for installation instructions.',
       );
     }

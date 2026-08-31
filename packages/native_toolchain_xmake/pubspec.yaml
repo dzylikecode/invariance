@@ -1,6 +1,6 @@
 name: native_toolchain_xmake
 description: A library to invoke and build Xmake projects for Dart Native Assets.
-version: 0.0.4
+version: 0.0.5
 repository: https://github.com/dzylikecode/invariance/tree/main/packages/native_toolchain_xmake
 
 environment:
@@ -9,10 +9,10 @@ environment:
 resolution: workspace
 
 dependencies:
-  code_assets: ^2.0.0
+  code_assets: ^1.2.1
   hooks: ^2.2.0
   logging: ^1.3.0
-  native_toolchain_c: ^0.19.4
+  native_toolchain_c: ^0.19.3
   path: ^1.9.1
 
 dev_dependencies:
