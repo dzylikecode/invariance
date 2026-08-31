@@ -76,6 +76,8 @@ class XmakeBuilder({
           ? ToLinkHook(input.packageName)
           : const ToAppBundle(),
     );
+    
+    logger.info('$assetName is associated with $libFile');
 
     // TODO: add deps
   }

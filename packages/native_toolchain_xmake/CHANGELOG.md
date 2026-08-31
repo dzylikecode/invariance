@@ -1,3 +1,7 @@
+## 0.0.6
+
+- export library.dart
+
 ## 0.0.5
 
 - 与 native_toolchain_c 对齐，简化用户使用
