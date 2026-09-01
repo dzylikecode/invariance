@@ -33,7 +33,7 @@ class XmakeBuilder({
     logger.info(
       'linking is ${input.config.linkingEnabled ? 'enabled' : 'disabled'}',
     );
-    final kind = input.config.linkingEnabled ? Kind.static : Kind.shared;
+    final Kind kind = input.config.linkingEnabled ? .static : .shared;
 
     final xmake = Xmake(
       projectRoot: projectRoot.toFilePath(),
@@ -76,7 +76,7 @@ class XmakeBuilder({
           ? ToLinkHook(input.packageName)
           : const ToAppBundle(),
     );
-    
+
     logger.info('$assetName is associated with $libFile');
 
     // TODO: add deps
