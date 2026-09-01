@@ -15,9 +15,11 @@ Future<String> getXmakeVersion() async {
 Future<String> getXmakeInfo() async {
   final result = await Process.run('xmake', ['--version']);
   if (result.exitCode != 0) {
-    throw Exception(
-      'Failed to get xmake info (exit ${result.exitCode}):\n'
-      '${result.stdout}\n${result.stderr}',
+    throw ProcessException(
+      'xmake',
+      ['--version'],
+      'Failed to get xmake version: ${result.stderr}',
+      result.exitCode,
     );
   }
   return result.stdout.toString().trim();
@@ -55,20 +57,19 @@ class Xmake({
       // 所以禁止颜色输出
       environment: {...Platform.environment, 'XMAKE_COLORTERM': 'nocolor'},
     );
-    if (result.exitCode != 0) {
-      throw Exception("""
-run follow command failed (exit ${result.exitCode}):
-$projectRoot>xmake ${args.join(' ')}
-stdout:
-${result.stdout}
-stderr:
-${result.stderr}
-""");
-    }
     logger.info("""
 $projectRoot>xmake ${args.join(' ')}
 ${result.stdout}
 """);
+    if (result.exitCode != 0) {
+      logger.severe(result.stderr);
+      throw ProcessException(
+        'xmake',
+        args,
+        result.stderr.toString(),
+        result.exitCode,
+      );
+    }
   }
 
   // see https://xmake.io/guide/basic-commands/build-configuration.html
