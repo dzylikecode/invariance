@@ -79,6 +79,8 @@ ${result.stdout}
       codeConfig.targetArchitecture,
     );
 
+    bool isCross = codeConfig.targetOS.name != Platform.operatingSystem;
+
     return call([
       'f',
       '-P',
@@ -88,25 +90,24 @@ ${result.stdout}
       '--arch=$arch',
       // dart format off
       ...switch (codeConfig.targetOS) {
-        .android => () {
-                      final ndk = _androidTool.ndk;
-                      final bin = _androidTool.bin;
-                      return [
-                        '--toolchain=ndk',
-                        if (ndk != null) '--ndk=$ndk',
-                        if (bin != null) '--bin=$bin',
-                      ];
-                    }(),
-        .iOS     => [
-                      if (codeConfig.iOS.targetSdk == .iPhoneSimulator)
-                        '--appledev=simulator',
-                    ],
-        // desktop
-        _        => [
-                      // cross compile
-                      if (codeConfig.targetOS.name != Platform.operatingSystem)
-                        '--toolchain=zigcc', // it's zigcc instead of zig !!!
-                    ],
+        .android       => () {
+                            final ndk = _androidTool.ndk;
+                            final bin = _androidTool.bin;
+                            return [
+                              '--toolchain=ndk',
+                              if (ndk != null) '--ndk=$ndk',
+                              if (bin != null) '--bin=$bin',
+                            ];
+                          }(),
+        .iOS           => [
+                            if (codeConfig.iOS.targetSdk == .iPhoneSimulator)
+                              '--appledev=simulator',
+                          ],
+        // desktop cross compile
+        _ when isCross => [
+                            '--toolchain=zigcc', // it's zigcc instead of zig !!!
+                          ],
+        _              => [],
       },
       // dart format on
       '--mode=release',
