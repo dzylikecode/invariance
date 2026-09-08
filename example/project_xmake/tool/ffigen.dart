@@ -2,29 +2,39 @@ import 'dart:io';
 
 import 'package:ffigen/ffigen.dart';
 
-void main() {
+Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
 
-  FfiGenerator(
+  final generator = FfiGenerator(
     output: Output(
-      dartFile: packageRoot.resolve('lib/src/project_xmake.g.dart'),
+      dart: DartOutput(
+        path: packageRoot.resolve('lib/src/project_xmake.g.dart'),
+      ),
       recordUseMapping: packageRoot.resolve(
         'lib/src/project_xmake.record_use_mapping.g.dart',
       ),
     ),
 
-    headers: Headers(
+    input: Input(
       entryPoints: [packageRoot.resolve('include/project_xmake.h')],
       include: (header) => header.path.contains('project_xmake'),
     ),
 
-    structs: Structs.includeAll,
+    visitors: [
+      Visitor(
+        func: (node) {
+          node.isIncluded = true;
+          node.recordUse = true;
+        },
+        struct: (node) {
+          node.isIncluded = true;
+        },
+        typealias: (node) {
+          node.isIncluded = .always;
+        },
+      ),
+    ],
+  );
 
-    functions: Functions(
-      include: Declarations.includeAll,
-      recordUse: (_) => true,
-    ),
-
-    typedefs: Typedefs.includeAll,
-  ).generate();
+  await generator.generate();
 }

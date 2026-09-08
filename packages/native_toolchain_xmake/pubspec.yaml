@@ -9,7 +9,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  code_assets: ^1.2.1
+  code_assets: ^2.0.0
   hooks: ^2.2.0
   logging: ^1.3.0
   native_toolchain_c: ^0.19.3
