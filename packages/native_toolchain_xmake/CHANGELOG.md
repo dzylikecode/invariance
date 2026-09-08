@@ -1,3 +1,11 @@
+## 0.0.8
+
+- 添加 linkOption 支持用户决定是否启动 tree-shake
+
+## 0.0.7
+
+- update code_assets to 2.0.0
+
 ## 0.0.6
 
 - export library.dart

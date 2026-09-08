@@ -5,6 +5,12 @@ import 'package:logging/logging.dart';
 
 import 'builder.dart';
 
+enum LinkModeOption {
+  static,
+  dynamic,
+  byPreference;
+}
+
 class XmakeLibrary({
   /// name of xmake target
   required final String target,
@@ -24,6 +30,7 @@ class XmakeLibrary({
   /// but the library to be used is "raylib".
   final String? libHintName,
   required final String assetName,
+  final LinkModeOption linkModeOption = .byPreference,
   Logger? logger,
 }) {
   final logger = logger ?? Logger('XmakeLibrary:$target')
@@ -43,6 +50,7 @@ class XmakeLibrary({
       assetName: assetName,
       projectRoot: input.packageRoot,
       logger: logger,
+      linkModeOption: linkModeOption,
     );
 
     await builder.run(input: input, output: output);

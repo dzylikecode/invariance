@@ -3,6 +3,7 @@ import 'package:hooks/hooks.dart';
 import 'package:logging/logging.dart';
 
 import 'xmake.dart';
+import 'library.dart';
 
 class XmakeBuilder({
   required final String target,
@@ -11,6 +12,7 @@ class XmakeBuilder({
   required final Uri projectRoot,
   Uri? installDir,
   required final Logger logger,
+  required final LinkModeOption linkModeOption,
 }) {
   final libHintName = libHintName ?? target;
   final installDir = installDir ?? projectRoot.resolveUri(.directory('dist'));
@@ -26,14 +28,20 @@ class XmakeBuilder({
       );
     }
 
-    final linkMode = input.config.linkingEnabled
-        ? StaticLinking()
-        : DynamicLoadingBundled();
+    final linkingEnabled = switch (linkModeOption) {
+      .static => true,
+      .dynamic => false,
+      .byPreference => input.config.linkingEnabled,
+    };
 
-    logger.info(
-      'linking is ${input.config.linkingEnabled ? 'enabled' : 'disabled'}',
-    );
-    final Kind kind = input.config.linkingEnabled ? .static : .shared;
+    logger.info("""
+config linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
+final linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
+""");
+
+    final linkMode = linkingEnabled ? StaticLinking() : DynamicLoadingBundled();
+
+    final Kind kind = linkingEnabled ? .static : .shared;
 
     final xmake = Xmake(
       projectRoot: projectRoot.toFilePath(),
@@ -72,7 +80,7 @@ class XmakeBuilder({
         file: .file(libFile),
         linkMode: linkMode,
       ),
-      routing: input.config.linkingEnabled
+      routing: linkingEnabled
           ? ToLinkHook(input.packageName)
           : const ToAppBundle(),
     );
