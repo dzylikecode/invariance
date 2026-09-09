@@ -87,3 +87,15 @@ dart analyze
 - `lib/src/binding/`: generated FFI declarations
 - `hook/build.dart`: native-assets/xmake integration
 - `tool/ffigen.dart`: binding generator
+
+## 思想
+
+1. 用抽象类擦除 T
+2. 用工厂方法擦除构造函数
+
+    ```dart
+    final constructors = {
+      .classA: (args) => .new<A>(args),
+      .classB: (args) => .new<B>(args)
+    }
+    ```
