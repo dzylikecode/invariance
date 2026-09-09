@@ -28,7 +28,7 @@ void produce_samples(CallableListener listener, uint64_t interval_ns,
   }
   is_running.store(false);
 }
-}  // namespace
+} // namespace
 
 uint64_t callable_now_ns() { return now_ns(); }
 
@@ -40,12 +40,14 @@ bool callable_start(CallableListener listener, uint64_t interval_ns,
     return false;
   }
 
-  if (producer_thread.joinable()) producer_thread.join();
+  if (producer_thread.joinable())
+    producer_thread.join();
   producer_thread =
       std::thread(produce_samples, listener, interval_ns, sample_count);
   return true;
 }
 
 void callable_join() {
-  if (producer_thread.joinable()) producer_thread.join();
+  if (producer_thread.joinable())
+    producer_thread.join();
 }

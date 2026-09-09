@@ -30,6 +30,20 @@ not affect the result. Repeating this at different native frequencies and Dart
 loads reveals typical latency, tail latency, and whether callbacks accumulate
 in the event queue.
 
+```dart
+// c
+void c_thread() {
+    final t1 = now();
+    dart_callback(t1);
+}
+// dart
+final callback = (t1) {
+    final t2 = now();
+    final delta = t2 - t1;
+}
+```
+
+
 ## Results
 
 The following measurements were collected on `TSJ20010049-L` at 1 kHz for
