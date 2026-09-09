@@ -1,21 +1,27 @@
 import 'package:callable/callable.dart';
 
 Future<void> main(List<String> arguments) async {
-  var hz = 1000;
-  var seconds = 3.0;
-  var busyMs = 0;
+  final result = await runBenchmark(_parseArguments(arguments));
+  print(result);
+}
+
+BenchmarkConfig _parseArguments(List<String> arguments) {
+  var config = const BenchmarkConfig();
+
   for (final argument in arguments) {
-    if (argument.startsWith('--hz=')) hz = int.parse(argument.substring(5));
-    if (argument.startsWith('--seconds=')) {
-      seconds = double.parse(argument.substring(10));
+    final separator = argument.indexOf('=');
+    if (separator < 0) {
+      throw FormatException('Expected --name=value, got: $argument');
     }
-    if (argument.startsWith('--busy-ms=')) {
-      busyMs = int.parse(argument.substring(10));
-    }
+    final name = argument.substring(0, separator);
+    final value = argument.substring(separator + 1);
+    config = switch (name) {
+      '--hz' => config.copyWith(hz: int.parse(value)),
+      '--seconds' => config.copyWith(seconds: double.parse(value)),
+      '--busy-ms' => config.copyWith(busyMilliseconds: int.parse(value)),
+      _ => throw FormatException('Unknown option: $name'),
+    };
   }
 
-  final result = await runBenchmark(
-    BenchmarkConfig(hz: hz, seconds: seconds, busyMilliseconds: busyMs),
-  );
-  print(result);
+  return config;
 }

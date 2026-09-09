@@ -12,7 +12,7 @@ external int callable_now_ns();
 
 @ffi.Native<ffi.Bool Function(CallableListener, ffi.Uint64, ffi.Uint64)>()
 external bool callable_start(
-  CallableListener callback,
+  CallableListener listener,
   int interval_ns,
   int sample_count,
 );

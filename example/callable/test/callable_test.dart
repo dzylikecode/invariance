@@ -7,7 +7,7 @@ void main() {
     final result = await runBenchmark(config);
 
     expect(result.sampleCount, 10);
-    expect(result.minUs, greaterThanOrEqualTo(0));
+    expect(result.latency.minUs, greaterThanOrEqualTo(0));
     expect(result.throughput, greaterThan(0));
   });
 }
