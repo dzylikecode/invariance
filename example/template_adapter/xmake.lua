@@ -1,0 +1,12 @@
+set_project("template_adapter")
+set_version("1.0.0")
+set_languages("cxx17")
+add_rules("mode.debug", "mode.release")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
+
+target("template_adapter")
+    set_kind("shared")
+    add_defines("TEMPLATE_ADAPTER_BUILDING")
+    add_includedirs("include", {public = true})
+    add_headerfiles("include/(**.h)")
+    add_files("src/*.cpp")

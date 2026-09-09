@@ -12,3 +12,6 @@ assets
 .vscode
 
 packages/native_toolchain_c
+.xmake
+.cache
+dist
