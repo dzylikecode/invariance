@@ -79,7 +79,9 @@ ${result.stdout}
       codeConfig.targetArchitecture,
     );
 
-    bool isCross = codeConfig.targetOS.name != Platform.operatingSystem;
+    bool isCross =
+        !(codeConfig.targetOS == OS.current &&
+            codeConfig.targetArchitecture == Architecture.current);
 
     return call([
       'f',
