@@ -4,6 +4,85 @@
 // ignore_for_file: type=lint, unused_import, unused_element, deprecated_member_use_from_same_package
 import 'dart:ffi' as ffi;
 
+class NativeLibrary {
+  /// Holds the symbol lookup function.
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+  _lookup;
+
+  /// The symbols are looked up in [dynamicLibrary].
+  NativeLibrary(ffi.DynamicLibrary dynamicLibrary)
+    : _lookup = dynamicLibrary.lookup;
+
+  /// The symbols are looked up with [lookup].
+  NativeLibrary.fromLookup(
+    ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
+  ) : _lookup = lookup;
+
+  void PyConfig_Clear(ffi.Pointer<PyConfig> arg0) {
+    return _PyConfig_Clear(arg0);
+  }
+
+  late final _PyConfig_ClearPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<PyConfig>)>>(
+        'PyConfig_Clear',
+      );
+  late final _PyConfig_Clear =
+      _PyConfig_ClearPtr.asFunction<void Function(ffi.Pointer<PyConfig>)>();
+
+  void PyConfig_InitPythonConfig(ffi.Pointer<PyConfig> config) {
+    return _PyConfig_InitPythonConfig(config);
+  }
+
+  late final _PyConfig_InitPythonConfigPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<PyConfig>)>>(
+        'PyConfig_InitPythonConfig',
+      );
+  late final _PyConfig_InitPythonConfig =
+      _PyConfig_InitPythonConfigPtr.asFunction<
+        void Function(ffi.Pointer<PyConfig>)
+      >();
+
+  PyStatus PyConfig_SetString(
+    ffi.Pointer<PyConfig> config,
+    ffi.Pointer<ffi.Pointer<ffi.WChar>> config_str,
+    ffi.Pointer<ffi.WChar> str,
+  ) {
+    return _PyConfig_SetString(config, config_str, str);
+  }
+
+  late final _PyConfig_SetStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          PyStatus Function(
+            ffi.Pointer<PyConfig>,
+            ffi.Pointer<ffi.Pointer<ffi.WChar>>,
+            ffi.Pointer<ffi.WChar>,
+          )
+        >
+      >('PyConfig_SetString');
+  late final _PyConfig_SetString =
+      _PyConfig_SetStringPtr.asFunction<
+        PyStatus Function(
+          ffi.Pointer<PyConfig>,
+          ffi.Pointer<ffi.Pointer<ffi.WChar>>,
+          ffi.Pointer<ffi.WChar>,
+        )
+      >();
+
+  PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
+    return _Py_InitializeFromConfig(config);
+  }
+
+  late final _Py_InitializeFromConfigPtr =
+      _lookup<ffi.NativeFunction<PyStatus Function(ffi.Pointer<PyConfig>)>>(
+        'Py_InitializeFromConfig',
+      );
+  late final _Py_InitializeFromConfig =
+      _Py_InitializeFromConfigPtr.asFunction<
+        PyStatus Function(ffi.Pointer<PyConfig>)
+      >();
+}
+
 final class PyConfig extends ffi.Struct {
   @ffi.Int()
   external int _config_init;
@@ -147,6 +226,30 @@ final class PyConfig extends ffi.Struct {
 
   @ffi.Int()
   external int _init_main;
+}
+
+final class PyStatus extends ffi.Struct {
+  @ffi.UnsignedInt()
+  external int _type;
+
+  external ffi.Pointer<ffi.Char> func;
+
+  external ffi.Pointer<ffi.Char> err_msg;
+
+  @ffi.Int()
+  external int exitcode;
+
+  static ffi.Pointer<PyStatus> $allocate(
+    ffi.Allocator $allocator, {
+    required int $type,
+    required ffi.Pointer<ffi.Char> func,
+    required ffi.Pointer<ffi.Char> err_msg,
+    required int exitcode,
+  }) => $allocator<PyStatus>()
+    ..ref._type = $type
+    ..ref.func = func
+    ..ref.err_msg = err_msg
+    ..ref.exitcode = exitcode;
 }
 
 final class PyWideStringList extends ffi.Struct {

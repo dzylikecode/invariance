@@ -5,15 +5,22 @@ import 'package:ffigen/ffigen.dart';
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
 
-  generatePyConfig('3.8.20', packageRoot);
+  generateSpecific('3.8.20', packageRoot);
 }
 
-Future<void> generatePyConfig(String version, Uri packageRoot) {
+Future<void> generateSpecific(String version, Uri packageRoot) {
+  const funcs = [
+    'PyConfig_InitPythonConfig',
+    'PyConfig_SetString',
+    'Py_InitializeFromConfig',
+    'PyConfig_Clear'
+  ];
+
   return FfiGenerator(
     output: Output(
       dart: DartOutput(
         path: packageRoot.resolve(
-          'lib/src/binding/py_config_${Platform.isWindows ? 'windows' : 'posix'}.g.dart',
+          'lib/src/binding/${Platform.isWindows ? 'windows' : 'posix'}.g.dart',
         ),
       ),
       style: const DynamicLibraryBindings(),
@@ -35,6 +42,7 @@ Future<void> generatePyConfig(String version, Uri packageRoot) {
         struct: (node) {
           node.isIncluded = node.name == 'PyConfig';
         },
+        func: (node) => node.isIncluded = funcs.contains(node.name),
         typealias: (node) =>
             node.isIncluded = node.name == 'Py_ssize_t' ? .ifUsed : .never,
       ),
