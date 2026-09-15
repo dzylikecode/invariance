@@ -150,7 +150,7 @@ final class PyConfig extends ffi.Struct {
 }
 
 final class PyWideStringList extends ffi.Struct {
-  @ffi.LongLong()
+  @Py_ssize_t()
   external int length;
 
   external ffi.Pointer<ffi.Pointer<ffi.WChar>> items;
@@ -163,3 +163,5 @@ final class PyWideStringList extends ffi.Struct {
     ..ref.length = length
     ..ref.items = items;
 }
+
+typedef Py_ssize_t = ffi.IntPtr;

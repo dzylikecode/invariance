@@ -36,16 +36,21 @@ Future<void> _fetchHeaders({
   }
 
   final targetInclude = Directory(p.join(distDir.path, version, 'include'));
-  if (await targetInclude.exists()) {
-    await targetInclude.delete(recursive: true);
+  if (!await targetInclude.exists()) {
+    await targetInclude.create(recursive: true);
+    await _copyDirectory(sourceInclude, targetInclude);
   }
-  await targetInclude.create(recursive: true);
 
-  await _copyDirectory(sourceInclude, targetInclude);
-
-  final pyConfig = await _getPyConfig(repoDir);
-  await pyConfig.copy(p.join(targetInclude.path, 'pyconfig.h'));
-
+  final pyConfig = await getPyConfig(repoDir);
+  final pyConfigTagetPath = p.join(targetInclude.path, 'pyconfig.h');
+  await pyConfig.copy(pyConfigTagetPath);
+  // 为了 Py_ssize_t 变为 uintptr
+  final targetPyConfig = File(pyConfigTagetPath);
+  final content = await targetPyConfig.readAsString();
+  const original = '#define HAVE_SSIZE_T 1';
+  await targetPyConfig.writeAsString(
+    content.replaceFirst(original, '#undef HAVE_SSIZE_T'),
+  );
   print('Wrote $targetInclude');
 }
 
@@ -88,7 +93,7 @@ Future<Directory> fetchRepo(String version, Directory cacheDir) async {
   return repoDir;
 }
 
-Future<File> _getPyConfig(Directory sourceRoot) async {
+Future<File> getPyConfig(Directory sourceRoot) async {
   if (Platform.isWindows) {
     return File(p.join(sourceRoot.path, 'PC', 'pyconfig.h'));
   }

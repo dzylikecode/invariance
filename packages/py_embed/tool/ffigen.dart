@@ -16,6 +16,7 @@ Future<void> generatePyConfig(String version, Uri packageRoot) {
           'lib/src/binding/py_config_${Platform.isWindows ? 'windows' : 'posix'}.g.dart',
         ),
       ),
+      style: const DynamicLibraryBindings(),
     ),
 
     input: Input(
@@ -34,6 +35,8 @@ Future<void> generatePyConfig(String version, Uri packageRoot) {
         struct: (node) {
           node.isIncluded = node.name == 'PyConfig';
         },
+        typealias: (node) =>
+            node.isIncluded = node.name == 'Py_ssize_t' ? .ifUsed : .never,
       ),
     ],
   ).generate();
