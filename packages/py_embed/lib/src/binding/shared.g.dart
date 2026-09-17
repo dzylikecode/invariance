@@ -18,6 +18,17 @@ class NativeLibrary {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
+  int PyStatus_Exception(PyStatus err) {
+    return _PyStatus_Exception(err);
+  }
+
+  late final _PyStatus_ExceptionPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(PyStatus)>>(
+        'PyStatus_Exception',
+      );
+  late final _PyStatus_Exception =
+      _PyStatus_ExceptionPtr.asFunction<int Function(PyStatus)>();
+
   void Py_Finalize() {
     return _Py_Finalize();
   }

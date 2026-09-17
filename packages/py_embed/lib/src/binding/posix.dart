@@ -7,12 +7,12 @@ import 'utils.dart';
 
 import '../env/dylib.dart';
 
-final api = g.NativeLibrary(dll);
+final _api = g.NativeLibrary(dll);
 
 class _PyConfig._(final Pointer<g.PyConfig> ptr) {
   factory() {
     final ptr = ffi.calloc<g.PyConfig>();
-    api.PyConfig_InitPythonConfig(ptr);
+    _api.PyConfig_InitPythonConfig(ptr);
     return ._(ptr);
   }
 
@@ -23,7 +23,7 @@ class _PyConfig._(final Pointer<g.PyConfig> ptr) {
       // 让 PyConfig_SetString 负责释放原来的 Python-owned 字符串
       final temp = arena<Pointer<WChar>>()..value = oldValue;
       // TODO: guard
-      api.PyConfig_SetString(ptr, temp, value.toNativeWChar(allocator: arena));
+      _api.PyConfig_SetString(ptr, temp, value.toNativeWChar(allocator: arena));
       return temp.value;
     },
   );
@@ -39,7 +39,7 @@ class _PyConfig._(final Pointer<g.PyConfig> ptr) {
   // set programName(String path) => ptr.ref.program_name = path.toNativeWChar();
 
   void dispose() {
-    api.PyConfig_Clear(ptr);
+    _api.PyConfig_Clear(ptr);
     ffi.calloc.free(ptr);
   }
 }
@@ -50,9 +50,8 @@ void initPy(String path) {
     ..programName = path;
   try {
     // TODO:
-    api.Py_InitializeFromConfig(config.ptr);
+    _api.Py_InitializeFromConfig(config.ptr);
   } finally {
     config.dispose();
   }
 }
-
