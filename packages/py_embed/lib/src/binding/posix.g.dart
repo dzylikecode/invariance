@@ -4,6 +4,8 @@
 // ignore_for_file: type=lint, unused_import, unused_element, deprecated_member_use_from_same_package
 import 'dart:ffi' as ffi;
 
+import 'shared.g.dart' as imp$1;
+
 class NativeLibrary {
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
@@ -42,7 +44,7 @@ class NativeLibrary {
         void Function(ffi.Pointer<PyConfig>)
       >();
 
-  PyStatus PyConfig_SetString(
+  imp$1.PyStatus PyConfig_SetString(
     ffi.Pointer<PyConfig> config,
     ffi.Pointer<ffi.Pointer<ffi.WChar>> config_str,
     ffi.Pointer<ffi.WChar> str,
@@ -53,7 +55,7 @@ class NativeLibrary {
   late final _PyConfig_SetStringPtr =
       _lookup<
         ffi.NativeFunction<
-          PyStatus Function(
+          imp$1.PyStatus Function(
             ffi.Pointer<PyConfig>,
             ffi.Pointer<ffi.Pointer<ffi.WChar>>,
             ffi.Pointer<ffi.WChar>,
@@ -62,24 +64,24 @@ class NativeLibrary {
       >('PyConfig_SetString');
   late final _PyConfig_SetString =
       _PyConfig_SetStringPtr.asFunction<
-        PyStatus Function(
+        imp$1.PyStatus Function(
           ffi.Pointer<PyConfig>,
           ffi.Pointer<ffi.Pointer<ffi.WChar>>,
           ffi.Pointer<ffi.WChar>,
         )
       >();
 
-  PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
+  imp$1.PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
     return _Py_InitializeFromConfig(config);
   }
 
   late final _Py_InitializeFromConfigPtr =
-      _lookup<ffi.NativeFunction<PyStatus Function(ffi.Pointer<PyConfig>)>>(
-        'Py_InitializeFromConfig',
-      );
+      _lookup<
+        ffi.NativeFunction<imp$1.PyStatus Function(ffi.Pointer<PyConfig>)>
+      >('Py_InitializeFromConfig');
   late final _Py_InitializeFromConfig =
       _Py_InitializeFromConfigPtr.asFunction<
-        PyStatus Function(ffi.Pointer<PyConfig>)
+        imp$1.PyStatus Function(ffi.Pointer<PyConfig>)
       >();
 }
 
@@ -223,30 +225,6 @@ final class PyConfig extends ffi.Struct {
 
   @ffi.Int()
   external int _init_main;
-}
-
-final class PyStatus extends ffi.Struct {
-  @ffi.UnsignedInt()
-  external int _type;
-
-  external ffi.Pointer<ffi.Char> func;
-
-  external ffi.Pointer<ffi.Char> err_msg;
-
-  @ffi.Int()
-  external int exitcode;
-
-  static ffi.Pointer<PyStatus> $allocate(
-    ffi.Allocator $allocator, {
-    required int $type,
-    required ffi.Pointer<ffi.Char> func,
-    required ffi.Pointer<ffi.Char> err_msg,
-    required int exitcode,
-  }) => $allocator<PyStatus>()
-    ..ref._type = $type
-    ..ref.func = func
-    ..ref.err_msg = err_msg
-    ..ref.exitcode = exitcode;
 }
 
 final class PyWideStringList extends ffi.Struct {
