@@ -84,6 +84,7 @@ Future<Directory> fetchRepo(String version, Directory cacheDir) async {
       },
       onProgress: (downloaded) => bar.update(downloaded),
     );
+    print(''); // 为了换行
   } else {
     print('Using cached $archiveFile');
   }

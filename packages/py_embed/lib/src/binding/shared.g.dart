@@ -39,6 +39,8 @@ class NativeLibrary {
   late final _Py_Finalize = _Py_FinalizePtr.asFunction<void Function()>();
 }
 
+typedef PyObject = _object;
+
 final class PyStatus extends ffi.Struct {
   @ffi.UnsignedInt()
   external int _type;
@@ -62,3 +64,5 @@ final class PyStatus extends ffi.Struct {
     ..ref.err_msg = err_msg
     ..ref.exitcode = exitcode;
 }
+
+final class _object extends ffi.Opaque {}

@@ -45,7 +45,7 @@ Future<void> generateShared(String version, Uri packageRoot) {
     output: packageRoot.resolve('lib/src/binding/shared.g.dart'),
     funcs: funcs,
     structs: structs,
-    alwaysTypealiases: const {'PyStatus'},
+    alwaysTypealiases: const {'PyStatus', 'PyObject'},
     symbolFile: SymbolFile(
       Uri.parse('shared.g.dart'),
       packageRoot.resolve('lib/src/binding/shared.symbols.yaml'),
