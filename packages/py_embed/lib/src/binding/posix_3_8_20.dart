@@ -2,13 +2,15 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
 
-import 'posix.g.dart' as g;
+import 'posix_3_8_20.g.dart' as g;
 import 'utils.dart';
 import 'shared.dart';
+import 'shared.g.dart' as shared;
 
-import '../env/dylib.dart';
+import '../env/env_args.dart';
+import 'api.dart';
 
-final _api = g.NativeLibrary(dll);
+final _api = g.NativeLibrary(pyDll);
 
 class _PyConfig._(final Pointer<g.PyConfig> ptr) {
   factory() {
@@ -47,14 +49,22 @@ class _PyConfig._(final Pointer<g.PyConfig> ptr) {
   }
 }
 
-void initPy(String path) {
-  final config = _PyConfig();
-  try {
-    config
-      ..executable = path
-      ..programName = path;
-    _api.Py_InitializeFromConfig(config.ptr).guard();
-  } finally {
-    config.dispose();
+mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
+  @override
+  void initPy(String path) {
+    final config = _PyConfig();
+    try {
+      config
+        ..executable = path
+        ..programName = path;
+      _api.Py_InitializeFromConfig(config.ptr).guard();
+    } finally {
+      config.dispose();
+    }
   }
 }
+
+final class Api(super.dynamicLibrary)
+    extends shared.NativeLibrary
+    with PlatformApi
+    implements BaseApi;

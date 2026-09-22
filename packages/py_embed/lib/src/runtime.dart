@@ -4,9 +4,10 @@ import 'package:ffi/ffi.dart' as ffi;
 
 import 'package:meta/meta.dart';
 
-import 'binding/cross.dart';
+import 'binding/api.dart';
 import 'env/env_args.dart';
 import 'binding/shared.dart';
+import 'common.dart';
 
 enum _State { idle, running, closed }
 
@@ -16,6 +17,7 @@ final class _Runtime._() {
   _State state = .idle;
 
   bool get isInitialized => state == .running;
+  Version get version => pyVersion;
 
   void _ensureInitialized() {
     switch (state) {
@@ -31,7 +33,7 @@ final class _Runtime._() {
 
   void init([String? executablePath]) {
     executablePath ??= getPyExecutableFromShellSync();
-    initPy(executablePath);
+    api.initPy(executablePath);
   }
 
   T execute<T>(T Function() operation) {
@@ -52,6 +54,9 @@ final class _Runtime._() {
 
 T runPythonZone<T>(T Function() operation) => pyRuntime.execute(operation);
 
+/// execute python code
+/// 
+/// {@example ../../example/hello_world.dart}
 void runString(String code) => runPythonZone(
   () => ffi.using(
     (arena) => api.PyRun_SimpleString(

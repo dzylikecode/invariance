@@ -1,9 +1,7 @@
 import 'package:ffi/ffi.dart' as ffi;
 
 import 'shared.g.dart' as g;
-import '../env/dylib.dart';
-
-final api = g.NativeLibrary(dll);
+import 'api.dart';
 
 extension PyStatusExt on g.PyStatus {
   bool get isException => api.PyStatus_Exception(this) != 0;

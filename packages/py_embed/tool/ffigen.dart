@@ -1,10 +1,11 @@
 import 'dart:io';
 
 import 'package:ffigen/ffigen.dart';
+import 'package:py_embed/src/common.dart' as lib;
 
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
-  const version = '3.8.20';
+  final version = lib.Version.parse('3.10.21');
   final declarations = await readDeclarations(
     packageRoot.resolve('tool/py_3_8_20.cpp'),
   );
@@ -26,18 +27,18 @@ Future<void> main() async {
 }
 
 Future<void> generateSpecific(
-  String version,
+  lib.Version version,
   Uri packageRoot, {
   required Set<String> funcs,
   required Set<String> structs,
   required Set<String> typealiases,
 }) {
+  final name =
+      '${Platform.isWindows ? 'windows' : 'posix'}_${version.format(delimiter: '_')}';
   return generateBindings(
-    version: version,
+    version: version.toString(),
     packageRoot: packageRoot,
-    output: packageRoot.resolve(
-      'lib/src/binding/${Platform.isWindows ? 'windows' : 'posix'}.g.dart',
-    ),
+    output: packageRoot.resolve('lib/src/binding/$name.g.dart'),
     funcs: funcs,
     structs: structs,
     importType: importFromSymbolFile(
@@ -48,14 +49,14 @@ Future<void> generateSpecific(
 }
 
 Future<void> generateShared(
-  String version,
+  lib.Version version,
   Uri packageRoot, {
   required Set<String> funcs,
   required Set<String> structs,
   required Set<String> typealiases,
 }) {
   return generateBindings(
-    version: version,
+    version: version.toString(),
     packageRoot: packageRoot,
     output: packageRoot.resolve('lib/src/binding/shared.g.dart'),
     funcs: funcs,

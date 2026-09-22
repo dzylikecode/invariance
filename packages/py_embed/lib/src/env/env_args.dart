@@ -2,6 +2,11 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
+import 'loader.dart';
+import '../common.dart';
+
+final pyVersion = getPyVersionSync();
+final pyDll = openEx(getPyDllPathFromVenvSync());
 
 Future<String> runPyShell(String code, [String pyExe = 'python']) async {
   final result = await Process.run(pyExe, ['-c', code]);
@@ -47,20 +52,7 @@ String getPyExecutableFromShellSync([String pyExe = 'python']) =>
 String getPyBasePrefixFromShellSync([String pyExe = 'python']) =>
     runPyShellSync('import sys; print(sys.base_prefix)', pyExe);
 
-@internal
-(int, int, int) extractVersion(String versionString) {
-  final version = RegExp(r'(\d+)\.(\d+)\.(\d+)').firstMatch(versionString);
-  if (version == null) {
-    throw FormatException('Invalid Python version string: $versionString');
-  }
-  return (
-    .parse(version.group(1)!),
-    .parse(version.group(2)!),
-    .parse(version.group(3)!),
-  );
-}
-
-(int, int, int) getPyVersionSync([String pyExe = 'python']) {
+Version getPyVersionSync([String pyExe = 'python']) {
   final result = Process.runSync(pyExe, ['--version']);
 
   if (result.exitCode != 0) {
@@ -73,7 +65,7 @@ String getPyBasePrefixFromShellSync([String pyExe = 'python']) =>
   }
 
   final output = result.stdout.toString().trim();
-  return extractVersion(output);
+  return .parse(output);
 }
 
 String getPyDllPathFromVenvSync([String pyExe = 'python']) {
@@ -83,16 +75,16 @@ String getPyDllPathFromVenvSync([String pyExe = 'python']) {
     _ when Platform.isLinux => p.join(
       basePrefix,
       'lib',
-      'libpython${version.$1}.${version.$2}.so',
+      'libpython${version.major}.${version.minor}.so',
     ),
     _ when Platform.isWindows => p.join(
       basePrefix,
-      'python${version.$1}${version.$2}.dll',
+      'python${version.major}.${version.minor}.dll',
     ),
     _ when Platform.isMacOS => p.join(
       basePrefix,
       'lib',
-      'libpython${version.$1}.${version.$2}.dylib',
+      'libpython${version.major}.${version.minor}.dylib',
     ),
     _ => throw UnsupportedError('Platform not implemented.'),
   };
@@ -101,3 +93,5 @@ String getPyDllPathFromVenvSync([String pyExe = 'python']) {
   }
   return path;
 }
+
+

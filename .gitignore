@@ -16,3 +16,4 @@ packages/native_toolchain_c
 .cache
 dist
 *.symbols.yaml
+api
