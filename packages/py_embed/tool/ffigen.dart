@@ -4,6 +4,7 @@ import 'package:ffigen/ffigen.dart';
 import 'package:py_embed/src/common.dart' as lib;
 
 import 'utils/fetch_header.dart';
+import 'utils/generate_version_wrapper.dart';
 
 const versions = ['3.8.20', '3.9.25', '3.10.21'];
 
@@ -13,9 +14,6 @@ Future<void> main() async {
 
   final sharedSource = packageRoot.resolve('tool/shared.cpp');
   final shared = await readDeclarations(sharedSource);
-  final template = await File.fromUri(
-    packageRoot.resolve('tool/version.dart.template'),
-  ).readAsString();
 
   await generateShared(
     lib.Version.parse(versions.first),
@@ -38,29 +36,8 @@ Future<void> main() async {
       structs: specific.structs,
       typealiases: specific.aliases,
     );
-    await generateVersionWrapper(version, packageRoot, template);
+    await generateVersionWrapper(version, packageRoot);
   }
-}
-
-String bindingName(lib.Version version) =>
-    '${Platform.isWindows ? 'windows' : 'posix'}_${version.format(delimiter: '_')}';
-
-Future<void> generateVersionWrapper(
-  lib.Version version,
-  Uri packageRoot,
-  String template,
-) async {
-  const marker = '{{binding}}';
-  if (!template.contains(marker)) {
-    throw FormatException('Missing $marker in tool/version.dart.template');
-  }
-  final name = bindingName(version);
-  final output = File.fromUri(
-    packageRoot.resolve('lib/src/binding/$name.dart'),
-  );
-  final content = template.replaceAll(marker, name);
-  if (await output.exists() && await output.readAsString() == content) return;
-  await output.writeAsString(content);
 }
 
 Future<void> generateSpecific(
