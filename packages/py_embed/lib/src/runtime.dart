@@ -19,10 +19,11 @@ final class _Runtime._() {
   bool get isInitialized => state == .running;
   Version get version => pyVersion;
 
-  void _ensureInitialized() {
+  void init([String? executablePath]) {
     switch (state) {
       case .idle:
-        init();
+        executablePath ??= getPyExecutableFromShellSync();
+        api.initPy(executablePath);
         state = .running;
       case .running:
         return;
@@ -31,13 +32,8 @@ final class _Runtime._() {
     }
   }
 
-  void init([String? executablePath]) {
-    executablePath ??= getPyExecutableFromShellSync();
-    api.initPy(executablePath);
-  }
-
   T execute<T>(T Function() operation) {
-    _ensureInitialized();
+    init();
     try {
       final result = operation();
       // TODO: error check
@@ -55,7 +51,7 @@ final class _Runtime._() {
 T runPythonZone<T>(T Function() operation) => pyRuntime.execute(operation);
 
 /// execute python code
-/// 
+///
 /// {@example ../../example/hello_world.dart}
 void runString(String code) => runPythonZone(
   () => ffi.using(
