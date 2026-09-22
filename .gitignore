@@ -17,3 +17,5 @@ packages/native_toolchain_c
 dist
 *.symbols.yaml
 api
+
+.DS_Store

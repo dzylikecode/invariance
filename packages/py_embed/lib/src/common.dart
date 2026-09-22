@@ -23,9 +23,9 @@ class const Version(final int major, final int minor, final int patch) {
     }
 
     return Version(
-      int.parse(version.group(1)!),
-      int.parse(version.group(2)!),
-      int.parse(version.group(3)!),
+      .parse(version.group(1)!),
+      .parse(version.group(2)!),
+      .parse(version.group(3)!),
     );
   }
 

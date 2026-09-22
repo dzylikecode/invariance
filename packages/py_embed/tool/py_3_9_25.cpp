@@ -13,4 +13,3 @@ const auto funcs = std::tuple{
 using structs = std::tuple<PyConfig>;
 
 using alias = std::tuple<Py_ssize_t>;
-

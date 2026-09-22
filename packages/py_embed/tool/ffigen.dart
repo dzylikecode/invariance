@@ -3,27 +3,64 @@ import 'dart:io';
 import 'package:ffigen/ffigen.dart';
 import 'package:py_embed/src/common.dart' as lib;
 
+import 'utils/fetch_header.dart';
+
+const versions = ['3.8.20', '3.9.25', '3.10.21'];
+
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
-  final version = lib.Version.parse('3.10.21');
-  final declarations = await readDeclarations(
-    packageRoot.resolve('tool/py_3_8_20.cpp'),
-  );
+  await fetchHeaders(versions, packageRoot);
+
+  final sharedSource = packageRoot.resolve('tool/shared.cpp');
+  final shared = await readDeclarations(sharedSource);
+  final template = await File.fromUri(
+    packageRoot.resolve('tool/version.dart.template'),
+  ).readAsString();
 
   await generateShared(
-    version,
+    lib.Version.parse(versions.first),
     packageRoot,
-    funcs: declarations.funcs,
-    structs: declarations.structs,
-    typealiases: declarations.aliases,
+    funcs: shared.funcs,
+    structs: shared.structs,
+    typealiases: shared.aliases,
   );
-  await generateSpecific(
-    version,
-    packageRoot,
-    funcs: declarations.platformFuncs,
-    structs: declarations.platformStructs,
-    typealiases: declarations.platformAliases,
+
+  for (final value in versions) {
+    final version = lib.Version.parse(value);
+    final specificSource = packageRoot.resolve(
+      'tool/py_${version.format(delimiter: '_')}.cpp',
+    );
+    final specific = await readDeclarations(specificSource);
+    await generateSpecific(
+      version,
+      packageRoot,
+      funcs: specific.funcs,
+      structs: specific.structs,
+      typealiases: specific.aliases,
+    );
+    await generateVersionWrapper(version, packageRoot, template);
+  }
+}
+
+String bindingName(lib.Version version) =>
+    '${Platform.isWindows ? 'windows' : 'posix'}_${version.format(delimiter: '_')}';
+
+Future<void> generateVersionWrapper(
+  lib.Version version,
+  Uri packageRoot,
+  String template,
+) async {
+  const marker = '{{binding}}';
+  if (!template.contains(marker)) {
+    throw FormatException('Missing $marker in tool/version.dart.template');
+  }
+  final name = bindingName(version);
+  final output = File.fromUri(
+    packageRoot.resolve('lib/src/binding/$name.dart'),
   );
+  final content = template.replaceAll(marker, name);
+  if (await output.exists() && await output.readAsString() == content) return;
+  await output.writeAsString(content);
 }
 
 Future<void> generateSpecific(
@@ -33,8 +70,7 @@ Future<void> generateSpecific(
   required Set<String> structs,
   required Set<String> typealiases,
 }) {
-  final name =
-      '${Platform.isWindows ? 'windows' : 'posix'}_${version.format(delimiter: '_')}';
+  final name = bindingName(version);
   return generateBindings(
     version: version.toString(),
     packageRoot: packageRoot,
@@ -112,9 +148,6 @@ Future<void> generateBindings({
 ImportedType? _noImportedTypes(Declaration _) => null;
 
 class Declarations({
-  required final Set<String> platformFuncs,
-  required final Set<String> platformStructs,
-  required final Set<String> platformAliases,
   required final Set<String> funcs,
   required final Set<String> structs,
   required final Set<String> aliases,
@@ -128,20 +161,18 @@ Future<Declarations> readDeclarations(Uri source) async {
       .replaceAll(RegExp(r'/\*[\s\S]*?\*/'), '')
       .replaceAll(RegExp(r'//[^\n]*'), '');
   return Declarations(
-    platformFuncs: _readTuple(
-      withoutComments,
-      'platformFuncs',
-      functions: true,
-    ),
-    platformStructs: _readTuple(withoutComments, 'platformStructs'),
-    platformAliases: _readTuple(withoutComments, 'platformAlias'),
-    funcs: _readTuple(withoutComments, 'funcs', functions: true),
-    structs: _readTuple(withoutComments, 'structs'),
-    aliases: _readTuple(withoutComments, 'alias'),
+    funcs: _readTuple(withoutComments, 'funcs', source, functions: true),
+    structs: _readTuple(withoutComments, 'structs', source),
+    aliases: _readTuple(withoutComments, 'alias', source),
   );
 }
 
-Set<String> _readTuple(String source, String name, {bool functions = false}) {
+Set<String> _readTuple(
+  String source,
+  String name,
+  Uri path, {
+  bool functions = false,
+}) {
   final pattern = functions
       ? RegExp(
           '\\bconst\\s+auto\\s+$name\\s*=\\s*std::tuple\\s*\\{([^}]*)\\}\\s*;',
@@ -150,7 +181,7 @@ Set<String> _readTuple(String source, String name, {bool functions = false}) {
   final matches = pattern.allMatches(source).toList();
   if (matches.length != 1) {
     throw FormatException(
-      'Expected exactly one $name tuple in tool/py_3_8_20.cpp',
+      'Expected exactly one $name tuple in ${path.toFilePath()}',
     );
   }
 

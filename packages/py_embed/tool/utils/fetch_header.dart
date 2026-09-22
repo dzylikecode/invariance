@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:console_bars/console_bars.dart';
 
-const versions = ['3.8.20', '3.9.25', '3.10.21'];
 
-Future<void> main() async {
-  final rootDir = Directory.fromUri(Platform.script.resolve('../'));
+Future<void> fetchHeaders(List<String> versions, Uri packageRoot) async {
+  final rootDir = Directory.fromUri(packageRoot);
   final cacheDir = Directory(p.join(rootDir.path, '.cache', 'cpython'));
   final distDir = Directory(p.join(rootDir.path, 'dist'));
 
