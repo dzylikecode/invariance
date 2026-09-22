@@ -1,5 +1,5 @@
 class const Version(final int major, final int minor, final int patch) {
-  factory Version.parse(
+  factory parse(
     String text, {
     String delimiter = '.',
     bool strict = false,

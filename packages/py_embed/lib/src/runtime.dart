@@ -2,11 +2,8 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
 
-import 'package:meta/meta.dart';
-
 import 'binding/api.dart';
 import 'env/env_args.dart';
-import 'binding/shared.dart';
 import 'common.dart';
 
 enum _State { idle, running, closed }
@@ -23,7 +20,8 @@ final class _Runtime._() {
     switch (state) {
       case .idle:
         executablePath ??= getPyExecutableFromShellSync();
-        api.initPy(executablePath);
+        // !important: 避免循环初始化
+        $singleApi.initPy(executablePath);
         state = .running;
       case .running:
         return;
@@ -33,10 +31,11 @@ final class _Runtime._() {
   }
 
   T execute<T>(T Function() operation) {
-    init();
     try {
       final result = operation();
       // TODO: error check
+      if (api.getLastError() != 0) {}
+
       return result;
     } finally {}
   }

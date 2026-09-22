@@ -18,6 +18,119 @@ class NativeLibrary {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
+  ffi.Pointer<PyObject> PyErr_Occurred() {
+    return _PyErr_Occurred();
+  }
+
+  late final _PyErr_OccurredPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function()>>(
+        'PyErr_Occurred',
+      );
+  late final _PyErr_Occurred =
+      _PyErr_OccurredPtr.asFunction<ffi.Pointer<PyObject> Function()>();
+
+  double PyFloat_AsDouble(ffi.Pointer<PyObject> arg0) {
+    return _PyFloat_AsDouble(arg0);
+  }
+
+  late final _PyFloat_AsDoublePtr =
+      _lookup<ffi.NativeFunction<ffi.Double Function(ffi.Pointer<PyObject>)>>(
+        'PyFloat_AsDouble',
+      );
+  late final _PyFloat_AsDouble =
+      _PyFloat_AsDoublePtr.asFunction<double Function(ffi.Pointer<PyObject>)>();
+
+  int PyLong_AsLong(ffi.Pointer<PyObject> arg0) {
+    return _PyLong_AsLong(arg0);
+  }
+
+  late final _PyLong_AsLongPtr =
+      _lookup<ffi.NativeFunction<ffi.Long Function(ffi.Pointer<PyObject>)>>(
+        'PyLong_AsLong',
+      );
+  late final _PyLong_AsLong =
+      _PyLong_AsLongPtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
+
+  ffi.Pointer<PyObject> PyObject_GetAttrString(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<ffi.Char> arg1,
+  ) {
+    return _PyObject_GetAttrString(arg0, arg1);
+  }
+
+  late final _PyObject_GetAttrStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('PyObject_GetAttrString');
+  late final _PyObject_GetAttrString =
+      _PyObject_GetAttrStringPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
+
+  int PyObject_HasAttrString(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<ffi.Char> arg1,
+  ) {
+    return _PyObject_HasAttrString(arg0, arg1);
+  }
+
+  late final _PyObject_HasAttrStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
+        >
+      >('PyObject_HasAttrString');
+  late final _PyObject_HasAttrString =
+      _PyObject_HasAttrStringPtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
+      >();
+
+  int PyObject_IsTrue(ffi.Pointer<PyObject> arg0) {
+    return _PyObject_IsTrue(arg0);
+  }
+
+  late final _PyObject_IsTruePtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<PyObject>)>>(
+        'PyObject_IsTrue',
+      );
+  late final _PyObject_IsTrue =
+      _PyObject_IsTruePtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
+
+  int PyObject_SetAttrString(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<ffi.Char> arg1,
+    ffi.Pointer<PyObject> arg2,
+  ) {
+    return _PyObject_SetAttrString(arg0, arg1, arg2);
+  }
+
+  late final _PyObject_SetAttrStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_SetAttrString');
+  late final _PyObject_SetAttrString =
+      _PyObject_SetAttrStringPtr.asFunction<
+        int Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   int PyRun_SimpleString(ffi.Pointer<ffi.Char> s) {
     return _PyRun_SimpleString(s);
   }
@@ -40,6 +153,17 @@ class NativeLibrary {
   late final _PyStatus_Exception =
       _PyStatus_ExceptionPtr.asFunction<int Function(PyStatus)>();
 
+  void Py_DecRef(ffi.Pointer<PyObject> arg0) {
+    return _Py_DecRef(arg0);
+  }
+
+  late final _Py_DecRefPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<PyObject>)>>(
+        'Py_DecRef',
+      );
+  late final _Py_DecRef =
+      _Py_DecRefPtr.asFunction<void Function(ffi.Pointer<PyObject>)>();
+
   void Py_Finalize() {
     return _Py_Finalize();
   }
@@ -48,6 +172,17 @@ class NativeLibrary {
     'Py_Finalize',
   );
   late final _Py_Finalize = _Py_FinalizePtr.asFunction<void Function()>();
+
+  void Py_IncRef(ffi.Pointer<PyObject> arg0) {
+    return _Py_IncRef(arg0);
+  }
+
+  late final _Py_IncRefPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<PyObject>)>>(
+        'Py_IncRef',
+      );
+  late final _Py_IncRef =
+      _Py_IncRefPtr.asFunction<void Function(ffi.Pointer<PyObject>)>();
 }
 
 typedef PyObject = _object;

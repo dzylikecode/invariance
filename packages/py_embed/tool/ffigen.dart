@@ -15,16 +15,16 @@ Future<void> main() async {
   final sharedSource = packageRoot.resolve('tool/shared.cpp');
   final shared = await readDeclarations(sharedSource);
 
-  await generateShared(
-    lib.Version.parse(versions.first),
-    packageRoot,
-    funcs: shared.funcs,
-    structs: shared.structs,
-    typealiases: shared.aliases,
-  );
-
+  final sharedOutputs = <({String version, String dart, String symbols})>[];
   for (final value in versions) {
     final version = lib.Version.parse(value);
+    await generateShared(
+      version,
+      packageRoot,
+      funcs: shared.funcs,
+      structs: shared.structs,
+      typealiases: shared.aliases,
+    );
     final specificSource = packageRoot.resolve(
       'tool/py_${version.format(delimiter: '_')}.cpp',
     );
@@ -37,6 +37,22 @@ Future<void> main() async {
       typealiases: specific.aliases,
     );
     await generateVersionWrapper(version, packageRoot);
+    sharedOutputs.add((
+      version: value,
+      dart: await File.fromUri(
+        packageRoot.resolve('lib/src/binding/shared.g.dart'),
+      ).readAsString(),
+      symbols: await File.fromUri(
+        packageRoot.resolve('lib/src/binding/shared.symbols.yaml'),
+      ).readAsString(),
+    ));
+  }
+
+  final first = sharedOutputs.first;
+  for (final output in sharedOutputs.skip(1)) {
+    if (output.dart != first.dart || output.symbols != first.symbols) {
+      throw StateError('Shared bindings differ: ${first.version} vs ${output.version}');
+    }
   }
 }
 

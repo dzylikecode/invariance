@@ -9,6 +9,11 @@ import 'posix_3_10_21.dart' as posix_3_10_21;
 import 'shared.g.dart' as shared;
 import '../env/env_args.dart';
 
+import '../runtime.dart';
+
+export 'shared.dart';
+
+final $singleApi = _getApi();
 final api = getApi();
 
 abstract class PlatformBaseApi {
@@ -18,7 +23,7 @@ abstract class PlatformBaseApi {
 abstract interface class BaseApi
     implements shared.NativeLibrary, PlatformBaseApi;
 
-BaseApi getApi() =>
+BaseApi _getApi() =>
     switch ((pyVersion.major, pyVersion.minor, pyVersion.patch)) {
       (3, 8, _) when Platform.isWindows => windows_3_8_20.Api(pyDll),
       (3, 8, _) when !Platform.isWindows => posix_3_8_20.Api(pyDll),
@@ -28,3 +33,8 @@ BaseApi getApi() =>
       (3, 10, _) when !Platform.isWindows => posix_3_10_21.Api(pyDll),
       _ => throw UnimplementedError('$pyVersion is not supported now'),
     };
+
+BaseApi getApi() {
+  pyRuntime.init(); // 这里面以及调用的都不能有对 api 的调用，否则会导致循环依赖
+  return $singleApi;
+}
