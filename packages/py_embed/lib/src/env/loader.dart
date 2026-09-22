@@ -33,28 +33,24 @@ DynamicLibrary openEx(String path) {
   if (Platform.isWindows) return .open(path);
 
   // linux system
-  if (Platform.isLinux || Platform.isAndroid || Platform.isFuchsia) {
-    return using((arena) {
-      _dlerror(); // Clear a previous dynamic-loader error.
-      final handle = _dlopen(
-        path.toNativeUtf8(allocator: arena).cast(),
-        _rtldNow | _rtldGlobal,
+  return using((arena) {
+    _dlerror(); // Clear a previous dynamic-loader error.
+    final handle = _dlopen(
+      path.toNativeUtf8(allocator: arena).cast(),
+      _rtldNow | _rtldGlobal,
+    );
+    if (handle == nullptr) {
+      final error = _dlerror();
+      final detail = error == nullptr
+          ? 'unknown dynamic-loader error'
+          : error.cast<Utf8>().toDartString();
+      throw ArgumentError.value(
+        path,
+        'path',
+        'Failed to load library: $detail',
       );
-      if (handle == nullptr) {
-        final error = _dlerror();
-        final detail = error == nullptr
-            ? 'unknown dynamic-loader error'
-            : error.cast<Utf8>().toDartString();
-        throw ArgumentError.value(
-          path,
-          'path',
-          'Failed to load library: $detail',
-        );
-      }
+    }
 
-      return .process();
-    });
-  }
-
-  throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+    return .process();
+  });
 }
