@@ -48,10 +48,11 @@ class _PyConfig._(final Pointer<g.PyConfig> ptr) {
 }
 
 void initPy(String path) {
-  final config = _PyConfig()
-    ..executable = path
-    ..programName = path;
+  final config = _PyConfig();
   try {
+    config
+      ..executable = path
+      ..programName = path;
     _api.Py_InitializeFromConfig(config.ptr).guard();
   } finally {
     config.dispose();

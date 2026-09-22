@@ -21,6 +21,7 @@ using platformAlias = std::tuple<Py_ssize_t>;
 const auto funcs = std::tuple{
     &Py_Finalize,
     &PyStatus_Exception,
+    &PyRun_SimpleString,
 };
 
 using structs = std::tuple<PyStatus>;

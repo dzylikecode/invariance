@@ -18,6 +18,17 @@ class NativeLibrary {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
+  int PyRun_SimpleString(ffi.Pointer<ffi.Char> s) {
+    return _PyRun_SimpleString(s);
+  }
+
+  late final _PyRun_SimpleStringPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Char>)>>(
+        'PyRun_SimpleString',
+      );
+  late final _PyRun_SimpleString =
+      _PyRun_SimpleStringPtr.asFunction<int Function(ffi.Pointer<ffi.Char>)>();
+
   int PyStatus_Exception(PyStatus err) {
     return _PyStatus_Exception(err);
   }

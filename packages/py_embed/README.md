@@ -1,5 +1,8 @@
 # py embed
 
+- 选择了 python 就不要在意速度，而是实现
+
+
 ## quick start
 
 ```bash
