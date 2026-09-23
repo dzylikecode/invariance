@@ -10,6 +10,12 @@ import 'windows_3_9_25.dart' as windows_3_9_25;
 import 'posix_3_9_25.dart' as posix_3_9_25;
 import 'windows_3_10_21.dart' as windows_3_10_21;
 import 'posix_3_10_21.dart' as posix_3_10_21;
+import 'windows_3_11_16.dart' as windows_3_11_16;
+import 'posix_3_11_16.dart' as posix_3_11_16;
+import 'windows_3_12_14.dart' as windows_3_12_14;
+import 'posix_3_12_14.dart' as posix_3_12_14;
+import 'windows_3_13_15.dart' as windows_3_13_15;
+import 'posix_3_13_15.dart' as posix_3_13_15;
 import 'shared.g.dart' as shared;
 import '../env/env_args.dart';
 
@@ -78,6 +84,12 @@ BaseApi _getApi() =>
       (3, 9, _) when !Platform.isWindows => posix_3_9_25.Api(pyDll),
       (3, 10, _) when Platform.isWindows => windows_3_10_21.Api(pyDll),
       (3, 10, _) when !Platform.isWindows => posix_3_10_21.Api(pyDll),
+      (3, 11, _) when Platform.isWindows => windows_3_11_16.Api(pyDll),
+      (3, 11, _) when !Platform.isWindows => posix_3_11_16.Api(pyDll),
+      (3, 12, _) when Platform.isWindows => windows_3_12_14.Api(pyDll),
+      (3, 12, _) when !Platform.isWindows => posix_3_12_14.Api(pyDll),
+      (3, 13, _) when Platform.isWindows => windows_3_13_15.Api(pyDll),
+      (3, 13, _) when !Platform.isWindows => posix_3_13_15.Api(pyDll),
       _ => throw UnimplementedError('$pyVersion is not supported now'),
     };
 
