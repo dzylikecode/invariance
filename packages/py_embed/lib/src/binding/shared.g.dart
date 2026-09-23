@@ -18,6 +18,17 @@ class NativeLibrary {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
+  ffi.Pointer<PyObject> PyBool_FromLong(int arg0) {
+    return _PyBool_FromLong(arg0);
+  }
+
+  late final _PyBool_FromLongPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function(ffi.Long)>>(
+        'PyBool_FromLong',
+      );
+  late final _PyBool_FromLong =
+      _PyBool_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
+
   ffi.Pointer<PyObject> PyErr_Occurred() {
     return _PyErr_Occurred();
   }
@@ -40,6 +51,34 @@ class NativeLibrary {
   late final _PyFloat_AsDouble =
       _PyFloat_AsDoublePtr.asFunction<double Function(ffi.Pointer<PyObject>)>();
 
+  ffi.Pointer<PyObject> PyFloat_FromDouble(double arg0) {
+    return _PyFloat_FromDouble(arg0);
+  }
+
+  late final _PyFloat_FromDoublePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function(ffi.Double)>>(
+        'PyFloat_FromDouble',
+      );
+  late final _PyFloat_FromDouble =
+      _PyFloat_FromDoublePtr.asFunction<
+        ffi.Pointer<PyObject> Function(double)
+      >();
+
+  ffi.Pointer<PyObject> PyImport_Import(ffi.Pointer<PyObject> name) {
+    return _PyImport_Import(name);
+  }
+
+  late final _PyImport_ImportPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyImport_Import');
+  late final _PyImport_Import =
+      _PyImport_ImportPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
   int PyLong_AsLong(ffi.Pointer<PyObject> arg0) {
     return _PyLong_AsLong(arg0);
   }
@@ -50,6 +89,17 @@ class NativeLibrary {
       );
   late final _PyLong_AsLong =
       _PyLong_AsLongPtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
+
+  ffi.Pointer<PyObject> PyLong_FromLong(int arg0) {
+    return _PyLong_FromLong(arg0);
+  }
+
+  late final _PyLong_FromLongPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function(ffi.Long)>>(
+        'PyLong_FromLong',
+      );
+  late final _PyLong_FromLong =
+      _PyLong_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
 
   ffi.Pointer<PyObject> PyObject_GetAttrString(
     ffi.Pointer<PyObject> arg0,
@@ -131,6 +181,21 @@ class NativeLibrary {
         )
       >();
 
+  ffi.Pointer<PyObject> PyObject_Str(ffi.Pointer<PyObject> arg0) {
+    return _PyObject_Str(arg0);
+  }
+
+  late final _PyObject_StrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyObject_Str');
+  late final _PyObject_Str =
+      _PyObject_StrPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
   int PyRun_SimpleString(ffi.Pointer<ffi.Char> s) {
     return _PyRun_SimpleString(s);
   }
@@ -152,6 +217,36 @@ class NativeLibrary {
       );
   late final _PyStatus_Exception =
       _PyStatus_ExceptionPtr.asFunction<int Function(PyStatus)>();
+
+  ffi.Pointer<ffi.Char> PyUnicode_AsUTF8(ffi.Pointer<PyObject> unicode) {
+    return _PyUnicode_AsUTF8(unicode);
+  }
+
+  late final _PyUnicode_AsUTF8Ptr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyUnicode_AsUTF8');
+  late final _PyUnicode_AsUTF8 =
+      _PyUnicode_AsUTF8Ptr.asFunction<
+        ffi.Pointer<ffi.Char> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyUnicode_FromString(ffi.Pointer<ffi.Char> u) {
+    return _PyUnicode_FromString(u);
+  }
+
+  late final _PyUnicode_FromStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+        >
+      >('PyUnicode_FromString');
+  late final _PyUnicode_FromString =
+      _PyUnicode_FromStringPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+      >();
 
   void Py_DecRef(ffi.Pointer<PyObject> arg0) {
     return _Py_DecRef(arg0);

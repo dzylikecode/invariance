@@ -19,6 +19,14 @@ const auto funcs = std::tuple{
     &PyObject_IsTrue,
     &PyLong_AsLong,
     &PyFloat_AsDouble,
+    &PyObject_Str,
+    &PyUnicode_AsUTF8,
+
+    &PyLong_FromLong,
+    &PyFloat_FromDouble,
+    &PyBool_FromLong,
+    &PyImport_Import,
+    &PyUnicode_FromString,
 };
 
 using structs = std::tuple<PyStatus>;
