@@ -1,3 +1,4 @@
+// ignore_for_file: non_constant_identifier_names
 import 'dart:io';
 import 'dart:ffi';
 
@@ -30,19 +31,40 @@ abstract class PlatformBaseApi {
   void initPy(String path);
 
   /// 由于 PySize 不同
-  // ignore: non_constant_identifier_names
   Pointer<shared.PyObject> PyTuple_New(int size);
-  // ignore: non_constant_identifier_names
+  int PyTuple_Size(Pointer<shared.PyObject> obj);
   int PyTuple_SetItem(
     Pointer<shared.PyObject> obj,
     int index,
     Pointer<shared.PyObject> item,
   );
-  // ignore: non_constant_identifier_names
   Pointer<shared.PyObject> PyTuple_GetItem(
     Pointer<shared.PyObject> obj,
     int index,
   );
+
+  Pointer<shared.PyObject> PyList_New(int size);
+  int PyList_Size(Pointer<shared.PyObject> obj);
+  int PyList_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  );
+  Pointer<shared.PyObject> PyList_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  );
+  int PyList_Append(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> item,
+  );
+  int PyList_Insert(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  );
+  int PyList_Sort(Pointer<shared.PyObject> obj);
+  int PyList_Reverse(Pointer<shared.PyObject> obj);
 }
 
 abstract interface class BaseApi

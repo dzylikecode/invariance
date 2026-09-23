@@ -51,6 +51,12 @@ conda activate py_embed_3_9_25
 
 > 选取 3.8.20 是因为 mac M 系列只支持部分的 3.8，所以就干脆只有最后一个版本
 
+### update platform api
+
+1. 更新各个版本的 cpp, 然后运行 ffigen.dart
+2. 在 api.dart 提出需要的 PlatformBaseApi
+3. 在 version.dart.template 中实现，然后再运行 ffigen.dart
+
 ## xmake
 
 > [!NOTE]

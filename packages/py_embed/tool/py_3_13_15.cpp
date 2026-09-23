@@ -10,10 +10,21 @@ const auto funcs = std::tuple{
     &PyConfig_Clear,
 
     &PyTuple_New,
+    &PyTuple_Size,
     &PyTuple_SetItem,
     &PyTuple_GetItem,
+
+    &PyList_New,
+    &PyList_Size,
+    &PyList_SetItem,
+    &PyList_GetItem,
+    &PyList_Append,
+    &PyList_Insert,
+    &PyList_Sort,
+    &PyList_Reverse,
 };
 
 using structs = std::tuple<PyConfig>;
 
 using alias = std::tuple<Py_ssize_t>;
+

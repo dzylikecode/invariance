@@ -155,15 +155,18 @@ class PyModule(String moduleName) extends PyObject {
         ),
       );
 }
+
 /// tuple
-/// 
+///
 /// [PyTuple] 会管理接管所有权:
 /// {@example /test/tuple_test.dart#tuple-take-the-ownership}
 class PyTuple(int size) extends PyObject {
   this : super(.own(api.PyTuple_New(size)));
 
+  int get length => api.PyTuple_Size(ptr);
+
   /// Set the item at [index] in the tuple to [item].
-  /// 
+  ///
   /// [item] 只是被借用，所以不得释放
   void setItem(int index, PyObject item) {
     final result = checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
@@ -175,6 +178,25 @@ class PyTuple(int size) extends PyObject {
   PyObject getItem(int index) {
     // PyTuple_GetItem returns a borrowed reference
     final item = checked(() => api.PyTuple_GetItem(ptr, index));
+    if (item == nullptr) {
+      throw StateError('Failed to get item at index $index');
+    }
+    return .borrow(item);
+  }
+}
+
+class PyList(int size) extends PyObject {
+  this : super(.own(api.PyList_New(size)));
+
+  void setItem(int index, PyObject item) {
+    final result = checked(() => api.PyList_SetItem(ptr, index, item.ptr));
+    if (result != 0) {
+      throw StateError('Failed to set item at index $index');
+    }
+  }
+
+  PyObject getItem(int index) {
+    final item = checked(() => api.PyList_GetItem(ptr, index));
     if (item == nullptr) {
       throw StateError('Failed to get item at index $index');
     }

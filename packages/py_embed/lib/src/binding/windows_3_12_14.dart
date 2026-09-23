@@ -1,3 +1,4 @@
+// ignore_for_file: non_constant_identifier_names
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
@@ -66,6 +67,9 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
   Pointer<shared.PyObject> PyTuple_New(int size) => _api.PyTuple_New(size);
 
   @override
+  int PyTuple_Size(Pointer<shared.PyObject> obj) => _api.PyTuple_Size(obj);
+
+  @override
   Pointer<shared.PyObject> PyTuple_GetItem(
     Pointer<shared.PyObject> obj,
     int index,
@@ -77,6 +81,44 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
     int index,
     Pointer<shared.PyObject> item,
   ) => _api.PyTuple_SetItem(obj, index, item);
+
+  @override
+  Pointer<shared.PyObject> PyList_New(int size) => _api.PyList_New(size);
+
+  @override
+  int PyList_Size(Pointer<shared.PyObject> obj) => _api.PyList_Size(obj);
+
+  @override
+  int PyList_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyList_SetItem(obj, index, item);
+
+  @override
+  Pointer<shared.PyObject> PyList_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  ) => _api.PyList_GetItem(obj, index);
+
+  @override
+  int PyList_Append(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyList_Append(obj, item);
+
+  @override
+  int PyList_Insert(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyList_Insert(obj, index, item);
+
+  @override
+  int PyList_Sort(Pointer<shared.PyObject> obj) => _api.PyList_Sort(obj);
+
+  @override
+  int PyList_Reverse(Pointer<shared.PyObject> obj) => _api.PyList_Reverse(obj);
 }
 
 final class Api(super.dynamicLibrary)

@@ -71,6 +71,154 @@ class NativeLibrary {
         )
       >();
 
+  int PyList_Append(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    ffi.Pointer<imp$1.PyObject$1> arg1,
+  ) {
+    return _PyList_Append(arg0, arg1);
+  }
+
+  late final _PyList_AppendPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            ffi.Pointer<imp$1.PyObject$1>,
+          )
+        >
+      >('PyList_Append');
+  late final _PyList_Append =
+      _PyList_AppendPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          ffi.Pointer<imp$1.PyObject$1>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject$1> PyList_GetItem(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    int arg1,
+  ) {
+    return _PyList_GetItem(arg0, arg1);
+  }
+
+  late final _PyList_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject$1> Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            Py_ssize_t,
+          )
+        >
+      >('PyList_GetItem');
+  late final _PyList_GetItem =
+      _PyList_GetItemPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject$1> Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+        )
+      >();
+
+  int PyList_Insert(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    int arg1,
+    ffi.Pointer<imp$1.PyObject$1> arg2,
+  ) {
+    return _PyList_Insert(arg0, arg1, arg2);
+  }
+
+  late final _PyList_InsertPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            Py_ssize_t,
+            ffi.Pointer<imp$1.PyObject$1>,
+          )
+        >
+      >('PyList_Insert');
+  late final _PyList_Insert =
+      _PyList_InsertPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+          ffi.Pointer<imp$1.PyObject$1>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject$1> PyList_New(int size) {
+    return _PyList_New(size);
+  }
+
+  late final _PyList_NewPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<imp$1.PyObject$1> Function(Py_ssize_t)>
+      >('PyList_New');
+  late final _PyList_New =
+      _PyList_NewPtr.asFunction<ffi.Pointer<imp$1.PyObject$1> Function(int)>();
+
+  int PyList_Reverse(ffi.Pointer<imp$1.PyObject$1> arg0) {
+    return _PyList_Reverse(arg0);
+  }
+
+  late final _PyList_ReversePtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Int Function(ffi.Pointer<imp$1.PyObject$1>)>
+      >('PyList_Reverse');
+  late final _PyList_Reverse =
+      _PyList_ReversePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject$1>)
+      >();
+
+  int PyList_SetItem(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    int arg1,
+    ffi.Pointer<imp$1.PyObject$1> arg2,
+  ) {
+    return _PyList_SetItem(arg0, arg1, arg2);
+  }
+
+  late final _PyList_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            Py_ssize_t,
+            ffi.Pointer<imp$1.PyObject$1>,
+          )
+        >
+      >('PyList_SetItem');
+  late final _PyList_SetItem =
+      _PyList_SetItemPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+          ffi.Pointer<imp$1.PyObject$1>,
+        )
+      >();
+
+  int PyList_Size(ffi.Pointer<imp$1.PyObject$1> arg0) {
+    return _PyList_Size(arg0);
+  }
+
+  late final _PyList_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject$1>)>
+      >('PyList_Size');
+  late final _PyList_Size =
+      _PyList_SizePtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject$1>)>();
+
+  int PyList_Sort(ffi.Pointer<imp$1.PyObject$1> arg0) {
+    return _PyList_Sort(arg0);
+  }
+
+  late final _PyList_SortPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Int Function(ffi.Pointer<imp$1.PyObject$1>)>
+      >('PyList_Sort');
+  late final _PyList_Sort =
+      _PyList_SortPtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject$1>)>();
+
   ffi.Pointer<imp$1.PyObject$1> PyTuple_GetItem(
     ffi.Pointer<imp$1.PyObject$1> arg0,
     int arg1,
@@ -131,6 +279,19 @@ class NativeLibrary {
           int,
           ffi.Pointer<imp$1.PyObject$1>,
         )
+      >();
+
+  int PyTuple_Size(ffi.Pointer<imp$1.PyObject$1> arg0) {
+    return _PyTuple_Size(arg0);
+  }
+
+  late final _PyTuple_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject$1>)>
+      >('PyTuple_Size');
+  late final _PyTuple_Size =
+      _PyTuple_SizePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject$1>)
       >();
 
   imp$1.PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
