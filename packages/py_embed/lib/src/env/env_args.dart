@@ -78,7 +78,7 @@ String getPyDllPathFromVenvSync([String pyExe = 'python']) {
     ),
     _ when Platform.isWindows => p.join(
       basePrefix,
-      'python${version.major}.${version.minor}.dll',
+      'python${version.major}${version.minor}.dll',
     ),
     _ when Platform.isMacOS => p.join(
       basePrefix,

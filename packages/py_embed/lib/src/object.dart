@@ -157,22 +157,8 @@ class PyModule(String moduleName) extends PyObject {
 }
 /// tuple
 /// 
-/// [PyTuple] 会管理接管所有权
-/// 
-/// ```c
-/// PyObject *tuple = PyTuple_New(1);
-/// PyObject *item = PyUnicode_FromString("hello"); // 新引用，计数 1
-///
-/// PyTuple_SetItem(tuple, 0, item); // 引用转交给 tuple，计数仍为 1
-///
-/// // item 变量还存着地址，但它不再拥有引用。
-/// // 这里不能 Py_DECREF(item)。
-///
-/// Py_DECREF(tuple); // tuple 销毁 → 对元素 DECREF → item 计数归零，释放
-/// ```
-/// 
-/// 这里就相当于 item 被转交给了 [PyTuple]，所以 [PyTuple] 会负责释放它。
-/// 
+/// [PyTuple] 会管理接管所有权:
+/// {@example /test/tuple_test.dart#tuple-take-the-ownership}
 class PyTuple(int size) extends PyObject {
   this : super(.own(api.PyTuple_New(size)));
 
