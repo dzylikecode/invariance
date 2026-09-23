@@ -29,6 +29,60 @@ class NativeLibrary {
   late final _PyBool_FromLong =
       _PyBool_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
 
+  void PyErr_Fetch(
+    ffi.Pointer<ffi.Pointer<PyObject>> arg0,
+    ffi.Pointer<ffi.Pointer<PyObject>> arg1,
+    ffi.Pointer<ffi.Pointer<PyObject>> arg2,
+  ) {
+    return _PyErr_Fetch(arg0, arg1, arg2);
+  }
+
+  late final _PyErr_FetchPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+          )
+        >
+      >('PyErr_Fetch');
+  late final _PyErr_Fetch =
+      _PyErr_FetchPtr.asFunction<
+        void Function(
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+        )
+      >();
+
+  void PyErr_NormalizeException(
+    ffi.Pointer<ffi.Pointer<PyObject>> arg0,
+    ffi.Pointer<ffi.Pointer<PyObject>> arg1,
+    ffi.Pointer<ffi.Pointer<PyObject>> arg2,
+  ) {
+    return _PyErr_NormalizeException(arg0, arg1, arg2);
+  }
+
+  late final _PyErr_NormalizeExceptionPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+            ffi.Pointer<ffi.Pointer<PyObject>>,
+          )
+        >
+      >('PyErr_NormalizeException');
+  late final _PyErr_NormalizeException =
+      _PyErr_NormalizeExceptionPtr.asFunction<
+        void Function(
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+          ffi.Pointer<ffi.Pointer<PyObject>>,
+        )
+      >();
+
   ffi.Pointer<PyObject> PyErr_Occurred() {
     return _PyErr_Occurred();
   }
@@ -39,6 +93,15 @@ class NativeLibrary {
       );
   late final _PyErr_Occurred =
       _PyErr_OccurredPtr.asFunction<ffi.Pointer<PyObject> Function()>();
+
+  void PyErr_Print() {
+    return _PyErr_Print();
+  }
+
+  late final _PyErr_PrintPtr = _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+    'PyErr_Print',
+  );
+  late final _PyErr_Print = _PyErr_PrintPtr.asFunction<void Function()>();
 
   double PyFloat_AsDouble(ffi.Pointer<PyObject> arg0) {
     return _PyFloat_AsDouble(arg0);
@@ -64,19 +127,34 @@ class NativeLibrary {
         ffi.Pointer<PyObject> Function(double)
       >();
 
-  ffi.Pointer<PyObject> PyImport_Import(ffi.Pointer<PyObject> name) {
-    return _PyImport_Import(name);
+  ffi.Pointer<PyObject> PyImport_AddModule(ffi.Pointer<ffi.Char> name) {
+    return _PyImport_AddModule(name);
   }
 
-  late final _PyImport_ImportPtr =
+  late final _PyImport_AddModulePtr =
       _lookup<
         ffi.NativeFunction<
-          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+          ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
         >
-      >('PyImport_Import');
-  late final _PyImport_Import =
-      _PyImport_ImportPtr.asFunction<
-        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >('PyImport_AddModule');
+  late final _PyImport_AddModule =
+      _PyImport_AddModulePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+      >();
+
+  ffi.Pointer<PyObject> PyImport_ImportModule(ffi.Pointer<ffi.Char> name) {
+    return _PyImport_ImportModule(name);
+  }
+
+  late final _PyImport_ImportModulePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+        >
+      >('PyImport_ImportModule');
+  late final _PyImport_ImportModule =
+      _PyImport_ImportModulePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
       >();
 
   int PyLong_AsLong(ffi.Pointer<PyObject> arg0) {

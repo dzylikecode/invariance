@@ -24,7 +24,7 @@ class PyRef.fromHandle(
   }
 }
 
-class PyObject(final PyRef _ptr) {
+class const PyObject(final PyRef _ptr) {
   Pointer<g.PyObject> get ptr => _ptr.ptr;
 
   factory own(Pointer<g.PyObject> ptr) => .new(.own(ptr));
@@ -33,23 +33,7 @@ class PyObject(final PyRef _ptr) {
   void dispose() => _ptr.dispose();
 
   @override
-  String toString() {
-    final strObj = api.PyObject_Str(ptr);
-
-    if (strObj == nullptr) {
-      throw StateError('Failed to convert PyObject to string');
-    }
-
-    try {
-      final utf8 = api.PyUnicode_AsUTF8(strObj);
-      if (utf8 == nullptr) {
-        throw StateError('Failed to convert PyObject to UTF-8 string');
-      }
-      return utf8.cast<ffi.Utf8>().toDartString();
-    } finally {
-      api.Py_DecRef(strObj);
-    }
-  }
+  String toString() => api.convertToString(ptr);
 }
 
 extension PyObjectAttributes on PyObject {
@@ -156,17 +140,18 @@ class PyString(String value) extends PyObject {
 class PyModule(String moduleName) extends PyObject {
   this
     : super(
-        .own(ffi.using((arena) {
-          final name = PyString(moduleName);
-          try {
-            final module = checked(() => api.PyImport_Import(name.ptr));
+        .own(
+          ffi.using((arena) {
+            final module = checked(
+              () => api.PyImport_ImportModule(
+                moduleName.toNativeUtf8(allocator: arena).cast<Char>(),
+              ),
+            );
             if (module == nullptr) {
               throw StateError('Failed to import Python module "$moduleName"');
             }
             return module;
-          } finally {
-            name.dispose();
-          }
-        }))
+          }),
+        ),
       );
 }

@@ -42,8 +42,9 @@ final class _Runtime._() {
 T checked<T>(T Function() operation) {
   try {
     final result = operation();
-    // TODO: error check
-    if (api.getLastError() != 0) {}
+    if (api.getLastError() case final PyException error) {
+      throw error;
+    }
 
     return result;
   } finally {}
