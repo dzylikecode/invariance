@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
+import 'package:meta/meta.dart';
 
 import 'binding/api.dart';
 import 'env/env_args.dart';
@@ -30,16 +31,6 @@ final class _Runtime._() {
     }
   }
 
-  T execute<T>(T Function() operation) {
-    try {
-      final result = operation();
-      // TODO: error check
-      if (api.getLastError() != 0) {}
-
-      return result;
-    } finally {}
-  }
-
   void dispose() {
     if (state == .closed) return;
     if (state == .running) api.Py_Finalize();
@@ -47,14 +38,23 @@ final class _Runtime._() {
   }
 }
 
-T runPythonZone<T>(T Function() operation) => pyRuntime.execute(operation);
+@internal
+T checked<T>(T Function() operation) {
+  try {
+    final result = operation();
+    // TODO: error check
+    if (api.getLastError() != 0) {}
+
+    return result;
+  } finally {}
+}
 
 /// execute python code
 ///
 /// {@example ../../example/hello_world.dart}
-void runString(String code) => runPythonZone(
-  () => ffi.using(
-    (arena) => api.PyRun_SimpleString(
+void runString(String code) => ffi.using(
+  (arena) => checked(
+    () => api.PyRun_SimpleString(
       code.toNativeUtf8(allocator: arena).cast<Char>(),
     ),
   ),

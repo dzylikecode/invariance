@@ -7,10 +7,18 @@ set_languages("c++17")
 ---------------------------------------------------------
 --- Examples
 ---------------------------------------------------------
-for _, file in ipairs(os.files("tool/*.cpp")) do
+for _, file in ipairs(os.files("tool/py_*.cpp")) do
     local name = path.basename(file)
+    local major, minor, patch = name:match("^py_(%d+)_(%d+)_(%d+)$")
+    local version = table.concat({major, minor, patch}, ".")
+
     target(name)
-      set_kind("binary")
+      set_kind("shared")
       add_files(file)
-      add_includedirs("dist/3.8.20/include", {public = true})
+      add_includedirs(path.join("dist", version, "include"), {public = true})
 end
+
+target("shared")
+  set_kind("shared")
+  add_files("tool/shared.cpp")
+  add_includedirs(path.join("dist", "3.8.20", "include"), {public = true})

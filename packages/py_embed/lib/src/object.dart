@@ -12,10 +12,8 @@ class PyObject.fromHandle(
 }) {
   Pointer<g.PyObject> get ptr => _ptr;
 
-  factory own(Pointer<g.PyObject> ptr) =>
-      PyObject.fromHandle(ptr, isBorrowed: false);
-  factory borrow(Pointer<g.PyObject> ptr) =>
-      PyObject.fromHandle(ptr, isBorrowed: true);
+  factory own(Pointer<g.PyObject> ptr) => .fromHandle(ptr, isBorrowed: false);
+  factory borrow(Pointer<g.PyObject> ptr) => .fromHandle(ptr, isBorrowed: true);
 
   void dispose() {
     if (_ptr == nullptr) return;
@@ -30,41 +28,41 @@ extension PyObjectAttributes on PyObject {
   /// Get the [attribute] of a Python object by name.
   ///
   /// [attribute] must exist, otherwise a [StateError] will be thrown.
-  PyObject get(String attribute) => runPythonZone(
-    () => ffi.using((arena) {
-      final obj = api.PyObject_GetAttrString(
+  PyObject get(String attribute) => ffi.using((arena) {
+    final obj = checked(
+      () => api.PyObject_GetAttrString(
         ptr,
         attribute.toNativeUtf8(allocator: arena).cast<Char>(),
-      );
-      if (obj == nullptr) {
-        // throw StateError('Attribute "$attribute" not found on Python object.');
-      }
-      return .fromHandle(obj);
-    }),
-  );
+      ),
+    );
+    if (obj == nullptr) {
+      throw StateError('Attribute "$attribute" not found');
+    }
+    return .own(obj);
+  });
 
-  void set(String attribute, PyObject value) => runPythonZone(
-    () => ffi.using((arena) {
-      final result = api.PyObject_SetAttrString(
+  void set(String attribute, PyObject value) => ffi.using((arena) {
+    final result = checked(
+      () => api.PyObject_SetAttrString(
         ptr,
         attribute.toNativeUtf8(allocator: arena).cast<Char>(),
         value.ptr,
-      );
-      if (result != 0) {
-        // throwPythonException(context: "setting attribute '$attribute'");
-      }
-    }),
-  );
+      ),
+    );
+    if (result != 0) {
+      throw StateError('Failed to set attribute "$attribute"');
+    }
+  });
 
-  bool has(String attribute) => runPythonZone(
-    () => ffi.using((arena) {
-      final result = api.PyObject_HasAttrString(
+  bool has(String attribute) => ffi.using((arena) {
+    final result = checked(
+      () => api.PyObject_HasAttrString(
         ptr,
         attribute.toNativeUtf8(allocator: arena).cast<Char>(),
-      );
-      return result != 0;
-    }),
-  );
+      ),
+    );
+    return result != 0;
+  });
 
   int getInt(String attribute) {
     final attr = get(attribute);
@@ -95,7 +93,7 @@ extension PyObjectAttributes on PyObject {
 }
 
 extension PyObjectConverter on PyObject {
-  int toInt() => runPythonZone(() => api.PyLong_AsLong(ptr));
-  double toDouble() => runPythonZone(() => api.PyFloat_AsDouble(ptr));
-  bool toBool() => runPythonZone(() => api.PyObject_IsTrue(ptr) != 0);
+  int toInt() => checked(() => api.PyLong_AsLong(ptr));
+  double toDouble() => checked(() => api.PyFloat_AsDouble(ptr));
+  bool toBool() => checked(() => api.PyObject_IsTrue(ptr) != 0);
 }

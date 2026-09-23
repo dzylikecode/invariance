@@ -6,7 +6,14 @@ import 'package:py_embed/src/common.dart' as lib;
 import 'utils/fetch_header.dart';
 import 'utils/generate_version_wrapper.dart';
 
-const versions = ['3.8.20', '3.9.25', '3.10.21', '3.11.16', '3.12.14', '3.13.15'];
+const versions = [
+  '3.8.20',
+  '3.9.25',
+  '3.10.21',
+  '3.11.16',
+  '3.12.14',
+  '3.13.15',
+];
 
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
@@ -51,7 +58,21 @@ Future<void> main() async {
   final first = sharedOutputs.first;
   for (final output in sharedOutputs.skip(1)) {
     if (output.dart != first.dart || output.symbols != first.symbols) {
-      throw StateError('Shared bindings differ: ${first.version} vs ${output.version}');
+      final temp = Directory.fromUri(packageRoot.resolve('temp/'));
+      for (final value in [first, output]) {
+        final directory = Directory.fromUri(
+          temp.uri.resolve('${value.version}/'),
+        );
+        await directory.create(recursive: true);
+        await File.fromUri(directory.uri.resolve('shared.g.dart'))
+            .writeAsString(value.dart);
+        await File.fromUri(directory.uri.resolve('shared.symbols.yaml'))
+            .writeAsString(value.symbols);
+      }
+      throw StateError(
+        'Shared bindings differ: ${first.version} vs ${output.version}. '
+        'Comparison files written to ${temp.path}',
+      );
     }
   }
 }
