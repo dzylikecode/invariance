@@ -155,3 +155,22 @@ class PyModule(String moduleName) extends PyObject {
         ),
       );
 }
+
+class PyTuple(int size) extends PyObject {
+  this : super(.own(api.PyTuple_New(size)));
+
+  void setItem(int index, PyObject item) {
+    final result = checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
+    if (result != 0) {
+      throw StateError('Failed to set item at index $index');
+    }
+  }
+
+  PyObject getItem(int index) {
+    final item = checked(() => api.PyTuple_GetItem(ptr, index));
+    if (item == nullptr) {
+      throw StateError('Failed to get item at index $index');
+    }
+    return PyObject.own(item);
+  }
+}

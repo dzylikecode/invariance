@@ -127,21 +127,6 @@ class NativeLibrary {
         ffi.Pointer<PyObject> Function(double)
       >();
 
-  ffi.Pointer<PyObject> PyImport_AddModule(ffi.Pointer<ffi.Char> name) {
-    return _PyImport_AddModule(name);
-  }
-
-  late final _PyImport_AddModulePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
-        >
-      >('PyImport_AddModule');
-  late final _PyImport_AddModule =
-      _PyImport_AddModulePtr.asFunction<
-        ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
-      >();
-
   ffi.Pointer<PyObject> PyImport_ImportModule(ffi.Pointer<ffi.Char> name) {
     return _PyImport_ImportModule(name);
   }
@@ -295,6 +280,55 @@ class NativeLibrary {
       );
   late final _PyStatus_Exception =
       _PyStatus_ExceptionPtr.asFunction<int Function(PyStatus)>();
+
+  ffi.Pointer<PyObject> PyTuple_GetItem(ffi.Pointer<PyObject> arg0, int arg1) {
+    return _PyTuple_GetItem(arg0, arg1);
+  }
+
+  late final _PyTuple_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>, ffi.IntPtr)
+        >
+      >('PyTuple_GetItem');
+  late final _PyTuple_GetItem =
+      _PyTuple_GetItemPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>, int)
+      >();
+
+  ffi.Pointer<PyObject> PyTuple_New(int size) {
+    return _PyTuple_New(size);
+  }
+
+  late final _PyTuple_NewPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function(ffi.IntPtr)>>(
+        'PyTuple_New',
+      );
+  late final _PyTuple_New =
+      _PyTuple_NewPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
+
+  int PyTuple_SetItem(
+    ffi.Pointer<PyObject> arg0,
+    int arg1,
+    ffi.Pointer<PyObject> arg2,
+  ) {
+    return _PyTuple_SetItem(arg0, arg1, arg2);
+  }
+
+  late final _PyTuple_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<PyObject>,
+            ffi.IntPtr,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyTuple_SetItem');
+  late final _PyTuple_SetItem =
+      _PyTuple_SetItemPtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, int, ffi.Pointer<PyObject>)
+      >();
 
   ffi.Pointer<ffi.Char> PyUnicode_AsUTF8(ffi.Pointer<PyObject> unicode) {
     return _PyUnicode_AsUTF8(unicode);
