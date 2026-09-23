@@ -186,6 +186,7 @@ class NativeLibrary {
 }
 
 typedef PyObject = _object;
+typedef PyObject$1 = _object;
 
 final class PyStatus extends ffi.Struct {
   @ffi.UnsignedInt()

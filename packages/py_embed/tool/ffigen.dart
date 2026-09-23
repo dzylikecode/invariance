@@ -6,7 +6,7 @@ import 'package:py_embed/src/common.dart' as lib;
 import 'utils/fetch_header.dart';
 import 'utils/generate_version_wrapper.dart';
 
-const versions = ['3.8.20', '3.9.25', '3.10.21'];
+const versions = ['3.8.20', '3.9.25', '3.10.21', '3.11.16', '3.12.14', '3.13.15'];
 
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
