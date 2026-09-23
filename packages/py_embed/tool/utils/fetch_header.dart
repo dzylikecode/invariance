@@ -87,62 +87,68 @@ Future<Directory> fetchRepo(String version, Directory cacheDir) async {
 
 Future<File> getPyConfig(Directory sourceRoot, String version) async {
   if (Platform.isWindows) {
-    final pyConfig = File(p.join(sourceRoot.path, 'PC', 'pyconfig.h'));
-    if (await pyConfig.exists()) {
-      return pyConfig;
-    }
-    final pcbuild = Directory(p.join(sourceRoot.path, 'PCbuild'));
-    final project = File(p.join(pcbuild.path, 'pythoncore.vcxproj'));
-    if (!await project.exists()) {
-      throw StateError('Missing CPython PCbuild project in ${pcbuild.path}');
-    }
-
-    final versionParts = version.split('.');
-    final versionTag = '${versionParts[0]}${versionParts[1]}';
-
-    // CPython 3.13+ generates pyconfig.h from PC/pyconfig.h.in. Invoke only
-    // its MSBuild target, rather than build.bat: the latter also locates (or
-    // downloads) a Python interpreter for the complete CPython build.
-    final generated = File(
-      p.join(
-        pcbuild.path,
-        'obj',
-        '${versionTag}amd64_Release',
-        'pythoncore',
-        'pyconfig.h',
-      ),
-    );
-    if (!await generated.exists()) {
-      stdout.writeln('Generating ${generated.path} with PCbuild');
-      final msBuild = await _findMsBuild();
-      final result = await Process.run(
-        msBuild,
-        [
-          project.path,
-          '/t:_UpdatePyconfig',
-          '/nologo',
-          '/v:m',
-          '/p:Configuration=Release',
-          '/p:Platform=x64',
-        ],
-        workingDirectory: pcbuild.path,
-      );
-      if (result.exitCode != 0) {
-        throw ProcessException(
-          project.path,
-          ['/t:_UpdatePyconfig', '/p:Configuration=Release', '/p:Platform=x64'],
-          '${result.stdout}${result.stderr}',
-          result.exitCode,
-        );
-      }
-    }
-
-    if (!await generated.exists()) {
-      throw StateError('PCbuild did not generate ${generated.path}');
-    }
-    return generated;
+    return getPyConfigWin(sourceRoot, version);
   }
 
+  return getPyConfigPosix(sourceRoot);
+}
+
+Future<File> getPyConfigWin(Directory sourceRoot, String version) async {
+  final pyConfig = File(p.join(sourceRoot.path, 'PC', 'pyconfig.h'));
+  // CPython <= 3.12 会自带 pyconfig.h
+  if (await pyConfig.exists()) return pyConfig;
+  // CPython 3.13+ 会在 PCbuild 目录下生成 pyconfig.h
+  final pcbuild = Directory(p.join(sourceRoot.path, 'PCbuild'));
+  final project = File(p.join(pcbuild.path, 'pythoncore.vcxproj'));
+  if (!await project.exists()) {
+    throw StateError('Missing CPython PCbuild project in ${pcbuild.path}');
+  }
+
+  final versionParts = version.split('.');
+  final versionTag = '${versionParts[0]}${versionParts[1]}';
+  final generated = File(
+    p.join(
+      pcbuild.path,
+      'obj',
+      '${versionTag}amd64_Release',
+      'pythoncore',
+      'pyconfig.h',
+    ),
+  );
+  if (!await generated.exists()) {
+    // CPython 3.13+ generates pyconfig.h from PC/pyconfig.h.in. Invoke only
+    // its MSBuild target: build.bat would also locate or download Python.
+    stdout.writeln('Generating ${generated.path} with PCbuild');
+    final msBuild = await _findMsBuild();
+    final result = await Process.run(
+      msBuild,
+      [
+        project.path,
+        '/t:_UpdatePyconfig',
+        '/nologo',
+        '/v:m',
+        '/p:Configuration=Release',
+        '/p:Platform=x64',
+      ],
+      workingDirectory: pcbuild.path,
+    );
+    if (result.exitCode != 0) {
+      throw ProcessException(
+        project.path,
+        ['/t:_UpdatePyconfig', '/p:Configuration=Release', '/p:Platform=x64'],
+        '${result.stdout}${result.stderr}',
+        result.exitCode,
+      );
+    }
+  }
+
+  if (!await generated.exists()) {
+    throw StateError('PCbuild did not generate ${generated.path}');
+  }
+  return generated;
+}
+
+Future<File> getPyConfigPosix(Directory sourceRoot) async {
   final pyConfig = File(p.join(sourceRoot.path, 'pyconfig.h'));
   if (await pyConfig.exists()) {
     stdout.writeln('Using generated ${pyConfig.path}');
