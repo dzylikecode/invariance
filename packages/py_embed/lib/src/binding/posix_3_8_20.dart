@@ -4,7 +4,6 @@ import 'package:ffi/ffi.dart' as ffi;
 
 import 'posix_3_8_20.g.dart' as g;
 import 'utils.dart';
-import 'shared.dart';
 import 'shared.g.dart' as shared;
 
 import '../env/env_args.dart';

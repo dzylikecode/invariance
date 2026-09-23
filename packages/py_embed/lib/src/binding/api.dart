@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:meta/meta.dart';
+
 import 'windows_3_8_20.dart' as windows_3_8_20;
 import 'posix_3_8_20.dart' as posix_3_8_20;
 import 'windows_3_9_25.dart' as windows_3_9_25;
@@ -13,7 +15,14 @@ import '../runtime.dart';
 
 export 'shared.dart';
 
+/// 避免循环依赖创建的，只是在 [pyRuntime].init() 的时候使用
+/// 
+/// [getApi] -> [pyRuntime].init() -> [$singleApi].initPy() -> gurad()
+@internal
 final $singleApi = _getApi();
+
+/// 对于 native 的统一接口
+@internal
 final api = getApi();
 
 abstract class PlatformBaseApi {
@@ -35,6 +44,6 @@ BaseApi _getApi() =>
     };
 
 BaseApi getApi() {
-  pyRuntime.init(); // 这里面以及调用的都不能有对 api 的调用，否则会导致循环依赖
+  pyRuntime.init();
   return $singleApi;
 }
