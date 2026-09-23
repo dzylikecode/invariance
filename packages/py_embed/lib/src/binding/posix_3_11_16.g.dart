@@ -71,6 +71,68 @@ class NativeLibrary {
         )
       >();
 
+  ffi.Pointer<imp$1.PyObject$1> PyTuple_GetItem(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    int arg1,
+  ) {
+    return _PyTuple_GetItem(arg0, arg1);
+  }
+
+  late final _PyTuple_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject$1> Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            Py_ssize_t,
+          )
+        >
+      >('PyTuple_GetItem');
+  late final _PyTuple_GetItem =
+      _PyTuple_GetItemPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject$1> Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject$1> PyTuple_New(int size) {
+    return _PyTuple_New(size);
+  }
+
+  late final _PyTuple_NewPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<imp$1.PyObject$1> Function(Py_ssize_t)>
+      >('PyTuple_New');
+  late final _PyTuple_New =
+      _PyTuple_NewPtr.asFunction<ffi.Pointer<imp$1.PyObject$1> Function(int)>();
+
+  int PyTuple_SetItem(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
+    int arg1,
+    ffi.Pointer<imp$1.PyObject$1> arg2,
+  ) {
+    return _PyTuple_SetItem(arg0, arg1, arg2);
+  }
+
+  late final _PyTuple_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject$1>,
+            Py_ssize_t,
+            ffi.Pointer<imp$1.PyObject$1>,
+          )
+        >
+      >('PyTuple_SetItem');
+  late final _PyTuple_SetItem =
+      _PyTuple_SetItemPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+          ffi.Pointer<imp$1.PyObject$1>,
+        )
+      >();
+
   imp$1.PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
     return _Py_InitializeFromConfig(config);
   }
@@ -265,4 +327,4 @@ final class PyWideStringList extends ffi.Struct {
     ..ref.items = items;
 }
 
-typedef Py_ssize_t = ffi.IntPtr;
+typedef Py_ssize_t = ffi.Long;
