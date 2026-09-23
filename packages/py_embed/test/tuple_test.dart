@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:py_embed/py_embed.dart';
-import 'package:py_embed/src/debug.dart';
+import 'package:py_embed/debug.dart';
 
 void main() {
   test('tuple: take the ownership', () {

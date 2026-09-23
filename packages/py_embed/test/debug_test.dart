@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:py_embed/src/binding/api.dart';
-import 'package:py_embed/src/debug.dart';
+import 'package:py_embed/debug.dart';
 
 void main() {
   test('getRefCount', () {

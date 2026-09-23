@@ -1,8 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'object.dart';
-import 'binding/shared.g.dart' as g;
+import 'src/object.dart';
+import 'src/binding/shared.g.dart' as g;
 
 final class PyObjectDebugWin extends Struct {
   @LongLong()
