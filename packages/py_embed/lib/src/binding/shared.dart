@@ -70,6 +70,7 @@ extension ApiExt on BaseApi {
     }
   }
 
+  // ignore: non_constant_identifier_names
   void Py_XDECREF(Pointer<g.PyObject> obj) {
     if (obj != nullptr) {
       Py_DecRef(obj);

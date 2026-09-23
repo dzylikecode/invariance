@@ -8,8 +8,13 @@ const auto funcs = std::tuple{
     &PyConfig_SetString,
     &Py_InitializeFromConfig,
     &PyConfig_Clear,
+
+    &PyTuple_New,
+    &PyTuple_SetItem,
+    &PyTuple_GetItem,
 };
 
 using structs = std::tuple<PyConfig>;
 
 using alias = std::tuple<Py_ssize_t>;
+

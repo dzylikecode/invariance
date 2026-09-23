@@ -61,6 +61,22 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
       config.dispose();
     }
   }
+
+  @override
+  Pointer<shared.PyObject> PyTuple_New(int size) => _api.PyTuple_New(size);
+
+  @override
+  Pointer<shared.PyObject> PyTuple_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  ) => _api.PyTuple_GetItem(obj, index);
+
+  @override
+  int PyTuple_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyTuple_SetItem(obj, index, item);
 }
 
 final class Api(super.dynamicLibrary)

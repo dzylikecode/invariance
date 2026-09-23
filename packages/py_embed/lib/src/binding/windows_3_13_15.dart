@@ -2,7 +2,7 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
 
-import 'windows_3_9_25.g.dart' as g;
+import 'windows_3_13_15.g.dart' as g;
 import 'utils.dart';
 import 'shared.g.dart' as shared;
 

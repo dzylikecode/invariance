@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ffi';
 
 import 'package:meta/meta.dart';
 
@@ -16,7 +17,7 @@ import '../runtime.dart';
 export 'shared.dart';
 
 /// 避免循环依赖创建的，只是在 [pyRuntime].init() 的时候使用
-/// 
+///
 /// [getApi] -> [pyRuntime].init() -> [$singleApi].initPy() -> gurad()
 @internal
 final $singleApi = _getApi();
@@ -27,6 +28,21 @@ final api = getApi();
 
 abstract class PlatformBaseApi {
   void initPy(String path);
+
+  /// 由于 PySize 不同
+  // ignore: non_constant_identifier_names
+  Pointer<shared.PyObject> PyTuple_New(int size);
+  // ignore: non_constant_identifier_names
+  int PyTuple_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  );
+  // ignore: non_constant_identifier_names
+  Pointer<shared.PyObject> PyTuple_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  );
 }
 
 abstract interface class BaseApi

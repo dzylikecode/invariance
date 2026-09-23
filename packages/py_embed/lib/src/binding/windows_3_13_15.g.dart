@@ -71,8 +71,8 @@ class NativeLibrary {
         )
       >();
 
-  ffi.Pointer<imp$1.PyObject> PyTuple_GetItem(
-    ffi.Pointer<imp$1.PyObject> arg0,
+  ffi.Pointer<imp$1.PyObject$1> PyTuple_GetItem(
+    ffi.Pointer<imp$1.PyObject$1> arg0,
     int arg1,
   ) {
     return _PyTuple_GetItem(arg0, arg1);
@@ -81,32 +81,35 @@ class NativeLibrary {
   late final _PyTuple_GetItemPtr =
       _lookup<
         ffi.NativeFunction<
-          ffi.Pointer<imp$1.PyObject> Function(
-            ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject$1> Function(
+            ffi.Pointer<imp$1.PyObject$1>,
             Py_ssize_t,
           )
         >
       >('PyTuple_GetItem');
   late final _PyTuple_GetItem =
       _PyTuple_GetItemPtr.asFunction<
-        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>, int)
+        ffi.Pointer<imp$1.PyObject$1> Function(
+          ffi.Pointer<imp$1.PyObject$1>,
+          int,
+        )
       >();
 
-  ffi.Pointer<imp$1.PyObject> PyTuple_New(int size) {
+  ffi.Pointer<imp$1.PyObject$1> PyTuple_New(int size) {
     return _PyTuple_New(size);
   }
 
   late final _PyTuple_NewPtr =
       _lookup<
-        ffi.NativeFunction<ffi.Pointer<imp$1.PyObject> Function(Py_ssize_t)>
+        ffi.NativeFunction<ffi.Pointer<imp$1.PyObject$1> Function(Py_ssize_t)>
       >('PyTuple_New');
   late final _PyTuple_New =
-      _PyTuple_NewPtr.asFunction<ffi.Pointer<imp$1.PyObject> Function(int)>();
+      _PyTuple_NewPtr.asFunction<ffi.Pointer<imp$1.PyObject$1> Function(int)>();
 
   int PyTuple_SetItem(
-    ffi.Pointer<imp$1.PyObject> arg0,
+    ffi.Pointer<imp$1.PyObject$1> arg0,
     int arg1,
-    ffi.Pointer<imp$1.PyObject> arg2,
+    ffi.Pointer<imp$1.PyObject$1> arg2,
   ) {
     return _PyTuple_SetItem(arg0, arg1, arg2);
   }
@@ -115,18 +118,18 @@ class NativeLibrary {
       _lookup<
         ffi.NativeFunction<
           ffi.Int Function(
-            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject$1>,
             Py_ssize_t,
-            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject$1>,
           )
         >
       >('PyTuple_SetItem');
   late final _PyTuple_SetItem =
       _PyTuple_SetItemPtr.asFunction<
         int Function(
-          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject$1>,
           int,
-          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject$1>,
         )
       >();
 
@@ -170,19 +173,24 @@ final class PyConfig extends ffi.Struct {
   external int faulthandler;
 
   @ffi.Int()
-  external int _use_peg_parser;
-
-  @ffi.Int()
   external int tracemalloc;
 
   @ffi.Int()
+  external int perf_profiling;
+
+  @ffi.Int()
   external int import_time;
+
+  @ffi.Int()
+  external int code_debug_ranges;
 
   @ffi.Int()
   external int show_ref_count;
 
   @ffi.Int()
   external int dump_refs;
+
+  external ffi.Pointer<ffi.WChar> dump_refs_file;
 
   @ffi.Int()
   external int malloc_stats;
@@ -196,9 +204,9 @@ final class PyConfig extends ffi.Struct {
   @ffi.Int()
   external int parse_argv;
 
-  external PyWideStringList argv;
+  external PyWideStringList orig_argv;
 
-  external ffi.Pointer<ffi.WChar> program_name;
+  external PyWideStringList argv;
 
   external PyWideStringList xoptions;
 
@@ -209,6 +217,9 @@ final class PyConfig extends ffi.Struct {
 
   @ffi.Int()
   external int bytes_warning;
+
+  @ffi.Int()
+  external int warn_default_encoding;
 
   @ffi.Int()
   external int inspect;
@@ -250,16 +261,34 @@ final class PyConfig extends ffi.Struct {
   external ffi.Pointer<ffi.WChar> check_hash_pycs_mode;
 
   @ffi.Int()
+  external int use_frozen_modules;
+
+  @ffi.Int()
+  external int safe_path;
+
+  @ffi.Int()
+  external int int_max_str_digits;
+
+  @ffi.Int()
+  external int cpu_count;
+
+  @ffi.Int()
   external int pathconfig_warnings;
+
+  external ffi.Pointer<ffi.WChar> program_name;
 
   external ffi.Pointer<ffi.WChar> pythonpath_env;
 
   external ffi.Pointer<ffi.WChar> home;
 
+  external ffi.Pointer<ffi.WChar> platlibdir;
+
   @ffi.Int()
   external int module_search_paths_set;
 
   external PyWideStringList module_search_paths;
+
+  external ffi.Pointer<ffi.WChar> stdlib_dir;
 
   external ffi.Pointer<ffi.WChar> executable;
 
@@ -273,8 +302,6 @@ final class PyConfig extends ffi.Struct {
 
   external ffi.Pointer<ffi.WChar> base_exec_prefix;
 
-  external ffi.Pointer<ffi.WChar> platlibdir;
-
   @ffi.Int()
   external int skip_source_first_line;
 
@@ -284,6 +311,8 @@ final class PyConfig extends ffi.Struct {
 
   external ffi.Pointer<ffi.WChar> run_filename;
 
+  external ffi.Pointer<ffi.WChar> sys_path_0;
+
   @ffi.Int()
   external int _install_importlib;
 
@@ -291,9 +320,7 @@ final class PyConfig extends ffi.Struct {
   external int _init_main;
 
   @ffi.Int()
-  external int _isolated_interpreter;
-
-  external PyWideStringList _orig_argv;
+  external int _is_python_build;
 }
 
 final class PyWideStringList extends ffi.Struct {
@@ -312,3 +339,4 @@ final class PyWideStringList extends ffi.Struct {
 }
 
 typedef Py_ssize_t = ffi.LongLong;
+typedef DartPy_ssize_t = int;

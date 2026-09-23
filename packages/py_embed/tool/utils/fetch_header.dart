@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:console_bars/console_bars.dart';
-
+import 'package:py_embed/src/common.dart' as lib;
 
 Future<void> fetchHeaders(List<String> versions, Uri packageRoot) async {
   final rootDir = Directory.fromUri(packageRoot);
@@ -40,17 +40,9 @@ Future<void> _fetchHeaders({
     await _copyDirectory(sourceInclude, targetInclude);
   }
 
-  final pyConfig = await getPyConfig(repoDir);
+  final pyConfig = await getPyConfig(repoDir, version);
   final pyConfigTagetPath = p.join(targetInclude.path, 'pyconfig.h');
   await pyConfig.copy(pyConfigTagetPath);
-  // 为了 Py_ssize_t 变为 uintptr
-  final targetPyConfig = File(pyConfigTagetPath);
-  final content = await targetPyConfig.readAsString();
-  const original = '#define HAVE_SSIZE_T 1';
-  await targetPyConfig.writeAsString(
-    content.replaceFirst(original, '#undef HAVE_SSIZE_T'),
-  );
-  print('Wrote $targetInclude');
 }
 
 Future<Directory> fetchRepo(String version, Directory cacheDir) async {
@@ -93,9 +85,62 @@ Future<Directory> fetchRepo(String version, Directory cacheDir) async {
   return repoDir;
 }
 
-Future<File> getPyConfig(Directory sourceRoot) async {
+Future<File> getPyConfig(Directory sourceRoot, String version) async {
   if (Platform.isWindows) {
-    return File(p.join(sourceRoot.path, 'PC', 'pyconfig.h'));
+    final pyConfig = File(p.join(sourceRoot.path, 'PC', 'pyconfig.h'));
+    if (await pyConfig.exists()) {
+      return pyConfig;
+    }
+    final pcbuild = Directory(p.join(sourceRoot.path, 'PCbuild'));
+    final project = File(p.join(pcbuild.path, 'pythoncore.vcxproj'));
+    if (!await project.exists()) {
+      throw StateError('Missing CPython PCbuild project in ${pcbuild.path}');
+    }
+
+    final versionParts = version.split('.');
+    final versionTag = '${versionParts[0]}${versionParts[1]}';
+
+    // CPython 3.13+ generates pyconfig.h from PC/pyconfig.h.in. Invoke only
+    // its MSBuild target, rather than build.bat: the latter also locates (or
+    // downloads) a Python interpreter for the complete CPython build.
+    final generated = File(
+      p.join(
+        pcbuild.path,
+        'obj',
+        '${versionTag}amd64_Release',
+        'pythoncore',
+        'pyconfig.h',
+      ),
+    );
+    if (!await generated.exists()) {
+      stdout.writeln('Generating ${generated.path} with PCbuild');
+      final msBuild = await _findMsBuild();
+      final result = await Process.run(
+        msBuild,
+        [
+          project.path,
+          '/t:_UpdatePyconfig',
+          '/nologo',
+          '/v:m',
+          '/p:Configuration=Release',
+          '/p:Platform=x64',
+        ],
+        workingDirectory: pcbuild.path,
+      );
+      if (result.exitCode != 0) {
+        throw ProcessException(
+          project.path,
+          ['/t:_UpdatePyconfig', '/p:Configuration=Release', '/p:Platform=x64'],
+          '${result.stdout}${result.stderr}',
+          result.exitCode,
+        );
+      }
+    }
+
+    if (!await generated.exists()) {
+      throw StateError('PCbuild did not generate ${generated.path}');
+    }
+    return generated;
   }
 
   final pyConfig = File(p.join(sourceRoot.path, 'pyconfig.h'));
@@ -128,6 +173,49 @@ Future<File> getPyConfig(Directory sourceRoot) async {
   }
 
   return pyConfig;
+}
+
+Future<String> _findMsBuild() async {
+  final onPath = await Process.run('where.exe', ['msbuild.exe']);
+  if (onPath.exitCode == 0) {
+    final path = (onPath.stdout as String).split(RegExp(r'\r?\n')).first.trim();
+    if (path.isNotEmpty) return path;
+  }
+
+  final programFilesX86 = Platform.environment['ProgramFiles(x86)'];
+  if (programFilesX86 != null) {
+    final vswhere = File(
+      p.join(
+        programFilesX86,
+        'Microsoft Visual Studio',
+        'Installer',
+        'vswhere.exe',
+      ),
+    );
+    if (await vswhere.exists()) {
+      final result = await Process.run(vswhere.path, [
+        '-latest',
+        '-prerelease',
+        '-products',
+        '*',
+        '-requires',
+        'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+        '-property',
+        'installationPath',
+      ]);
+      if (result.exitCode == 0) {
+        final installPath = (result.stdout as String).trim();
+        for (final version in ['Current', '15.0']) {
+          final msBuild = File(
+            p.join(installPath, 'MSBuild', version, 'Bin', 'MSBuild.exe'),
+          );
+          if (await msBuild.exists()) return msBuild.path;
+        }
+      }
+    }
+  }
+
+  throw StateError('Unable to locate MSBuild.exe');
 }
 
 Future<void> _download(
