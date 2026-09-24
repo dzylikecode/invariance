@@ -24,4 +24,17 @@ void main() {
     tuple.dispose();
     expect(obj.refCount, equals(0)); // tuple 会释放 obj
   });
+
+  test('guard out of range', () {
+    final tuple = PyTuple(1);
+
+    expect(
+      () => tuple.getItem(2),
+      throwsA(
+        isA<PyException>()
+            .having((e) => e.type, 'type', contains('IndexError'))
+            .having((e) => e.message, 'message', "tuple index out of range"),
+      ),
+    );
+  });
 }

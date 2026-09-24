@@ -7,30 +7,31 @@ import 'binding/api.dart';
 import 'runtime.dart';
 
 class PyRef.fromHandle(
-  var Pointer<g.PyObject> _ref, {
+  var Pointer<g.PyObject> _ptr, {
   required final bool _isBorrowed,
 }) {
-  Pointer<g.PyObject> get ptr => _ref;
+  Pointer<g.PyObject> get ptr => _ptr;
 
   factory own(Pointer<g.PyObject> ptr) => .fromHandle(ptr, isBorrowed: false);
   factory borrow(Pointer<g.PyObject> ptr) => .fromHandle(ptr, isBorrowed: true);
 
+  void increment() => api.Py_IncRef(ptr);
+  void discrement() => api.Py_DecRef(ptr);
+
   void dispose() {
-    if (_ref == nullptr) return;
-    if (!_isBorrowed) {
-      api.Py_DecRef(_ref);
-    }
-    _ref = nullptr;
+    if (_ptr == nullptr) return;
+    if (!_isBorrowed) discrement();
+    _ptr = nullptr;
   }
 }
 
-class const PyObject(final PyRef _ptr) {
-  Pointer<g.PyObject> get ptr => _ptr.ptr;
+class const PyObject(final PyRef ref) {
+  Pointer<g.PyObject> get ptr => ref.ptr;
 
   factory own(Pointer<g.PyObject> ptr) => .new(.own(ptr));
   factory borrow(Pointer<g.PyObject> ptr) => .new(.borrow(ptr));
 
-  void dispose() => _ptr.dispose();
+  void dispose() => ref.dispose();
 
   @override
   String toString() => api.convertToString(ptr);
@@ -141,17 +142,13 @@ class PyModule(String moduleName) extends PyObject {
   this
     : super(
         .own(
-          ffi.using((arena) {
-            final module = checked(
+          ffi.using(
+            (arena) => checked(
               () => api.PyImport_ImportModule(
                 moduleName.toNativeUtf8(allocator: arena).cast<Char>(),
               ),
-            );
-            if (module == nullptr) {
-              throw StateError('Failed to import Python module "$moduleName"');
-            }
-            return module;
-          }),
+            ),
+          ),
         ),
       );
 }
@@ -168,38 +165,19 @@ class PyTuple(int size) extends PyObject {
   /// Set the item at [index] in the tuple to [item].
   ///
   /// [item] 只是被借用，所以不得释放
-  void setItem(int index, PyObject item) {
-    final result = checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
-    if (result != 0) {
-      throw StateError('Failed to set item at index $index');
-    }
-  }
+  void setItem(int index, PyObject item) =>
+      checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
 
-  PyObject getItem(int index) {
-    // PyTuple_GetItem returns a borrowed reference
-    final item = checked(() => api.PyTuple_GetItem(ptr, index));
-    if (item == nullptr) {
-      throw StateError('Failed to get item at index $index');
-    }
-    return .borrow(item);
-  }
+  PyObject getItem(int index) =>
+      .borrow(checked(() => api.PyTuple_GetItem(ptr, index)));
 }
 
 class PyList(int size) extends PyObject {
   this : super(.own(api.PyList_New(size)));
 
-  void setItem(int index, PyObject item) {
-    final result = checked(() => api.PyList_SetItem(ptr, index, item.ptr));
-    if (result != 0) {
-      throw StateError('Failed to set item at index $index');
-    }
-  }
+  void setItem(int index, PyObject item) =>
+      checked(() => api.PyList_SetItem(ptr, index, item.ptr));
 
-  PyObject getItem(int index) {
-    final item = checked(() => api.PyList_GetItem(ptr, index));
-    if (item == nullptr) {
-      throw StateError('Failed to get item at index $index');
-    }
-    return .borrow(item);
-  }
+  PyObject getItem(int index) =>
+      .borrow(checked(() => api.PyList_GetItem(ptr, index)));
 }
