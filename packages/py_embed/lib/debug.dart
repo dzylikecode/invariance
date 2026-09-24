@@ -4,14 +4,14 @@ import 'dart:io';
 import 'src/object.dart';
 import 'src/binding/shared.g.dart' as g;
 
-final class PyObjectDebugWin extends Struct {
+final class _PyObjectDebugWin extends Struct {
   @LongLong()
   external int count;
 
   external Pointer<Void> type;
 }
 
-final class PyObjectDebugPosix extends Struct {
+final class _PyObjectDebugPosix extends Struct {
   @Long()
   external int count;
 
@@ -23,5 +23,5 @@ extension PyObjectDebugExtension on PyObject {
 }
 
 int getRefCount(Pointer<g.PyObject> ptr) => Platform.isWindows
-    ? ptr.cast<PyObjectDebugWin>().ref.count
-    : ptr.cast<PyObjectDebugPosix>().ref.count;
+    ? ptr.cast<_PyObjectDebugWin>().ref.count
+    : ptr.cast<_PyObjectDebugPosix>().ref.count;

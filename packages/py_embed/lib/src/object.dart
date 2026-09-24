@@ -156,7 +156,7 @@ class PyModule(String moduleName) extends PyObject {
 /// tuple
 ///
 /// [PyTuple] 会管理接管所有权:
-/// {@example /test/tuple_test.dart#tuple-take-the-ownership}
+/// {@example /test/object_test.dart#tuple-take-the-ownership}
 class PyTuple(int size) extends PyObject {
   this : super(.own(api.PyTuple_New(size)));
 
@@ -170,14 +170,34 @@ class PyTuple(int size) extends PyObject {
 
   PyObject getItem(int index) =>
       .borrow(checked(() => api.PyTuple_GetItem(ptr, index)));
+
+  void operator []=(int index, PyObject item) => setItem(index, item);
+  PyObject operator [](int index) => getItem(index);
 }
 
 class PyList(int size) extends PyObject {
   this : super(.own(api.PyList_New(size)));
+
+  int get length => api.PyList_Size(ptr);
 
   void setItem(int index, PyObject item) =>
       checked(() => api.PyList_SetItem(ptr, index, item.ptr));
 
   PyObject getItem(int index) =>
       .borrow(checked(() => api.PyList_GetItem(ptr, index)));
+
+  /// ref++
+  void append(PyObject item) => checked(() => api.PyList_Append(ptr, item.ptr));
+  
+  /// ref++
+  void insert(int index, PyObject item) =>
+      checked(() => api.PyList_Insert(ptr, index, item.ptr));
+
+  void sort() => api.PyList_Sort(ptr);
+
+  void reverse() => api.PyList_Reverse(ptr);
+
+  void operator []=(int index, PyObject item) => setItem(index, item);
+  PyObject operator [](int index) => getItem(index);
 }
+

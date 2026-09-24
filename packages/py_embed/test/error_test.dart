@@ -5,8 +5,8 @@ void main() {
   runString("a = 5");
   final module = PyModule('__main__');
   test('found value', () {
-    final a = module.get('a');
-    expect(a.toInt(), equals(5));
+    final a = module.get('a').toInt();
+    expect(a, equals(5));
   });
 
   test('not found value', () {
