@@ -33,6 +33,9 @@ const auto funcs = std::tuple{
     &PyErr_Fetch,
     &PyErr_NormalizeException,
     &PyErr_Print,
+
+    &PyObject_Call,
+    &PyObject_CallObject,
 };
 
 using structs = std::tuple<PyStatus>;

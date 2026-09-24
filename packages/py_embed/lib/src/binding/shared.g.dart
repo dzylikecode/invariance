@@ -164,6 +164,57 @@ class NativeLibrary {
   late final _PyLong_FromLong =
       _PyLong_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
 
+  ffi.Pointer<PyObject> PyObject_Call(
+    ffi.Pointer<PyObject> callable,
+    ffi.Pointer<PyObject> args,
+    ffi.Pointer<PyObject> kwargs,
+  ) {
+    return _PyObject_Call(callable, args, kwargs);
+  }
+
+  late final _PyObject_CallPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_Call');
+  late final _PyObject_Call =
+      _PyObject_CallPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyObject_CallObject(
+    ffi.Pointer<PyObject> callable,
+    ffi.Pointer<PyObject> args,
+  ) {
+    return _PyObject_CallObject(callable, args);
+  }
+
+  late final _PyObject_CallObjectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_CallObject');
+  late final _PyObject_CallObject =
+      _PyObject_CallObjectPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   ffi.Pointer<PyObject> PyObject_GetAttrString(
     ffi.Pointer<PyObject> arg0,
     ffi.Pointer<ffi.Char> arg1,

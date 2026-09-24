@@ -113,6 +113,16 @@ extension PyObjectConverter on PyObject {
   bool toBool() => checked(() => api.PyObject_IsTrue(ptr) != 0);
 }
 
+extension PyObjectCall on PyObject {
+  PyObject call(PyTuple args, [PyDict? kwargs]) => checked(
+    () => .own(
+      api.PyObject_Call(ptr, args.ptr, kwargs == null ? nullptr : kwargs.ptr),
+    ),
+  );
+  PyObject call0() =>
+      checked(() => .own(api.PyObject_CallObject(ptr, nullptr)));
+}
+
 class PyInt(int value) extends PyObject {
   this : super(.own(api.PyLong_FromLong(value)));
 }
@@ -188,7 +198,7 @@ class PyList(int size) extends PyObject {
 
   /// ref++
   void append(PyObject item) => checked(() => api.PyList_Append(ptr, item.ptr));
-  
+
   /// ref++
   void insert(int index, PyObject item) =>
       checked(() => api.PyList_Insert(ptr, index, item.ptr));
@@ -201,3 +211,6 @@ class PyList(int size) extends PyObject {
   PyObject operator [](int index) => getItem(index);
 }
 
+class PyDict(int size) extends PyObject {
+  this : super(.own(api.PyList_New(size)));
+}
