@@ -22,6 +22,13 @@ const auto funcs = std::tuple{
     &PyList_Insert,
     &PyList_Sort,
     &PyList_Reverse,
+
+    &PyDict_New,
+    &PyDict_Size,
+    &PyDict_SetItem,
+    &PyDict_GetItem,
+    &PyDict_DelItem,
+    &PyDict_Clear,
 };
 
 using structs = std::tuple<PyConfig>;
