@@ -7,9 +7,9 @@ void main() {
     // #region tuple-take-the-ownership
     final tuple = PyTuple(1);
     // dart format off
-    final obj = PyTuple(1);  expect(obj.refCount, equals(1));
-    tuple[0] = obj;          expect(obj.refCount, equals(1));
-    tuple.dispose();         expect(obj.refCount, equals(0)); // tuple 释放 obj
+    final obj = PyTuple(1);  expect(obj.ref.count, equals(1));
+    tuple[0] = obj;          expect(obj.ref.count, equals(1));
+    tuple.dispose();         expect(obj.ref.count, equals(0)); // tuple 释放 obj
     // dart format on
     // #endregion
   });
@@ -17,9 +17,9 @@ void main() {
   test('tuple: take the ownership for primitive types', () {
     final tuple = PyTuple(1);
     // dart format off
-    final obj = PyDouble(1); expect(obj.refCount, equals(1));
-    tuple[0] = obj;          expect(obj.refCount, equals(1));
-    tuple.dispose();         expect(obj.refCount, equals(0));
+    final obj = PyDouble(1); expect(obj.ref.count, equals(1));
+    tuple[0] = obj;          expect(obj.ref.count, equals(1));
+    tuple.dispose();         expect(obj.ref.count, equals(0));
     // dart format on
   });
 
@@ -39,27 +39,27 @@ void main() {
   test("list: append won't take the ownership", () {
     final owner = PyList(1);
     // dart format off
-    final part = PyTuple(1); expect(part.refCount, equals(1));
-    owner.append(part);      expect(part.refCount, equals(2));
-    owner.dispose();         expect(part.refCount, equals(1));
+    final part = PyTuple(1); expect(part.ref.count, equals(1));
+    owner.append(part);      expect(part.ref.count, equals(2));
+    owner.dispose();         expect(part.ref.count, equals(1));
     // dart format on
   });
 
   test("list: insert won't take the ownership", () {
     final owner = PyList(1);
     // dart format off
-    final part = PyTuple(1); expect(part.refCount, equals(1));
-    owner.insert(0, part);   expect(part.refCount, equals(2));
-    owner.dispose();         expect(part.refCount, equals(1));
+    final part = PyTuple(1); expect(part.ref.count, equals(1));
+    owner.insert(0, part);   expect(part.ref.count, equals(2));
+    owner.dispose();         expect(part.ref.count, equals(1));
     // dart format on
   });
 
   test('list: take the ownership for primitive types', () {
     final owner = PyList(1);
     // dart format off
-    final obj = PyDouble(1); expect(obj.refCount, equals(1));
-    owner[0] = obj;          expect(obj.refCount, equals(1));
-    owner.dispose();         expect(obj.refCount, equals(0));
+    final obj = PyDouble(1); expect(obj.ref.count, equals(1));
+    owner[0] = obj;          expect(obj.ref.count, equals(1));
+    owner.dispose();         expect(obj.ref.count, equals(0));
     // dart format on
   });
 }

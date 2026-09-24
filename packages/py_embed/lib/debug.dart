@@ -18,8 +18,8 @@ final class _PyObjectDebugPosix extends Struct {
   external Pointer<Void> type;
 }
 
-extension PyObjectDebugExtension on PyObject {
-  int get refCount => getRefCount(ptr);
+extension PyRefDebugExtension on PyRef {
+  int get count => getRefCount(ptr);
 }
 
 int getRefCount(Pointer<g.PyObject> ptr) => Platform.isWindows
