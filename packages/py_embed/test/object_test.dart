@@ -10,7 +10,7 @@ void main() {
       // dart format off
       final obj = PyTuple(1);  expect(obj.ref.count, equals(1));
       tuple[0] = obj;          expect(obj.ref.count, equals(1));
-      tuple.dispose();         expect(obj.ref.count, equals(0)); // tuple 释放 obj
+      tuple.ref.discrement();  expect(obj.ref.count, equals(0)); // tuple 释放 obj
       // dart format on
       // #endregion
     });
@@ -20,7 +20,7 @@ void main() {
       // dart format off
       final obj = PyDouble(1); expect(obj.ref.count, equals(1));
       tuple[0] = obj;          expect(obj.ref.count, equals(1));
-      tuple.dispose();         expect(obj.ref.count, equals(0));
+      tuple.ref.discrement();  expect(obj.ref.count, equals(0));
       // dart format on
     });
 
@@ -32,11 +32,7 @@ void main() {
         throwsA(
           isA<PyException>()
               .having((e) => e.type, 'type', contains('IndexError'))
-              .having(
-                (e) => e.message,
-                'message',
-                "tuple index out of range",
-              ),
+              .having((e) => e.message, 'message', "tuple index out of range"),
         ),
       );
     });
@@ -47,8 +43,8 @@ void main() {
       final owner = PyList(1);
       // dart format off
       final part = PyTuple(1); expect(part.ref.count, equals(1));
-      owner.append(part);      expect(part.ref.count, equals(2));
-      owner.dispose();         expect(part.ref.count, equals(1));
+      owner.add(part);         expect(part.ref.count, equals(2));
+      owner.ref.discrement();  expect(part.ref.count, equals(1));
       // dart format on
     });
 
@@ -57,7 +53,7 @@ void main() {
       // dart format off
       final part = PyTuple(1); expect(part.ref.count, equals(1));
       owner.insert(0, part);   expect(part.ref.count, equals(2));
-      owner.dispose();         expect(part.ref.count, equals(1));
+      owner.ref.discrement();  expect(part.ref.count, equals(1));
       // dart format on
     });
 
@@ -66,7 +62,7 @@ void main() {
       // dart format off
       final obj = PyDouble(1); expect(obj.ref.count, equals(1));
       owner[0] = obj;          expect(obj.ref.count, equals(1));
-      owner.dispose();         expect(obj.ref.count, equals(0));
+      owner.ref.discrement();  expect(obj.ref.count, equals(0));
       // dart format on
     });
   });
