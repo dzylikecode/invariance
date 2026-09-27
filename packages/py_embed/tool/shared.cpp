@@ -4,6 +4,7 @@
 const auto funcs = std::tuple{
     &Py_Finalize,
     &PyRun_SimpleString,
+    &Py_IsInitialized,
     
     &PyStatus_Exception,
     &PyErr_Occurred,
@@ -36,9 +37,13 @@ const auto funcs = std::tuple{
 
     &PyObject_Call,
     &PyObject_CallObject,
+
+    &PyGILState_Ensure,
+    &PyGILState_Release,
+    &PyEval_SaveThread,
 };
 
 using structs = std::tuple<PyStatus>;
 
-using alias = std::tuple<PyObject>;
+using alias = std::tuple<PyObject, PyGILState_STATE, PyThreadState>;
 

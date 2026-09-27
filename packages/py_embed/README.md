@@ -57,6 +57,16 @@ conda activate py_embed_3_9_25
 2. 在 api.dart 提出需要的 PlatformBaseApi
 3. 在 version.dart.template 中实现，然后再运行 ffigen.dart
 
+## issue
+
+这里由于没有处理好并发
+
+```bash
+dart run test --concurrency=1
+```
+
+  
+
 ## xmake
 
 > [!NOTE]

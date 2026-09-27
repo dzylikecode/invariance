@@ -103,6 +103,17 @@ class NativeLibrary {
   );
   late final _PyErr_Print = _PyErr_PrintPtr.asFunction<void Function()>();
 
+  ffi.Pointer<PyThreadState> PyEval_SaveThread() {
+    return _PyEval_SaveThread();
+  }
+
+  late final _PyEval_SaveThreadPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyThreadState> Function()>>(
+        'PyEval_SaveThread',
+      );
+  late final _PyEval_SaveThread =
+      _PyEval_SaveThreadPtr.asFunction<ffi.Pointer<PyThreadState> Function()>();
+
   double PyFloat_AsDouble(ffi.Pointer<PyObject> arg0) {
     return _PyFloat_AsDouble(arg0);
   }
@@ -126,6 +137,28 @@ class NativeLibrary {
       _PyFloat_FromDoublePtr.asFunction<
         ffi.Pointer<PyObject> Function(double)
       >();
+
+  PyGILState_STATE PyGILState_Ensure() {
+    return PyGILState_STATE.fromValue(_PyGILState_Ensure());
+  }
+
+  late final _PyGILState_EnsurePtr =
+      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function()>>(
+        'PyGILState_Ensure',
+      );
+  late final _PyGILState_Ensure =
+      _PyGILState_EnsurePtr.asFunction<int Function()>();
+
+  void PyGILState_Release(PyGILState_STATE arg0) {
+    return _PyGILState_Release(arg0.value);
+  }
+
+  late final _PyGILState_ReleasePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.UnsignedInt)>>(
+        'PyGILState_Release',
+      );
+  late final _PyGILState_Release =
+      _PyGILState_ReleasePtr.asFunction<void Function(int)>();
 
   ffi.Pointer<PyObject> PyImport_ImportModule(ffi.Pointer<ffi.Char> name) {
     return _PyImport_ImportModule(name);
@@ -392,6 +425,29 @@ class NativeLibrary {
       );
   late final _Py_IncRef =
       _Py_IncRefPtr.asFunction<void Function(ffi.Pointer<PyObject>)>();
+
+  int Py_IsInitialized() {
+    return _Py_IsInitialized();
+  }
+
+  late final _Py_IsInitializedPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('Py_IsInitialized');
+  late final _Py_IsInitialized =
+      _Py_IsInitializedPtr.asFunction<int Function()>();
+}
+
+enum PyGILState_STATE {
+  PyGILState_LOCKED(0),
+  PyGILState_UNLOCKED(1);
+
+  final int value;
+  const PyGILState_STATE(this.value);
+
+  static PyGILState_STATE fromValue(int value) => switch (value) {
+    0 => PyGILState_LOCKED,
+    1 => PyGILState_UNLOCKED,
+    _ => throw ArgumentError('Unknown value for PyGILState_STATE: $value'),
+  };
 }
 
 typedef PyObject = _object;
@@ -421,4 +477,8 @@ final class PyStatus extends ffi.Struct {
     ..ref.exitcode = exitcode;
 }
 
+typedef PyThreadState = _ts;
+
 final class _object extends ffi.Opaque {}
+
+final class _ts extends ffi.Opaque {}
