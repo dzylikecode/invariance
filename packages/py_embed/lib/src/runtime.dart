@@ -30,7 +30,7 @@ final class _Runtime._() {
     executablePath ??= getPyExecutableFromShellSync();
     // !important: 避免循环初始化
     $singleApi.initPy(executablePath);
-    // _threadState = $singleApi.PyEval_SaveThread();
+    _threadState = $singleApi.PyEval_SaveThread();
   }
 
   void dispose() {
@@ -41,7 +41,7 @@ final class _Runtime._() {
 
 @internal
 T checked<T>(T Function() operation) {
-  // final state = api.PyGILState_Ensure();
+  final state = api.PyGILState_Ensure();
   try {
     final result = operation();
     if (api.getLastError() case final PyException error) {
@@ -50,7 +50,7 @@ T checked<T>(T Function() operation) {
 
     return result;
   } finally {
-    // api.PyGILState_Release(state);
+    api.PyGILState_Release(state);
   }
 }
 

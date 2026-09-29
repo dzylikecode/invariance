@@ -35,6 +35,9 @@ final api = getApi();
 abstract class PlatformBaseApi {
   void initPy(String path);
 
+  //-------------------------------------------
+  // ## tuple
+
   /// 由于 PySize 不同
   Pointer<shared.PyObject> PyTuple_New(int size);
   int PyTuple_Size(Pointer<shared.PyObject> obj);
@@ -47,6 +50,9 @@ abstract class PlatformBaseApi {
     Pointer<shared.PyObject> obj,
     int index,
   );
+
+  //-------------------------------------------
+  // ## list
 
   Pointer<shared.PyObject> PyList_New(int size);
   int PyList_Size(Pointer<shared.PyObject> obj);
@@ -70,6 +76,82 @@ abstract class PlatformBaseApi {
   );
   int PyList_Sort(Pointer<shared.PyObject> obj);
   int PyList_Reverse(Pointer<shared.PyObject> obj);
+
+  //-------------------------------------------
+  // ## dict
+
+  Pointer<shared.PyObject> PyDict_New();
+  int PyDict_Size(Pointer<shared.PyObject> obj);
+  int PyDict_SetItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+    Pointer<shared.PyObject> item,
+  );
+  Pointer<shared.PyObject> PyDict_GetItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  );
+  int PyDict_DelItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  );
+  void PyDict_Clear(Pointer<shared.PyObject> obj);
+  int PyDict_Next(
+    Pointer<shared.PyObject> obj,
+    Pointer<IntPtr> pos,
+    Pointer<Pointer<shared.PyObject>> key,
+    Pointer<Pointer<shared.PyObject>> value,
+  );
+  Pointer<shared.PyObject> PyDict_Keys(Pointer<shared.PyObject> obj);
+  Pointer<shared.PyObject> PyDict_Values(Pointer<shared.PyObject> obj);
+  Pointer<shared.PyObject> PyDict_Items(Pointer<shared.PyObject> obj);
+  Pointer<shared.PyObject> PyDict_Copy(Pointer<shared.PyObject> obj);
+  int PyDict_Contains(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  );
+  int PyDict_Update(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+  );
+  int PyDict_Merge(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+    int override,
+  );
+  Pointer<shared.PyObject> PyDict_GetItemString(
+    Pointer<shared.PyObject> obj,
+    Pointer<Char> key,
+  );
+  int PyDict_SetItemString(
+    Pointer<shared.PyObject> obj,
+    Pointer<Char> key,
+    Pointer<shared.PyObject> item,
+  );
+  int PyDict_DelItemString(Pointer<shared.PyObject> obj, Pointer<Char> key);
+
+  //-------------------------------------------
+  // ## sequence
+
+  int PySequence_DelItem(Pointer<shared.PyObject> obj, int index);
+  int PySequence_Size(Pointer<shared.PyObject> obj);
+  Pointer<shared.PyObject> PySequence_Concat(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+  );
+  Pointer<shared.PyObject> PySequence_Repeat(
+    Pointer<shared.PyObject> obj,
+    int count,
+  );
+  Pointer<shared.PyObject> PySequence_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  );
+  int PySequence_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  );
 }
 
 abstract interface class BaseApi

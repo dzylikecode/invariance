@@ -82,6 +82,42 @@ class NativeLibrary {
   late final _PyDict_Clear =
       _PyDict_ClearPtr.asFunction<void Function(ffi.Pointer<imp$1.PyObject>)>();
 
+  int PyDict_Contains(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> key,
+  ) {
+    return _PyDict_Contains(mp, key);
+  }
+
+  late final _PyDict_ContainsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_Contains');
+  late final _PyDict_Contains =
+      _PyDict_ContainsPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Copy(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Copy(mp);
+  }
+
+  late final _PyDict_CopyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Copy');
+  late final _PyDict_Copy =
+      _PyDict_CopyPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
   int PyDict_DelItem(
     ffi.Pointer<imp$1.PyObject> mp,
     ffi.Pointer<imp$1.PyObject> key,
@@ -101,6 +137,24 @@ class NativeLibrary {
   late final _PyDict_DelItem =
       _PyDict_DelItemPtr.asFunction<
         int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  int PyDict_DelItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+  ) {
+    return _PyDict_DelItemString(dp, key);
+  }
+
+  late final _PyDict_DelItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<ffi.Char>)
+        >
+      >('PyDict_DelItemString');
+  late final _PyDict_DelItemString =
+      _PyDict_DelItemStringPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<ffi.Char>)
       >();
 
   ffi.Pointer<imp$1.PyObject> PyDict_GetItem(
@@ -124,6 +178,87 @@ class NativeLibrary {
         ffi.Pointer<imp$1.PyObject> Function(
           ffi.Pointer<imp$1.PyObject>,
           ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_GetItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+  ) {
+    return _PyDict_GetItemString(dp, key);
+  }
+
+  late final _PyDict_GetItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('PyDict_GetItemString');
+  late final _PyDict_GetItemString =
+      _PyDict_GetItemStringPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Items(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Items(mp);
+  }
+
+  late final _PyDict_ItemsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Items');
+  late final _PyDict_Items =
+      _PyDict_ItemsPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Keys(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Keys(mp);
+  }
+
+  late final _PyDict_KeysPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Keys');
+  late final _PyDict_Keys =
+      _PyDict_KeysPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  int PyDict_Merge(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> other,
+    int override,
+  ) {
+    return _PyDict_Merge(mp, other, override);
+  }
+
+  late final _PyDict_MergePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Int,
+          )
+        >
+      >('PyDict_Merge');
+  late final _PyDict_Merge =
+      _PyDict_MergePtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+          int,
         )
       >();
 
@@ -195,6 +330,33 @@ class NativeLibrary {
         )
       >();
 
+  int PyDict_SetItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+    ffi.Pointer<imp$1.PyObject> item,
+  ) {
+    return _PyDict_SetItemString(dp, key, item);
+  }
+
+  late final _PyDict_SetItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_SetItemString');
+  late final _PyDict_SetItemString =
+      _PyDict_SetItemStringPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
   int PyDict_Size(ffi.Pointer<imp$1.PyObject> mp) {
     return _PyDict_Size(mp);
   }
@@ -205,6 +367,42 @@ class NativeLibrary {
       >('PyDict_Size');
   late final _PyDict_Size =
       _PyDict_SizePtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
+
+  int PyDict_Update(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> other,
+  ) {
+    return _PyDict_Update(mp, other);
+  }
+
+  late final _PyDict_UpdatePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_Update');
+  late final _PyDict_Update =
+      _PyDict_UpdatePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Values(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Values(mp);
+  }
+
+  late final _PyDict_ValuesPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Values');
+  late final _PyDict_Values =
+      _PyDict_ValuesPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
 
   int PyList_Append(
     ffi.Pointer<imp$1.PyObject> arg0,

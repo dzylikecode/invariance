@@ -30,6 +30,16 @@ const auto funcs = std::tuple{
     &PyDict_DelItem,
     &PyDict_Clear,
     &PyDict_Next,
+    &PyDict_Keys,
+    &PyDict_Values,
+    &PyDict_Items,
+    &PyDict_Copy,
+    &PyDict_Contains,
+    &PyDict_Update,
+    &PyDict_Merge,
+    &PyDict_GetItemString,
+    &PyDict_SetItemString,
+    &PyDict_DelItemString,
 
     &PySequence_DelItem,
     &PySequence_Size,
@@ -42,4 +52,3 @@ const auto funcs = std::tuple{
 using structs = std::tuple<PyConfig>;
 
 using alias = std::tuple<Py_ssize_t>;
-

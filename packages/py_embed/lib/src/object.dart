@@ -13,10 +13,10 @@ class PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
 
   Pointer<g.PyObject> get ptr => _ptr;
 
-  void increment() => api.Py_IncRef(ptr);
+  void increment() => checked(() => api.Py_IncRef(ptr));
   void discrement() {
     assert(count > 0);
-    api.Py_DecRef(ptr);
+    checked(() => api.Py_DecRef(ptr));
   }
 }
 
@@ -155,9 +155,9 @@ class PyModule(String moduleName) extends PyObject {
 /// [PyTuple] 会管理接管所有权:
 /// {@example /test/object_test.dart#tuple-take-the-ownership}
 class PyTuple(int size) extends PyObject {
-  this : super(.fromHandle(api.PyTuple_New(size)));
+  this : super(.fromHandle(checked(() => api.PyTuple_New(size))));
 
-  int get length => api.PyTuple_Size(ptr);
+  int get length => checked(() => api.PyTuple_Size(ptr));
 
   /// Set the item at [index] in the tuple to [item].
   ///
@@ -173,9 +173,9 @@ class PyTuple(int size) extends PyObject {
 }
 
 class PyList(int size) extends PyObject {
-  this : super(.fromHandle(api.PyList_New(size)));
+  this : super(.fromHandle(checked(() => api.PyList_New(size))));
 
-  int get length => api.PyList_Size(ptr);
+  int get length => checked(() => api.PyList_Size(ptr));
 
   void setElementAt(int index, PyObject item) =>
       checked(() => api.PyList_SetItem(ptr, index, item.ptr));
@@ -188,11 +188,11 @@ class PyList(int size) extends PyObject {
 
   /// ref++
   void insert(int index, PyObject item) =>
-      checked(() => api.PyList_Insert(ptr, index, item.ptr));
+      checked(() => checked(() => api.PyList_Insert(ptr, index, item.ptr)));
 
-  void sort() => api.PyList_Sort(ptr);
+  void sort() => checked(() => api.PyList_Sort(ptr));
 
-  void reverse() => api.PyList_Reverse(ptr);
+  void reverse() => checked(() => api.PyList_Reverse(ptr));
 
   void operator []=(int index, PyObject item) => setElementAt(index, item);
   PyObject operator [](int index) => elementAt(index);
