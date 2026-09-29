@@ -119,6 +119,133 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
 
   @override
   int PyList_Reverse(Pointer<shared.PyObject> obj) => _api.PyList_Reverse(obj);
+
+  //-------------------------------------------
+  // ## dict
+
+  @override
+  Pointer<shared.PyObject> PyDict_New() => _api.PyDict_New();
+
+  @override
+  int PyDict_Size(Pointer<shared.PyObject> obj) => _api.PyDict_Size(obj);
+
+  @override
+  int PyDict_SetItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyDict_SetItem(obj, key, item);
+
+  @override
+  Pointer<shared.PyObject> PyDict_GetItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  ) => _api.PyDict_GetItem(obj, key);
+
+  @override
+  int PyDict_DelItem(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  ) => _api.PyDict_DelItem(obj, key);
+
+  @override
+  void PyDict_Clear(Pointer<shared.PyObject> obj) => _api.PyDict_Clear(obj);
+
+  @override
+  int PyDict_Next(
+    Pointer<shared.PyObject> obj,
+    Pointer<IntPtr> pos,
+    Pointer<Pointer<shared.PyObject>> key,
+    Pointer<Pointer<shared.PyObject>> value,
+  ) => _api.PyDict_Next(obj, pos.cast<g.Py_ssize_t>(), key, value);
+
+  @override
+  Pointer<shared.PyObject> PyDict_Keys(Pointer<shared.PyObject> obj) =>
+      _api.PyDict_Keys(obj);
+
+  @override
+  Pointer<shared.PyObject> PyDict_Values(Pointer<shared.PyObject> obj) =>
+      _api.PyDict_Values(obj);
+
+  @override
+  Pointer<shared.PyObject> PyDict_Items(Pointer<shared.PyObject> obj) =>
+      _api.PyDict_Items(obj);
+
+  @override
+  Pointer<shared.PyObject> PyDict_Copy(Pointer<shared.PyObject> obj) =>
+      _api.PyDict_Copy(obj);
+
+  @override
+  int PyDict_Contains(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> key,
+  ) => _api.PyDict_Contains(obj, key);
+
+  @override
+  int PyDict_Update(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+  ) => _api.PyDict_Update(obj, other);
+
+  @override
+  int PyDict_Merge(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+    int override,
+  ) => _api.PyDict_Merge(obj, other, override);
+
+  @override
+  Pointer<shared.PyObject> PyDict_GetItemString(
+    Pointer<shared.PyObject> obj,
+    Pointer<Char> key,
+  ) => _api.PyDict_GetItemString(obj, key);
+
+  @override
+  int PyDict_SetItemString(
+    Pointer<shared.PyObject> obj,
+    Pointer<Char> key,
+    Pointer<shared.PyObject> item,
+  ) => _api.PyDict_SetItemString(obj, key, item);
+
+  @override
+  int PyDict_DelItemString(Pointer<shared.PyObject> obj, Pointer<Char> key) =>
+      _api.PyDict_DelItemString(obj, key);
+
+  //-------------------------------------------
+  // ## sequence
+
+  @override
+  int PySequence_DelItem(Pointer<shared.PyObject> obj, int index) =>
+      _api.PySequence_DelItem(obj, index);
+
+  @override
+  int PySequence_Size(Pointer<shared.PyObject> obj) =>
+      _api.PySequence_Size(obj);
+
+  @override
+  Pointer<shared.PyObject> PySequence_Concat(
+    Pointer<shared.PyObject> obj,
+    Pointer<shared.PyObject> other,
+  ) => _api.PySequence_Concat(obj, other);
+
+  @override
+  Pointer<shared.PyObject> PySequence_Repeat(
+    Pointer<shared.PyObject> obj,
+    int count,
+  ) => _api.PySequence_Repeat(obj, count);
+
+  @override
+  Pointer<shared.PyObject> PySequence_GetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+  ) => _api.PySequence_GetItem(obj, index);
+
+  @override
+  int PySequence_SetItem(
+    Pointer<shared.PyObject> obj,
+    int index,
+    Pointer<shared.PyObject> item,
+  ) => _api.PySequence_SetItem(obj, index, item);
 }
 
 final class Api(super.dynamicLibrary)

@@ -71,6 +71,339 @@ class NativeLibrary {
         )
       >();
 
+  void PyDict_Clear(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Clear(mp);
+  }
+
+  late final _PyDict_ClearPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Void Function(ffi.Pointer<imp$1.PyObject>)>
+      >('PyDict_Clear');
+  late final _PyDict_Clear =
+      _PyDict_ClearPtr.asFunction<void Function(ffi.Pointer<imp$1.PyObject>)>();
+
+  int PyDict_Contains(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> key,
+  ) {
+    return _PyDict_Contains(mp, key);
+  }
+
+  late final _PyDict_ContainsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_Contains');
+  late final _PyDict_Contains =
+      _PyDict_ContainsPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Copy(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Copy(mp);
+  }
+
+  late final _PyDict_CopyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Copy');
+  late final _PyDict_Copy =
+      _PyDict_CopyPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  int PyDict_DelItem(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> key,
+  ) {
+    return _PyDict_DelItem(mp, key);
+  }
+
+  late final _PyDict_DelItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_DelItem');
+  late final _PyDict_DelItem =
+      _PyDict_DelItemPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  int PyDict_DelItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+  ) {
+    return _PyDict_DelItemString(dp, key);
+  }
+
+  late final _PyDict_DelItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<ffi.Char>)
+        >
+      >('PyDict_DelItemString');
+  late final _PyDict_DelItemString =
+      _PyDict_DelItemStringPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<ffi.Char>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_GetItem(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> key,
+  ) {
+    return _PyDict_GetItem(mp, key);
+  }
+
+  late final _PyDict_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_GetItem');
+  late final _PyDict_GetItem =
+      _PyDict_GetItemPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_GetItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+  ) {
+    return _PyDict_GetItemString(dp, key);
+  }
+
+  late final _PyDict_GetItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('PyDict_GetItemString');
+  late final _PyDict_GetItemString =
+      _PyDict_GetItemStringPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Items(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Items(mp);
+  }
+
+  late final _PyDict_ItemsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Items');
+  late final _PyDict_Items =
+      _PyDict_ItemsPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Keys(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Keys(mp);
+  }
+
+  late final _PyDict_KeysPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Keys');
+  late final _PyDict_Keys =
+      _PyDict_KeysPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  int PyDict_Merge(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> other,
+    int override,
+  ) {
+    return _PyDict_Merge(mp, other, override);
+  }
+
+  late final _PyDict_MergePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Int,
+          )
+        >
+      >('PyDict_Merge');
+  late final _PyDict_Merge =
+      _PyDict_MergePtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+          int,
+        )
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_New() {
+    return _PyDict_New();
+  }
+
+  late final _PyDict_NewPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<imp$1.PyObject> Function()>>(
+        'PyDict_New',
+      );
+  late final _PyDict_New =
+      _PyDict_NewPtr.asFunction<ffi.Pointer<imp$1.PyObject> Function()>();
+
+  int PyDict_Next(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<Py_ssize_t> pos,
+    ffi.Pointer<ffi.Pointer<imp$1.PyObject>> key,
+    ffi.Pointer<ffi.Pointer<imp$1.PyObject>> value,
+  ) {
+    return _PyDict_Next(mp, pos, key, value);
+  }
+
+  late final _PyDict_NextPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<Py_ssize_t>,
+            ffi.Pointer<ffi.Pointer<imp$1.PyObject>>,
+            ffi.Pointer<ffi.Pointer<imp$1.PyObject>>,
+          )
+        >
+      >('PyDict_Next');
+  late final _PyDict_Next =
+      _PyDict_NextPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<Py_ssize_t>,
+          ffi.Pointer<ffi.Pointer<imp$1.PyObject>>,
+          ffi.Pointer<ffi.Pointer<imp$1.PyObject>>,
+        )
+      >();
+
+  int PyDict_SetItem(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> key,
+    ffi.Pointer<imp$1.PyObject> item,
+  ) {
+    return _PyDict_SetItem(mp, key, item);
+  }
+
+  late final _PyDict_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_SetItem');
+  late final _PyDict_SetItem =
+      _PyDict_SetItemPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  int PyDict_SetItemString(
+    ffi.Pointer<imp$1.PyObject> dp,
+    ffi.Pointer<ffi.Char> key,
+    ffi.Pointer<imp$1.PyObject> item,
+  ) {
+    return _PyDict_SetItemString(dp, key, item);
+  }
+
+  late final _PyDict_SetItemStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_SetItemString');
+  late final _PyDict_SetItemString =
+      _PyDict_SetItemStringPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  int PyDict_Size(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Size(mp);
+  }
+
+  late final _PyDict_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject>)>
+      >('PyDict_Size');
+  late final _PyDict_Size =
+      _PyDict_SizePtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
+
+  int PyDict_Update(
+    ffi.Pointer<imp$1.PyObject> mp,
+    ffi.Pointer<imp$1.PyObject> other,
+  ) {
+    return _PyDict_Update(mp, other);
+  }
+
+  late final _PyDict_UpdatePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PyDict_Update');
+  late final _PyDict_Update =
+      _PyDict_UpdatePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, ffi.Pointer<imp$1.PyObject>)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PyDict_Values(ffi.Pointer<imp$1.PyObject> mp) {
+    return _PyDict_Values(mp);
+  }
+
+  late final _PyDict_ValuesPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+        >
+      >('PyDict_Values');
+  late final _PyDict_Values =
+      _PyDict_ValuesPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
   int PyList_Append(
     ffi.Pointer<imp$1.PyObject> arg0,
     ffi.Pointer<imp$1.PyObject> arg1,
@@ -212,6 +545,127 @@ class NativeLibrary {
       >('PyList_Sort');
   late final _PyList_Sort =
       _PyList_SortPtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
+
+  ffi.Pointer<imp$1.PyObject> PySequence_Concat(
+    ffi.Pointer<imp$1.PyObject> o1,
+    ffi.Pointer<imp$1.PyObject> o2,
+  ) {
+    return _PySequence_Concat(o1, o2);
+  }
+
+  late final _PySequence_ConcatPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PySequence_Concat');
+  late final _PySequence_Concat =
+      _PySequence_ConcatPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(
+          ffi.Pointer<imp$1.PyObject>,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  int PySequence_DelItem(ffi.Pointer<imp$1.PyObject> o, int i) {
+    return _PySequence_DelItem(o, i);
+  }
+
+  late final _PySequence_DelItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<imp$1.PyObject>, Py_ssize_t)
+        >
+      >('PySequence_DelItem');
+  late final _PySequence_DelItem =
+      _PySequence_DelItemPtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>, int)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PySequence_GetItem(
+    ffi.Pointer<imp$1.PyObject> o,
+    int i,
+  ) {
+    return _PySequence_GetItem(o, i);
+  }
+
+  late final _PySequence_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            Py_ssize_t,
+          )
+        >
+      >('PySequence_GetItem');
+  late final _PySequence_GetItem =
+      _PySequence_GetItemPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>, int)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> PySequence_Repeat(
+    ffi.Pointer<imp$1.PyObject> o,
+    int count,
+  ) {
+    return _PySequence_Repeat(o, count);
+  }
+
+  late final _PySequence_RepeatPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(
+            ffi.Pointer<imp$1.PyObject>,
+            Py_ssize_t,
+          )
+        >
+      >('PySequence_Repeat');
+  late final _PySequence_Repeat =
+      _PySequence_RepeatPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(ffi.Pointer<imp$1.PyObject>, int)
+      >();
+
+  int PySequence_SetItem(
+    ffi.Pointer<imp$1.PyObject> o,
+    int i,
+    ffi.Pointer<imp$1.PyObject> v,
+  ) {
+    return _PySequence_SetItem(o, i, v);
+  }
+
+  late final _PySequence_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<imp$1.PyObject>,
+            Py_ssize_t,
+            ffi.Pointer<imp$1.PyObject>,
+          )
+        >
+      >('PySequence_SetItem');
+  late final _PySequence_SetItem =
+      _PySequence_SetItemPtr.asFunction<
+        int Function(
+          ffi.Pointer<imp$1.PyObject>,
+          int,
+          ffi.Pointer<imp$1.PyObject>,
+        )
+      >();
+
+  int PySequence_Size(ffi.Pointer<imp$1.PyObject> o) {
+    return _PySequence_Size(o);
+  }
+
+  late final _PySequence_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject>)>
+      >('PySequence_Size');
+  late final _PySequence_Size =
+      _PySequence_SizePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>)
+      >();
 
   ffi.Pointer<imp$1.PyObject> PyTuple_GetItem(
     ffi.Pointer<imp$1.PyObject> arg0,
