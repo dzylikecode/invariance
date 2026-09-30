@@ -10,7 +10,8 @@ void main() {
         final a = PyInt(1);
         final count = a.ref.count;
         // dart format off
-        final b = PyInt(1);     expect(b.ref.count, equals(count+1));
+        final b = PyInt(1);     expect(a.ptr, equals(b.ptr));
+                                expect(b.ref.count, equals(count+1));
         a.ref.discrement();     expect(b.ref.count, equals(count));
         // dart format on
       },
@@ -22,7 +23,8 @@ void main() {
       // dart format off
       final a = PyDouble(1);     expect(a.ref.count, equals(1));
       final count = a.ref.count;
-      final b = PyDouble(1);     expect(a.ref.count, equals(1));
+      final b = PyDouble(1);     expect(b.ptr, isNot(equals(a.ptr)));
+                                 expect(a.ref.count, equals(1));
                                  expect(b.ref.count, equals(1));
                                  expect(b.ref.count, isNot(equals(count+1)));
       a.ref.discrement();        expect(b.ref.count, equals(1));
@@ -174,7 +176,9 @@ void main() {
                                   expect(value.ref.count, equals(2));
       final v = owner[key];       expect(v, isNotNull);
                                   expect(v!.toDouble(), closeTo(11, 0.1));
+                                  expect(v.ptr, equals(value.ptr));
                                   expect(v.ref.count, equals(2));
+                                  expect(key.ref.count, equals(2));
       owner.ref.discrement();     expect(key.ref.count, equals(1));
                                   expect(value.ref.count, equals(1));
       key.ref.discrement();       expect(key.ref.count, equals(0));

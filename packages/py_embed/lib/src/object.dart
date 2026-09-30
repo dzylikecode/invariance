@@ -37,8 +37,7 @@ class const PyObject(final PyRef ref) {
 extension PyObjectAttributes on PyObject {
   /// Get the [attribute] of a Python object by name.
   ///
-  /// [attribute] must exist, otherwise a [StateError] will be thrown.
-  /// returns a new [PyObject] that must be disposed of when no longer needed.
+  /// ref++
   PyObject get(String attribute) => ffi.using(
     (arena) => .fromHandle(
       checked(
@@ -164,10 +163,11 @@ class PyTuple(int size) extends PyObject {
 
   /// Set the item at [index] in the tuple to [item].
   ///
-  /// [item] 只是被借用，所以不得释放
+  /// ref ==
   void setElementAt(int index, PyObject item) =>
       checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
 
+  /// ref ==
   PyObject elementAt(int index) =>
       .fromHandle(checked(() => api.PyTuple_GetItem(ptr, index)));
 
@@ -182,9 +182,11 @@ class PyList.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
 
   int get length => checked(() => api.PyList_Size(ptr));
 
+  /// ref ==
   void setElementAt(int index, PyObject item) =>
       checked(() => api.PyList_SetItem(ptr, index, item.ptr));
 
+  /// ref ==
   PyObject elementAt(int index) =>
       .fromHandle(checked(() => api.PyList_GetItem(ptr, index)));
 
@@ -218,11 +220,11 @@ class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
   bool get isEmpty => length == 0;
   bool get isNotEmpty => !isEmpty;
 
-  /// Retains [key] and [item]; the caller keeps its own references.
+  /// [key].ref++, [item].ref++
   void setElementAt(PyObject key, PyObject item) =>
       checked(() => api.PyDict_SetItem(ptr, key.ptr, item.ptr));
 
-  /// Returns a borrowed reference, or null if [key] is absent.
+  /// ref ==
   PyObject? elementAt(PyObject key) {
     final item = checked(() => api.PyDict_GetItem(ptr, key.ptr));
     return item == nullptr ? null : .fromHandle(item);
