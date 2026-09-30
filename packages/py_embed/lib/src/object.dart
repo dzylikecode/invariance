@@ -20,6 +20,11 @@ class PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
   }
 }
 
+extension on Pointer<g.PyObject> {
+  PyRef get asRef => .fromHandle(this);
+  PyObject get asObj => .fromHandle(this);
+}
+
 class const PyObject(final PyRef ref) {
   Pointer<g.PyObject> get ptr => ref.ptr;
 
@@ -172,8 +177,10 @@ class PyTuple(int size) extends PyObject {
   PyObject operator [](int index) => elementAt(index);
 }
 
-class PyList(int size) extends PyObject {
-  this : super(.fromHandle(checked(() => api.PyList_New(size))));
+class PyList.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
+  this : super(.fromHandle(ptr));
+
+  factory(int size) => .fromHandle(checked(() => api.PyList_New(size)));
 
   int get length => checked(() => api.PyList_Size(ptr));
 
@@ -198,6 +205,58 @@ class PyList(int size) extends PyObject {
   PyObject operator [](int index) => elementAt(index);
 }
 
-class PyDict(int size) extends PyObject {
-  this : super(.fromHandle(api.PyList_New(size)));
+/// A Python dictionary. Keys and values are retained when inserted.
+///
+/// Lookups return borrowed references, like [PyList.elementAt]. Do not release
+/// them unless you first call [PyRef.increment]; they are valid only while the
+/// dictionary retains the value. Copies and snapshot lists own new references
+/// and must be released by their caller.
+class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
+  this : super(.fromHandle(ptr));
+
+  factory() => .fromHandle(checked(() => api.PyDict_New()));
+
+  int get length => checked(() => api.PyDict_Size(ptr));
+  bool get isEmpty => length == 0;
+  bool get isNotEmpty => !isEmpty;
+
+  /// Retains [key] and [item]; the caller keeps its own references.
+  void setElementAt(PyObject key, PyObject item) =>
+      checked(() => api.PyDict_SetItem(ptr, key.ptr, item.ptr));
+
+  /// Returns a borrowed reference, or null if [key] is absent.
+  PyObject? elementAt(PyObject key) {
+    final item = checked(() => api.PyDict_GetItem(ptr, key.ptr));
+    return item == nullptr ? null : .fromHandle(item);
+  }
+
+  bool contains(PyObject key) =>
+      checked(() => api.PyDict_Contains(ptr, key.ptr)) != 0;
+
+  /// Deletes [key], throwing a Python KeyError if it is absent.
+  void remove(PyObject key) => checked(() => api.PyDict_DelItem(ptr, key.ptr));
+
+  void clear() => checked(() => api.PyDict_Clear(ptr));
+
+  /// A new list containing the keys. The caller owns the list reference.
+  PyList get keys => .fromHandle(checked(() => api.PyDict_Keys(ptr)));
+
+  /// A new list containing the values. The caller owns the list reference.
+  PyList get values => .fromHandle(checked(() => api.PyDict_Values(ptr)));
+
+  /// A new list of (key, value) tuples. The caller owns the list reference.
+  PyList get items => .fromHandle(checked(() => api.PyDict_Items(ptr)));
+
+  /// A shallow copy. The caller owns the returned dictionary reference.
+  PyDict copy() => .fromHandle(checked(() => api.PyDict_Copy(ptr)));
+
+  /// Adds entries from [other], replacing existing values.
+  void update(PyDict other) => checked(() => api.PyDict_Update(ptr, other.ptr));
+
+  /// Adds entries from [other], optionally keeping existing values.
+  void merge(PyDict other, {bool override = true}) =>
+      checked(() => api.PyDict_Merge(ptr, other.ptr, override ? 1 : 0));
+
+  void operator []=(PyObject key, PyObject item) => setElementAt(key, item);
+  PyObject? operator [](PyObject key) => elementAt(key);
 }
