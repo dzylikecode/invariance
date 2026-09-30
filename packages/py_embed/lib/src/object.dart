@@ -115,10 +115,15 @@ extension PyObjectCall on PyObject {
       checked(() => .fromHandle(api.PyObject_CallObject(ptr, nullptr)));
 }
 
+/// CPython 会缓存小整数，相同的缓存值（例如 1）共享底层对象和引用计数。
+/// 这不代表所有整数都会共享；每次构造仍取得一个需要由调用方释放的引用。
+/// 引用计数的具体变化取决于 CPython 版本，不能假定每次构造都会加一。
 class PyInt(int value) extends PyObject {
   this : super(.fromHandle(api.PyLong_FromLong(value)));
 }
 
+/// 每次构造都会创建独立的 Python 浮点对象，即使值相同也不共享引用计数。
+/// 新对象的引用计数为 1，调用方需要分别释放各自的引用。
 class PyDouble(double value) extends PyObject {
   this : super(.fromHandle(api.PyFloat_FromDouble(value)));
 }

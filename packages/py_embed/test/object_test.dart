@@ -3,6 +3,31 @@ import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 
 void main() {
+  group("PyInt", () {
+    test("shares the cached object and reference count for the same small integer", () {
+      final a = PyInt(1);
+      final count = a.ref.count;
+      // dart format off
+      final b = PyInt(1);     expect(b.ref.count, equals(count+1));
+      a.ref.discrement();     expect(b.ref.count, equals(count));
+      // dart format on
+    });
+  });
+
+  group("PyDouble", () {
+    test("keeps independent reference counts for equal values", () {
+      // dart format off
+      final a = PyDouble(1);     expect(a.ref.count, equals(1));
+      final count = a.ref.count;
+      final b = PyDouble(1);     expect(a.ref.count, equals(1));
+                                 expect(b.ref.count, equals(1));
+                                 expect(b.ref.count, isNot(equals(count+1)));
+      a.ref.discrement();        expect(b.ref.count, equals(1));
+
+      // dart format on
+    });
+  });
+
   group('PyTuple', () {
     test('takes ownership', () {
       // #region tuple-take-the-ownership
