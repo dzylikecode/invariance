@@ -240,7 +240,7 @@ class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
 
   /// Deletes [key], throwing a Python KeyError if it is absent.
   void remove(PyObject key) => checked(() => api.PyDict_DelItem(ptr, key.ptr));
-  PyObject? getStringKey(String key) => ffi.using((arena) {
+  PyObject? elementAtStr(String key) => ffi.using((arena) {
     final item = checked(
       () => api.PyDict_GetItemString(
         ptr,
@@ -249,7 +249,7 @@ class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
     );
     return item == nullptr ? null : .fromHandle(item);
   });
-  void setStringKey(String key, PyObject item) => ffi.using(
+  void setElementAtStr(String key, PyObject item) => ffi.using(
     (arena) => checked(
       () => api.PyDict_SetItemString(
         ptr,
@@ -258,7 +258,7 @@ class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
       ),
     ),
   );
-  void removeStringKey(String key) => ffi.using(
+  void removeStr(String key) => ffi.using(
     (arena) => checked(
       () => api.PyDict_DelItemString(
         ptr,

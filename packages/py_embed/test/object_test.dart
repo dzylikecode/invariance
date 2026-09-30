@@ -228,7 +228,7 @@ void main() {
       final value = PyDouble(11);         expect(value.ref.count, equals(1));
       owner[key] = value;                 expect(key.ref.count, equals(keyCount + 1));
                                           expect(value.ref.count, equals(2));
-      final v = owner.getStringKey('a');  expect(v, isNotNull);
+      final v = owner.elementAtStr('a');  expect(v, isNotNull);
                                           expect(v!.toDouble(), closeTo(11, 0.1));
                                           expect(key.ref.count, equals(keyCount + 1));
                                           expect(value.ref.count, equals(2));
@@ -244,8 +244,8 @@ void main() {
       final owner = PyDict();
       // dart format off
       final value = PyDouble(11);         expect(value.ref.count, equals(1));
-      owner.setStringKey("a", value);     expect(value.ref.count, equals(2));
-      final v = owner.getStringKey('a');  expect(v, isNotNull);
+      owner.setElementAtStr("a", value);  expect(value.ref.count, equals(2));
+      final v = owner.elementAtStr('a');  expect(v, isNotNull);
                                           expect(v!.toDouble(), closeTo(11, 0.1));
                                           expect(value.ref.count, equals(2));
                                           expect(v.ref.count, equals(2));
