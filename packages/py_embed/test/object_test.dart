@@ -4,14 +4,17 @@ import 'package:py_embed/debug.dart';
 
 void main() {
   group("PyInt", () {
-    test("shares the cached object and reference count for the same small integer", () {
-      final a = PyInt(1);
-      final count = a.ref.count;
-      // dart format off
-      final b = PyInt(1);     expect(b.ref.count, equals(count+1));
-      a.ref.discrement();     expect(b.ref.count, equals(count));
-      // dart format on
-    });
+    test(
+      "shares the cached object and reference count for the same small integer",
+      () {
+        final a = PyInt(1);
+        final count = a.ref.count;
+        // dart format off
+        final b = PyInt(1);     expect(b.ref.count, equals(count+1));
+        a.ref.discrement();     expect(b.ref.count, equals(count));
+        // dart format on
+      },
+    );
   });
 
   group("PyDouble", () {
@@ -25,6 +28,17 @@ void main() {
       a.ref.discrement();        expect(b.ref.count, equals(1));
 
       // dart format on
+    });
+  });
+
+  group("PyString", () {
+    test("shares the cached object and reference count", () {
+      final a = PyString('a');
+      final count = a.ref.count;
+      // dart format off
+        final b = PyString('a');  expect(b.ref.count, equals(count+1));
+        a.ref.discrement();       expect(b.ref.count, equals(count));
+        // dart format on
     });
   });
 
@@ -115,6 +129,23 @@ void main() {
       // dart format on
     });
 
+    test("lookup returns a borrowed value without increasing its reference count", () {
+      final owner = PyDict();
+      // dart format off
+      final key = PyDouble(1);    expect(key.ref.count, equals(1));
+      final value = PyDouble(11); expect(value.ref.count, equals(1));
+      owner[key] = value;         expect(key.ref.count, equals(2));
+                                  expect(value.ref.count, equals(2));
+      final v = owner[key];       expect(v, isNotNull);
+                                  expect(v!.toDouble(), closeTo(11, 0.1));
+                                  expect(v.ref.count, equals(2));
+      owner.ref.discrement();     expect(key.ref.count, equals(1));
+                                  expect(value.ref.count, equals(1));
+      key.ref.discrement();       expect(key.ref.count, equals(0));
+      value.ref.discrement();     expect(value.ref.count, equals(0));
+      // dart format on
+    });
+
     test("remove releases both the key and value references", () {
       final owner = PyDict();
       // dart format off
@@ -187,6 +218,40 @@ void main() {
       final tuple = PyDict();
       final key = PyDouble(1);
       expect(tuple[key], isNull);
+    });
+
+    test("getStringKey looks up a PyString key without retaining the key or value", () {
+      final owner = PyDict();
+      // dart format off
+      final key = PyString("a");
+      final keyCount = key.ref.count;
+      final value = PyDouble(11);         expect(value.ref.count, equals(1));
+      owner[key] = value;                 expect(key.ref.count, equals(keyCount + 1));
+                                          expect(value.ref.count, equals(2));
+      final v = owner.getStringKey('a');  expect(v, isNotNull);
+                                          expect(v!.toDouble(), closeTo(11, 0.1));
+                                          expect(key.ref.count, equals(keyCount + 1));
+                                          expect(value.ref.count, equals(2));
+                                          expect(v.ref.count, equals(2));
+      owner.ref.discrement();             expect(key.ref.count, equals(keyCount));
+                                          expect(value.ref.count, equals(1));
+      key.ref.discrement();
+      value.ref.discrement();
+      // dart format on
+    });
+
+    test("setStringKey retains the value and getStringKey borrows it", () {
+      final owner = PyDict();
+      // dart format off
+      final value = PyDouble(11);         expect(value.ref.count, equals(1));
+      owner.setStringKey("a", value);     expect(value.ref.count, equals(2));
+      final v = owner.getStringKey('a');  expect(v, isNotNull);
+                                          expect(v!.toDouble(), closeTo(11, 0.1));
+                                          expect(value.ref.count, equals(2));
+                                          expect(v.ref.count, equals(2));
+      owner.ref.discrement();             expect(value.ref.count, equals(1));
+      value.ref.discrement();
+      // dart format on
     });
   });
 }
