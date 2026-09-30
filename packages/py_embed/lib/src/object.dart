@@ -71,30 +71,23 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getInt(String attribute) {
-    final attr = get(attribute);
-    try {
-      return attr.toInt();
-    } finally {
-      attr.ref.discrement();
-    }
-  }
+  int getInt(String attribute) => get(attribute).using((attr) => attr.toInt());
+  double getDouble(String attribute) =>
+      get(attribute).using((attr) => attr.toDouble());
 
-  double getDouble(String attribute) {
-    final attr = get(attribute);
-    try {
-      return attr.toDouble();
-    } finally {
-      attr.ref.discrement();
-    }
-  }
+  bool getBool(String attribute) =>
+      get(attribute).using((attr) => attr.toBool());
+}
 
-  bool getBool(String attribute) {
-    final attr = get(attribute);
+extension PyObjectReference on PyObject {
+  /// 同步执行 [action]，结束时释放当前拥有的一次引用，即使回调抛出异常。
+  /// 不增加引用计数，因此不能直接用于 borrowed reference。
+  /// 回调不得释放或转交这次引用；异步回调也不会被等待。
+  T using<T>(T Function(PyObject) action) {
     try {
-      return attr.toBool();
+      return action(this);
     } finally {
-      attr.ref.discrement();
+      ref.discrement();
     }
   }
 }

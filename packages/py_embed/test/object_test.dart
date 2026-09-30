@@ -42,6 +42,40 @@ void main() {
     });
   });
 
+  group("PyObject", () {
+    test("get returns an independent bound method for each upper lookup", () {
+      final obj = PyString("hello");   expect(obj.has("upper"), isTrue);
+      final upper1 = obj.get("upper"); expect(upper1.ref.count, equals(1));
+      final upper2 = obj.get("upper"); expect(upper2.ref.count, equals(1));
+      obj.ref.discrement();            expect(upper1.ref.count, equals(1));
+                                       // 得到的是一个新的对象
+      upper1.ref.discrement();         expect(upper1.ref.count, equals(0));
+                                       expect(upper2.ref.count, equals(1));
+      upper2.ref.discrement();         expect(upper2.ref.count, equals(0));
+    });
+
+    test("get retains the float for real and creates a new float for imag", () {
+      final obj = PyDouble(1.5);
+      final real = obj.get("real");     expect(real.ptr, equals(obj.ptr)); // 同一个对象
+                                        expect(real.ref.count, equals(2));
+      final real2 = obj.get("real");    expect(real2.ref.count, equals(3));
+                                        expect(real.ptr, equals(real2.ptr));
+      final imag = obj.get("imag");     expect(imag.ref.count, equals(1));  // 每次都在构造新的
+      final imag2 = obj.get("imag");    expect(imag2.ref.count, equals(1));
+
+      real.ref.discrement();
+      real2.ref.discrement();
+                                        // 说明 imag 返回的是一个新的对象
+      imag.ref.discrement();            expect(imag.ref.count, equals(0));
+                                        expect(imag2.ref.count, equals(1));
+      imag2.ref.discrement();
+
+      obj.ref.discrement();
+
+      // 所以无论哪一种都是需要 ref--，对于 getDouble
+    });
+  });
+
   group('PyTuple', () {
     test('takes ownership', () {
       // #region tuple-take-the-ownership
@@ -129,7 +163,9 @@ void main() {
       // dart format on
     });
 
-    test("lookup returns a borrowed value without increasing its reference count", () {
+    test(
+      "lookup returns a borrowed value without increasing its reference count",
+      () {
       final owner = PyDict();
       // dart format off
       final key = PyDouble(1);    expect(key.ref.count, equals(1));
@@ -144,7 +180,8 @@ void main() {
       key.ref.discrement();       expect(key.ref.count, equals(0));
       value.ref.discrement();     expect(value.ref.count, equals(0));
       // dart format on
-    });
+      },
+    );
 
     test("remove releases both the key and value references", () {
       final owner = PyDict();
@@ -220,7 +257,9 @@ void main() {
       expect(tuple[key], isNull);
     });
 
-    test("getStringKey looks up a PyString key without retaining the key or value", () {
+    test(
+      "getStringKey looks up a PyString key without retaining the key or value",
+      () {
       final owner = PyDict();
       // dart format off
       final key = PyString("a");
@@ -238,7 +277,8 @@ void main() {
       key.ref.discrement();
       value.ref.discrement();
       // dart format on
-    });
+      },
+    );
 
     test("setStringKey retains the value and getStringKey borrows it", () {
       final owner = PyDict();
