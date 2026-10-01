@@ -2,6 +2,8 @@
 ## 0.2.2
 
 - 移除 dispose，而是暴露 ref++ 和 ref--，用户直接思考 ref
+- + pydict
+- 添加 test
 
 ## 0.2.1
 

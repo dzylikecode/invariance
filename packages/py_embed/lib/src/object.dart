@@ -107,6 +107,18 @@ extension PyObjectCall on PyObject {
       checked(() => .fromHandle(api.PyObject_CallObject(ptr, nullptr)));
 }
 
+extension PyObjectWithContext on PyObject {
+  T withContext<T>(T Function(PyObject) action) {
+    final value = get('__enter__').using((enter) => enter.call0());
+    try {
+      return action(value);
+    } finally {
+      get('__exit__').using((exit) => exit.call0());
+      value.ref.discrement();
+    }
+  }
+}
+
 /// CPython 会缓存小整数，相同的缓存值（例如 1）共享底层对象和引用计数。
 /// 这不代表所有整数都会共享；每次构造仍取得一个需要由调用方释放的引用。
 /// 引用计数的具体变化取决于 CPython 版本，不能假定每次构造都会加一。

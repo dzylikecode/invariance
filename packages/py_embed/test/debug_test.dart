@@ -7,7 +7,7 @@ void main() {
   test(
     'getRefCount',
     () => checked(() {
-      // dart format off
+    // dart format off
     // 空 tuple 是通用的，不要用它作为测试
     final a = api.PyTuple_New(1); expect(getRefCount(a), equals(1));
     api.Py_IncRef(a);             expect(getRefCount(a), equals(2));
