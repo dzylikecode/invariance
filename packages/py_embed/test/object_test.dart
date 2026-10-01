@@ -10,6 +10,7 @@ void main() {
         final a = PyInt(1);
         final count = a.ref.count;
         // dart format off
+                                // 指针指向了同一处
         final b = PyInt(1);     expect(a.ptr, equals(b.ptr));
                                 expect(b.ref.count, equals(count+1));
         a.ref.discrement();     expect(b.ref.count, equals(count));
