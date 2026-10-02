@@ -211,8 +211,8 @@ extension ApiExt on BaseApi {
       PyErr_NormalizeException(typePtr, valuePtr, tracebackPtr);
       PyErr_Print();
       return PyException(
-        type: convertToString(typePtr.value),
-        message: convertToString(valuePtr.value),
+        type: callToString(typePtr.value),
+        message: callToString(valuePtr.value),
       );
     } finally {
       Py_XDECREF(typePtr.value);
@@ -221,7 +221,7 @@ extension ApiExt on BaseApi {
     }
   });
 
-  String convertToString(Pointer<shared.PyObject> obj) {
+  String callToString(Pointer<shared.PyObject> obj) {
     if (obj == nullptr) {
       throw StateError('Cannot convert null PyObject to string');
     }

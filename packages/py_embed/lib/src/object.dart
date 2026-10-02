@@ -31,7 +31,7 @@ class const PyObject(final PyRef ref) {
   factory fromHandle(Pointer<g.PyObject> ptr) => .new(.fromHandle(ptr));
 
   @override
-  String toString() => api.convertToString(ptr);
+  String toString() => api.callToString(ptr);
 }
 
 extension PyObjectAttributes on PyObject {
@@ -70,12 +70,15 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getInt(String attribute) => get(attribute).using((attr) => attr.toInt());
+  int getInt(String attribute) => get(attribute).using((attr) => attr.asInt());
   double getDouble(String attribute) =>
-      get(attribute).using((attr) => attr.toDouble());
+      get(attribute).using((attr) => attr.asDouble());
 
   bool getBool(String attribute) =>
-      get(attribute).using((attr) => attr.toBool());
+      get(attribute).using((attr) => attr.asBool());
+
+  String getString(String attribute) =>
+      get(attribute).using((attr) => attr.asString());
 }
 
 extension PyObjectReference on PyObject {
@@ -92,9 +95,10 @@ extension PyObjectReference on PyObject {
 }
 
 extension PyObjectConverter on PyObject {
-  int toInt() => checked(() => api.PyLong_AsLong(ptr));
-  double toDouble() => checked(() => api.PyFloat_AsDouble(ptr));
-  bool toBool() => checked(() => api.PyObject_IsTrue(ptr) != 0);
+  int asInt() => checked(() => api.PyLong_AsLong(ptr));
+  double asDouble() => checked(() => api.PyFloat_AsDouble(ptr));
+  bool asBool() => checked(() => api.PyObject_IsTrue(ptr) != 0);
+  String asString() => checked(() => api.PyUnicode_AsUTF8(ptr)).cast<ffi.Utf8>().toDartString();
 }
 
 extension PyObjectCall on PyObject {
@@ -105,6 +109,9 @@ extension PyObjectCall on PyObject {
   );
   PyObject call0() =>
       checked(() => .fromHandle(api.PyObject_CallObject(ptr, nullptr)));
+  
+  /// ref-- args 里面的引用会释放一次
+  PyObject callN(List<PyObject> args) => PyTuple.fromList(args).using((tuple) => call(tuple as PyTuple));
 }
 
 extension PyObjectWithContext on PyObject {
@@ -170,6 +177,15 @@ class PyModule(String moduleName) extends PyObject {
 /// {@example /test/object_test.dart#tuple-take-the-ownership}
 class PyTuple(int size) extends PyObject {
   this : super(.fromHandle(checked(() => api.PyTuple_New(size))));
+
+  /// ref==
+  factory fromList(List<PyObject> items) {
+    final tuple = PyTuple(items.length);
+    for (var i = 0; i < items.length; i++) {
+      tuple.setElementAt(i, items[i]);
+    }
+    return tuple;
+  }
 
   int get length => checked(() => api.PyTuple_Size(ptr));
 

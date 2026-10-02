@@ -176,7 +176,7 @@ void main() {
       owner[key] = value;         expect(key.ref.count, equals(2));
                                   expect(value.ref.count, equals(2));
       final v = owner[key];       expect(v, isNotNull);
-                                  expect(v!.toDouble(), closeTo(11, 0.1));
+                                  expect(v!.asDouble(), closeTo(11, 0.1));
                                   expect(v.ptr, equals(value.ptr));
                                   expect(v.ref.count, equals(2));
                                   expect(key.ref.count, equals(2));
@@ -273,7 +273,7 @@ void main() {
       owner[key] = value;                 expect(key.ref.count, equals(keyCount + 1));
                                           expect(value.ref.count, equals(2));
       final v = owner.elementAtStr('a');  expect(v, isNotNull);
-                                          expect(v!.toDouble(), closeTo(11, 0.1));
+                                          expect(v!.asDouble(), closeTo(11, 0.1));
                                           expect(key.ref.count, equals(keyCount + 1));
                                           expect(value.ref.count, equals(2));
                                           expect(v.ref.count, equals(2));
@@ -291,7 +291,7 @@ void main() {
       final value = PyDouble(11);         expect(value.ref.count, equals(1));
       owner.setElementAtStr("a", value);  expect(value.ref.count, equals(2));
       final v = owner.elementAtStr('a');  expect(v, isNotNull);
-                                          expect(v!.toDouble(), closeTo(11, 0.1));
+                                          expect(v!.asDouble(), closeTo(11, 0.1));
                                           expect(value.ref.count, equals(2));
                                           expect(v.ref.count, equals(2));
       owner.ref.discrement();             expect(value.ref.count, equals(1));
