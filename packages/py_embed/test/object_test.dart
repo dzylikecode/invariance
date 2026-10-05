@@ -102,6 +102,15 @@ void main() {
   });
 
   group('PyTuple', () {
+    test('fromList', () {
+      final a = PyDouble(1);                  expect(a.ref.count, equals(1));
+      final b = PyDouble(2);                  expect(b.ref.count, equals(1));
+      final tuple = PyTuple.fromList([a, b]); expect(a.ref.count, equals(1));
+                                              expect(b.ref.count, equals(1));
+      tuple.ref.discrement();                 expect(a.ref.count, equals(0));
+                                              expect(b.ref.count, equals(0));
+    });
+
     test('takes ownership', () {
       // #region tuple-take-the-ownership
       final tuple = PyTuple(1);

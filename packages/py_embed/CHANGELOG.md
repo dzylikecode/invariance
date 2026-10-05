@@ -1,3 +1,8 @@
+## 0.2.3
+
+- + getItem
+- object.get -> object.getAttr
+
 
 ## 0.2.2
 
