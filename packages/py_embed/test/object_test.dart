@@ -46,36 +46,58 @@ void main() {
   });
 
   group("PyObject", () {
-    test("get returns an independent bound method for each upper lookup", () {
-      final obj = PyString("hello");   expect(obj.has("upper"), isTrue);
-      final upper1 = obj.get("upper"); expect(upper1.ref.count, equals(1));
-      final upper2 = obj.get("upper"); expect(upper2.ref.count, equals(1));
-      obj.ref.discrement();            expect(upper1.ref.count, equals(1));
-                                       // 得到的是一个新的对象
-      upper1.ref.discrement();         expect(upper1.ref.count, equals(0));
-                                       expect(upper2.ref.count, equals(1));
-      upper2.ref.discrement();         expect(upper2.ref.count, equals(0));
+    /// getAttr 对于方法：每次得到的是新的对象
+    test("getAttr for methods: returns a new object on each lookup", () {
+      final obj = PyString("hello");        expect(obj.hasAttr("upper"), isTrue);
+      final upper1 = obj.getAttr("upper");  expect(upper1.ref.count, equals(1));
+                                            // ## proof 1: 得到新的对象
+      final upper2 = obj.getAttr("upper");  expect(upper2.ptr, isNot(equals(upper1.ptr)));
+                                            expect(upper2.ref.count, equals(1));
+      obj.ref.discrement();                 expect(upper1.ref.count, equals(1));
+                                            // ## proof 2: 得到新的对象
+      upper1.ref.discrement();              expect(upper1.ref.count, equals(0));
+                                            expect(upper2.ref.count, equals(1));
+      upper2.ref.discrement();              expect(upper2.ref.count, equals(0));
     });
 
-    test("get retains the float for real and creates a new float for imag", () {
+    /// getAttr 对于属性：新的对象 ｜ 共享对象且 ref++
+    test("getAttr for attributes: new object | shared object with ref++", () {
       final obj = PyDouble(1.5);
-      final real = obj.get("real");     expect(real.ptr, equals(obj.ptr)); // 同一个对象
-                                        expect(real.ref.count, equals(2));
-      final real2 = obj.get("real");    expect(real2.ref.count, equals(3));
-                                        expect(real.ptr, equals(real2.ptr));
-      final imag = obj.get("imag");     expect(imag.ref.count, equals(1));  // 每次都在构造新的
-      final imag2 = obj.get("imag");    expect(imag2.ref.count, equals(1));
+      final real = obj.getAttr("real");   expect(real.ptr, equals(obj.ptr)); // 同一个对象
+                                          expect(real.ref.count, equals(2));
+      final real2 = obj.getAttr("real");  expect(real2.ref.count, equals(3));
+                                          expect(real.ptr, equals(real2.ptr));
+      final imag = obj.getAttr("imag");   expect(imag.ref.count, equals(1));  // 每次都在构造新的
+      final imag2 = obj.getAttr("imag");  expect(imag2.ref.count, equals(1));
 
       real.ref.discrement();
       real2.ref.discrement();
-                                        // 说明 imag 返回的是一个新的对象
-      imag.ref.discrement();            expect(imag.ref.count, equals(0));
-                                        expect(imag2.ref.count, equals(1));
+                                          // 说明 imag 返回的是一个新的对象
+      imag.ref.discrement();              expect(imag.ref.count, equals(0));
+                                          expect(imag2.ref.count, equals(1));
       imag2.ref.discrement();
 
       obj.ref.discrement();
 
       // 所以无论哪一种都是需要 ref--，对于 getDouble
+    });
+
+    /// getItem: ref++
+    test("getItem: ref++", () {
+      final owner = PyList(0);
+      final a = PyDouble(1);      expect(a.ref.count, equals(1));
+      owner.add(a);               expect(a.ref.count, equals(2));
+                                  // 返回一个引用且 ref++
+      final i = PyInt(0);
+      final b = owner.getItem(i); expect(b.ptr, equals(a.ptr));
+                                  expect(b.ref.count, equals(3));
+      final c = owner[0];         expect(c.ptr, equals(a.ptr));
+                                  expect(c.ref.count, equals(3));
+
+      owner.ref.discrement();     expect(a.ref.count, equals(2));
+      a.ref.discrement();         expect(a.ref.count, equals(1));
+      b.ref.discrement();         expect(a.ref.count, equals(0));
+      i.ref.discrement();
     });
   });
 

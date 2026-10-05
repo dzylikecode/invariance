@@ -11,8 +11,14 @@ const auto funcs = std::tuple{
 
 
     &PyObject_GetAttrString,
+    &PyObject_GetAttr,
+    &PyObject_GetItem,
     &PyObject_SetAttrString,
+    &PyObject_SetAttr,
+    &PyObject_SetItem,
     &PyObject_HasAttrString,
+    &PyObject_HasAttr,
+    &PyObject_DelItem,
 
     &Py_DecRef,
     &Py_IncRef,

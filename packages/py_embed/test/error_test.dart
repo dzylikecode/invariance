@@ -5,13 +5,13 @@ void main() {
   runString("a = 5");
   final module = PyModule('__main__');
   test('found value', () {
-    final a = module.get('a').asInt();
+    final a = module.getAttr('a').asInt();
     expect(a, equals(5));
   });
 
   test('not found value', () {
     expect(
-      () => module.get('b'),
+      () => module.getAttr('b'),
       throwsA(
         isA<PyException>()
             .having((e) => e.type, 'type', contains('AttributeError'))

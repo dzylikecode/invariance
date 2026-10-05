@@ -31,14 +31,18 @@ class const PyObject(final PyRef ref) {
   factory fromHandle(Pointer<g.PyObject> ptr) => .new(.fromHandle(ptr));
 
   @override
-  String toString() => api.callToString(ptr);
+  String toString() => checked(() => api.callToString(ptr));
 }
 
 extension PyObjectAttributes on PyObject {
-  /// Get the [attribute] of a Python object by name.
+  /// Get the [attribute] of a Python object.
+  ///
+  /// ```python
+  /// obj.attribute
+  /// ```
   ///
   /// ref++
-  PyObject get(String attribute) => ffi.using(
+  PyObject getAttr(String attribute) => ffi.using(
     (arena) => .fromHandle(
       checked(
         () => api.PyObject_GetAttrString(
@@ -50,7 +54,7 @@ extension PyObjectAttributes on PyObject {
   );
 
   /// Set the [attribute] of a Python object to a new [value].
-  void set(String attribute, PyObject value) => ffi.using(
+  void setAttr(String attribute, PyObject value) => ffi.using(
     (arena) => checked(
       () => api.PyObject_SetAttrString(
         ptr,
@@ -60,7 +64,7 @@ extension PyObjectAttributes on PyObject {
     ),
   );
 
-  bool has(String attribute) => ffi.using((arena) {
+  bool hasAttr(String attribute) => ffi.using((arena) {
     final result = checked(
       () => api.PyObject_HasAttrString(
         ptr,
@@ -70,15 +74,37 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getInt(String attribute) => get(attribute).using((attr) => attr.asInt());
-  double getDouble(String attribute) =>
-      get(attribute).using((attr) => attr.asDouble());
+  int getAttrInt(String attribute) =>
+      getAttr(attribute).using((attr) => attr.asInt());
+  double getAttrDouble(String attribute) =>
+      getAttr(attribute).using((attr) => attr.asDouble());
 
-  bool getBool(String attribute) =>
-      get(attribute).using((attr) => attr.asBool());
+  bool getAttrBool(String attribute) =>
+      getAttr(attribute).using((attr) => attr.asBool());
 
-  String getString(String attribute) =>
-      get(attribute).using((attr) => attr.asString());
+  String getAttrString(String attribute) =>
+      getAttr(attribute).using((attr) => attr.asString());
+
+  PyObject getAttrObject(PyObject attribute) =>
+      checked(() => .fromHandle(api.PyObject_GetAttr(ptr, attribute.ptr)));
+  void setAttrObject(PyObject attribute, PyObject value) =>
+      checked(() => api.PyObject_SetAttr(ptr, attribute.ptr, value.ptr));
+  bool hasAttrObject(PyObject attribute) =>
+      checked(() => api.PyObject_HasAttr(ptr, attribute.ptr)) != 0;
+
+  /// Get the item of a Python object using the subscript operator.
+  ///
+  /// ```python
+  /// obj[key]
+  /// ```
+  ///
+  /// ref++
+  PyObject getItem(PyObject key) =>
+      .fromHandle(checked(() => api.PyObject_GetItem(ptr, key.ptr)));
+  void setItem(PyObject key, PyObject value) =>
+      checked(() => api.PyObject_SetItem(ptr, key.ptr, value.ptr));
+  void deleteItem(PyObject key) =>
+      checked(() => api.PyObject_DelItem(ptr, key.ptr));
 }
 
 extension PyObjectReference on PyObject {
@@ -98,7 +124,8 @@ extension PyObjectConverter on PyObject {
   int asInt() => checked(() => api.PyLong_AsLong(ptr));
   double asDouble() => checked(() => api.PyFloat_AsDouble(ptr));
   bool asBool() => checked(() => api.PyObject_IsTrue(ptr) != 0);
-  String asString() => checked(() => api.PyUnicode_AsUTF8(ptr)).cast<ffi.Utf8>().toDartString();
+  String asString() =>
+      checked(() => api.PyUnicode_AsUTF8(ptr)).cast<ffi.Utf8>().toDartString();
 }
 
 extension PyObjectCall on PyObject {
@@ -109,18 +136,19 @@ extension PyObjectCall on PyObject {
   );
   PyObject call0() =>
       checked(() => .fromHandle(api.PyObject_CallObject(ptr, nullptr)));
-  
+
   /// ref-- args 里面的引用会释放一次
-  PyObject callN(List<PyObject> args) => PyTuple.fromList(args).using((tuple) => call(tuple as PyTuple));
+  PyObject callN(List<PyObject> args) =>
+      PyTuple.fromList(args).using((tuple) => call(tuple as PyTuple));
 }
 
 extension PyObjectWithContext on PyObject {
   T withContext<T>(T Function(PyObject) action) {
-    final value = get('__enter__').using((enter) => enter.call0());
+    final value = getAttr('__enter__').using((enter) => enter.call0());
     try {
       return action(value);
     } finally {
-      get('__exit__').using((exit) => exit.call0());
+      getAttr('__exit__').using((exit) => exit.call0());
       value.ref.discrement();
     }
   }

@@ -248,6 +248,45 @@ class NativeLibrary {
         )
       >();
 
+  int PyObject_DelItem(ffi.Pointer<PyObject> o, ffi.Pointer<PyObject> key) {
+    return _PyObject_DelItem(o, key);
+  }
+
+  late final _PyObject_DelItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
+        >
+      >('PyObject_DelItem');
+  late final _PyObject_DelItem =
+      _PyObject_DelItemPtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyObject_GetAttr(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<PyObject> arg1,
+  ) {
+    return _PyObject_GetAttr(arg0, arg1);
+  }
+
+  late final _PyObject_GetAttrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_GetAttr');
+  late final _PyObject_GetAttr =
+      _PyObject_GetAttrPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   ffi.Pointer<PyObject> PyObject_GetAttrString(
     ffi.Pointer<PyObject> arg0,
     ffi.Pointer<ffi.Char> arg1,
@@ -270,6 +309,45 @@ class NativeLibrary {
           ffi.Pointer<PyObject>,
           ffi.Pointer<ffi.Char>,
         )
+      >();
+
+  ffi.Pointer<PyObject> PyObject_GetItem(
+    ffi.Pointer<PyObject> o,
+    ffi.Pointer<PyObject> key,
+  ) {
+    return _PyObject_GetItem(o, key);
+  }
+
+  late final _PyObject_GetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_GetItem');
+  late final _PyObject_GetItem =
+      _PyObject_GetItemPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  int PyObject_HasAttr(ffi.Pointer<PyObject> arg0, ffi.Pointer<PyObject> arg1) {
+    return _PyObject_HasAttr(arg0, arg1);
+  }
+
+  late final _PyObject_HasAttrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
+        >
+      >('PyObject_HasAttr');
+  late final _PyObject_HasAttr =
+      _PyObject_HasAttrPtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
       >();
 
   int PyObject_HasAttrString(
@@ -301,6 +379,33 @@ class NativeLibrary {
   late final _PyObject_IsTrue =
       _PyObject_IsTruePtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
 
+  int PyObject_SetAttr(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<PyObject> arg1,
+    ffi.Pointer<PyObject> arg2,
+  ) {
+    return _PyObject_SetAttr(arg0, arg1, arg2);
+  }
+
+  late final _PyObject_SetAttrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_SetAttr');
+  late final _PyObject_SetAttr =
+      _PyObject_SetAttrPtr.asFunction<
+        int Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   int PyObject_SetAttrString(
     ffi.Pointer<PyObject> arg0,
     ffi.Pointer<ffi.Char> arg1,
@@ -324,6 +429,33 @@ class NativeLibrary {
         int Function(
           ffi.Pointer<PyObject>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  int PyObject_SetItem(
+    ffi.Pointer<PyObject> o,
+    ffi.Pointer<PyObject> key,
+    ffi.Pointer<PyObject> v,
+  ) {
+    return _PyObject_SetItem(o, key, v);
+  }
+
+  late final _PyObject_SetItemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyObject_SetItem');
+  late final _PyObject_SetItem =
+      _PyObject_SetItemPtr.asFunction<
+        int Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
           ffi.Pointer<PyObject>,
         )
       >();
