@@ -47,6 +47,47 @@ const auto funcs = std::tuple{
     &PyGILState_Ensure,
     &PyGILState_Release,
     &PyEval_SaveThread,
+
+    // operators
+    &PyObject_RichCompare,
+    &PyObject_RichCompareBool,
+
+    // arithmetic and bitwise operators
+    &PyNumber_Add,
+    &PyNumber_Subtract,
+    &PyNumber_Multiply,
+    &PyNumber_MatrixMultiply,
+    &PyNumber_FloorDivide,
+    &PyNumber_TrueDivide,
+    &PyNumber_Remainder,
+    &PyNumber_Divmod,
+    &PyNumber_Power,
+    &PyNumber_Lshift,
+    &PyNumber_Rshift,
+    &PyNumber_And,
+    &PyNumber_Xor,
+    &PyNumber_Or,
+
+    // unary operators
+    &PyNumber_Negative,
+    &PyNumber_Positive,
+    &PyNumber_Absolute,
+    &PyNumber_Invert,
+
+    // augmented assignment operators
+    &PyNumber_InPlaceAdd,
+    &PyNumber_InPlaceSubtract,
+    &PyNumber_InPlaceMultiply,
+    &PyNumber_InPlaceMatrixMultiply,
+    &PyNumber_InPlaceFloorDivide,
+    &PyNumber_InPlaceTrueDivide,
+    &PyNumber_InPlaceRemainder,
+    &PyNumber_InPlacePower,
+    &PyNumber_InPlaceLshift,
+    &PyNumber_InPlaceRshift,
+    &PyNumber_InPlaceAnd,
+    &PyNumber_InPlaceXor,
+    &PyNumber_InPlaceOr,
 };
 
 using structs = std::tuple<PyStatus>;

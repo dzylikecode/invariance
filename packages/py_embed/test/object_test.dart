@@ -3,6 +3,58 @@ import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 
 void main() {
+  group("PyNone", () {
+    /// borrow: ref ==，不需要释放。
+    test("shares the singleton without increasing its reference count", () {
+      // dart format off
+      final a = PyNone();       expect(a.toString(), equals('None'));
+                                expect(a.asBool(), isFalse);
+      final count = a.ref.count;
+      final b = PyNone();       expect(b.ptr, equals(a.ptr));
+                                expect(b.ref.count, equals(count));
+      // dart format on
+    });
+
+    test("can own a reference by explicitly incrementing it", () {
+      // dart format off
+      final none = PyNone();
+      final count = none.ref.count;
+      none.ref.increment();
+      // Python 3.12 起 None 是 immortal，引用计数不再随增减变化。
+      if (pyRuntime.version.minor < 12) {
+                               expect(none.ref.count, equals(count + 1));
+      }
+      expect(
+        () => none.using((value) => throw StateError('test')),
+        throwsStateError,
+      );
+                               expect(none.ref.count, equals(count));
+                               expect(none.toString(), equals('None'));
+      // dart format on
+    });
+
+    test("power preserves the borrowed None reference", () {
+      // dart format off
+      final a = PyInt(5);
+      final b = PyInt(3);
+      final none = PyNone();
+      final count = none.ref.count;
+      final result = a.pow(b, none);          expect(result.asInt(), equals(125));
+      final inPlace = a.inPlacePower(b, none);expect(inPlace.asInt(), equals(125));
+      final implicit = a.pow(b);              expect(implicit.asInt(), equals(125));
+      final implicitInPlace = a.inPlacePower(b);
+                                              expect(implicitInPlace.asInt(), equals(125));
+                                              expect(none.ref.count, equals(count));
+      result.ref.discrement();
+      inPlace.ref.discrement();
+      implicit.ref.discrement();
+      implicitInPlace.ref.discrement();
+      a.ref.discrement();
+      b.ref.discrement();
+      // dart format on
+    });
+  });
+
   group("PyInt", () {
     test(
       "shares the cached object and reference count for the same small integer",

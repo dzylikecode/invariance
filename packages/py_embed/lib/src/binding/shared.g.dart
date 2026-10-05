@@ -197,6 +197,720 @@ class NativeLibrary {
   late final _PyLong_FromLong =
       _PyLong_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
 
+  ffi.Pointer<PyObject> PyNumber_Absolute(ffi.Pointer<PyObject> o) {
+    return _PyNumber_Absolute(o);
+  }
+
+  late final _PyNumber_AbsolutePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyNumber_Absolute');
+  late final _PyNumber_Absolute =
+      _PyNumber_AbsolutePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Add(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Add(o1, o2);
+  }
+
+  late final _PyNumber_AddPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Add');
+  late final _PyNumber_Add =
+      _PyNumber_AddPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_And(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_And(o1, o2);
+  }
+
+  late final _PyNumber_AndPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_And');
+  late final _PyNumber_And =
+      _PyNumber_AndPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Divmod(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Divmod(o1, o2);
+  }
+
+  late final _PyNumber_DivmodPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Divmod');
+  late final _PyNumber_Divmod =
+      _PyNumber_DivmodPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_FloorDivide(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_FloorDivide(o1, o2);
+  }
+
+  late final _PyNumber_FloorDividePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_FloorDivide');
+  late final _PyNumber_FloorDivide =
+      _PyNumber_FloorDividePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceAdd(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceAdd(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceAddPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceAdd');
+  late final _PyNumber_InPlaceAdd =
+      _PyNumber_InPlaceAddPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceAnd(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceAnd(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceAndPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceAnd');
+  late final _PyNumber_InPlaceAnd =
+      _PyNumber_InPlaceAndPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceFloorDivide(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceFloorDivide(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceFloorDividePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceFloorDivide');
+  late final _PyNumber_InPlaceFloorDivide =
+      _PyNumber_InPlaceFloorDividePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceLshift(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceLshift(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceLshiftPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceLshift');
+  late final _PyNumber_InPlaceLshift =
+      _PyNumber_InPlaceLshiftPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceMatrixMultiply(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceMatrixMultiply(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceMatrixMultiplyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceMatrixMultiply');
+  late final _PyNumber_InPlaceMatrixMultiply =
+      _PyNumber_InPlaceMatrixMultiplyPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceMultiply(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceMultiply(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceMultiplyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceMultiply');
+  late final _PyNumber_InPlaceMultiply =
+      _PyNumber_InPlaceMultiplyPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceOr(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceOr(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceOrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceOr');
+  late final _PyNumber_InPlaceOr =
+      _PyNumber_InPlaceOrPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlacePower(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+    ffi.Pointer<PyObject> o3,
+  ) {
+    return _PyNumber_InPlacePower(o1, o2, o3);
+  }
+
+  late final _PyNumber_InPlacePowerPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlacePower');
+  late final _PyNumber_InPlacePower =
+      _PyNumber_InPlacePowerPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceRemainder(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceRemainder(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceRemainderPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceRemainder');
+  late final _PyNumber_InPlaceRemainder =
+      _PyNumber_InPlaceRemainderPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceRshift(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceRshift(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceRshiftPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceRshift');
+  late final _PyNumber_InPlaceRshift =
+      _PyNumber_InPlaceRshiftPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceSubtract(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceSubtract(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceSubtractPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceSubtract');
+  late final _PyNumber_InPlaceSubtract =
+      _PyNumber_InPlaceSubtractPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceTrueDivide(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceTrueDivide(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceTrueDividePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceTrueDivide');
+  late final _PyNumber_InPlaceTrueDivide =
+      _PyNumber_InPlaceTrueDividePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_InPlaceXor(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_InPlaceXor(o1, o2);
+  }
+
+  late final _PyNumber_InPlaceXorPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_InPlaceXor');
+  late final _PyNumber_InPlaceXor =
+      _PyNumber_InPlaceXorPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Invert(ffi.Pointer<PyObject> o) {
+    return _PyNumber_Invert(o);
+  }
+
+  late final _PyNumber_InvertPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyNumber_Invert');
+  late final _PyNumber_Invert =
+      _PyNumber_InvertPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Lshift(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Lshift(o1, o2);
+  }
+
+  late final _PyNumber_LshiftPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Lshift');
+  late final _PyNumber_Lshift =
+      _PyNumber_LshiftPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_MatrixMultiply(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_MatrixMultiply(o1, o2);
+  }
+
+  late final _PyNumber_MatrixMultiplyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_MatrixMultiply');
+  late final _PyNumber_MatrixMultiply =
+      _PyNumber_MatrixMultiplyPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Multiply(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Multiply(o1, o2);
+  }
+
+  late final _PyNumber_MultiplyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Multiply');
+  late final _PyNumber_Multiply =
+      _PyNumber_MultiplyPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Negative(ffi.Pointer<PyObject> o) {
+    return _PyNumber_Negative(o);
+  }
+
+  late final _PyNumber_NegativePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyNumber_Negative');
+  late final _PyNumber_Negative =
+      _PyNumber_NegativePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Or(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Or(o1, o2);
+  }
+
+  late final _PyNumber_OrPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Or');
+  late final _PyNumber_Or =
+      _PyNumber_OrPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Positive(ffi.Pointer<PyObject> o) {
+    return _PyNumber_Positive(o);
+  }
+
+  late final _PyNumber_PositivePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyNumber_Positive');
+  late final _PyNumber_Positive =
+      _PyNumber_PositivePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Power(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+    ffi.Pointer<PyObject> o3,
+  ) {
+    return _PyNumber_Power(o1, o2, o3);
+  }
+
+  late final _PyNumber_PowerPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Power');
+  late final _PyNumber_Power =
+      _PyNumber_PowerPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Remainder(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Remainder(o1, o2);
+  }
+
+  late final _PyNumber_RemainderPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Remainder');
+  late final _PyNumber_Remainder =
+      _PyNumber_RemainderPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Rshift(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Rshift(o1, o2);
+  }
+
+  late final _PyNumber_RshiftPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Rshift');
+  late final _PyNumber_Rshift =
+      _PyNumber_RshiftPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Subtract(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Subtract(o1, o2);
+  }
+
+  late final _PyNumber_SubtractPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Subtract');
+  late final _PyNumber_Subtract =
+      _PyNumber_SubtractPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_TrueDivide(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_TrueDivide(o1, o2);
+  }
+
+  late final _PyNumber_TrueDividePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_TrueDivide');
+  late final _PyNumber_TrueDivide =
+      _PyNumber_TrueDividePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
+  ffi.Pointer<PyObject> PyNumber_Xor(
+    ffi.Pointer<PyObject> o1,
+    ffi.Pointer<PyObject> o2,
+  ) {
+    return _PyNumber_Xor(o1, o2);
+  }
+
+  late final _PyNumber_XorPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyNumber_Xor');
+  late final _PyNumber_Xor =
+      _PyNumber_XorPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   ffi.Pointer<PyObject> PyObject_Call(
     ffi.Pointer<PyObject> callable,
     ffi.Pointer<PyObject> args,
@@ -378,6 +1092,56 @@ class NativeLibrary {
       );
   late final _PyObject_IsTrue =
       _PyObject_IsTruePtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
+
+  ffi.Pointer<PyObject> PyObject_RichCompare(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<PyObject> arg1,
+    int arg2,
+  ) {
+    return _PyObject_RichCompare(arg0, arg1, arg2);
+  }
+
+  late final _PyObject_RichComparePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Int,
+          )
+        >
+      >('PyObject_RichCompare');
+  late final _PyObject_RichCompare =
+      _PyObject_RichComparePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          int,
+        )
+      >();
+
+  int PyObject_RichCompareBool(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<PyObject> arg1,
+    int arg2,
+  ) {
+    return _PyObject_RichCompareBool(arg0, arg1, arg2);
+  }
+
+  late final _PyObject_RichCompareBoolPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Int,
+          )
+        >
+      >('PyObject_RichCompareBool');
+  late final _PyObject_RichCompareBool =
+      _PyObject_RichCompareBoolPtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>, int)
+      >();
 
   int PyObject_SetAttr(
     ffi.Pointer<PyObject> arg0,

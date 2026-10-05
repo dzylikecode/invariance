@@ -47,6 +47,8 @@ const auto funcs = std::tuple{
     &PySequence_Repeat,
     &PySequence_GetItem,
     &PySequence_SetItem,
+
+    
 };
 
 using structs = std::tuple<PyConfig>;

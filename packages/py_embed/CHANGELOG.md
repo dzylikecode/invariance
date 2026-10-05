@@ -1,3 +1,8 @@
+## 0.3.0
+
+- + python operator
+- PyNone
+
 ## 0.2.3
 
 - + getItem

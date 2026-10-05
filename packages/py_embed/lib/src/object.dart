@@ -4,6 +4,7 @@ import 'package:ffi/ffi.dart' as ffi;
 
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
+import 'env/env_args.dart' show pyDll;
 import 'runtime.dart';
 
 import '../debug.dart';
@@ -18,11 +19,6 @@ class PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
     assert(count > 0);
     checked(() => api.Py_DecRef(ptr));
   }
-}
-
-extension on Pointer<g.PyObject> {
-  PyRef get asRef => .fromHandle(this);
-  PyObject get asObj => .fromHandle(this);
 }
 
 class const PyObject(final PyRef ref) {
@@ -142,6 +138,188 @@ extension PyObjectCall on PyObject {
       PyTuple.fromList(args).using((tuple) => call(tuple as PyTuple));
 }
 
+/// Python rich comparison operation codes.
+enum PyComparison {
+  lessThan,
+  lessThanOrEqual,
+  equal,
+  notEqual,
+  greaterThan,
+  greaterThanOrEqual,
+}
+
+/// Object results own a new reference; release them with [PyObjectReference.using]
+/// or [PyRef.discrement]. Operands retain their existing references.
+/// Dart compound assignments use the ordinary operators. Use the inPlace
+/// methods explicitly for Python augmented assignment semantics.
+extension PyObjectOperator on PyObject {
+  /// python: a + b
+  PyObject operator +(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Add(ptr, other.ptr)));
+
+  /// python: a - b
+  PyObject operator -(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Subtract(ptr, other.ptr)));
+
+  /// python: a * b
+  PyObject operator *(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Multiply(ptr, other.ptr)));
+
+  /// python: a / b
+  PyObject operator /(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_TrueDivide(ptr, other.ptr)));
+
+  /// python: a // b
+  PyObject operator ~/(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_FloorDivide(ptr, other.ptr)));
+
+  /// python: a % b
+  PyObject operator %(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Remainder(ptr, other.ptr)));
+
+  /// python: a << b
+  PyObject operator <<(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Lshift(ptr, other.ptr)));
+
+  /// python: a >> b
+  PyObject operator >>(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Rshift(ptr, other.ptr)));
+
+  /// python: a & b
+  PyObject operator &(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_And(ptr, other.ptr)));
+
+  /// python: a ^ b
+  PyObject operator ^(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Xor(ptr, other.ptr)));
+
+  /// python: a | b
+  PyObject operator |(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Or(ptr, other.ptr)));
+
+  /// python: -a
+  PyObject operator -() =>
+      .fromHandle(checked(() => api.PyNumber_Negative(ptr)));
+
+  /// python: ~a
+  PyObject operator ~() => .fromHandle(checked(() => api.PyNumber_Invert(ptr)));
+
+  /// python: +a
+  PyObject positive() => .fromHandle(checked(() => api.PyNumber_Positive(ptr)));
+
+  /// python: abs(a)
+  PyObject abs() => .fromHandle(checked(() => api.PyNumber_Absolute(ptr)));
+
+  /// python: a @ b
+  PyObject matrixMultiply(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_MatrixMultiply(ptr, other.ptr)));
+
+  /// python: divmod(a, b)
+  PyObject divmod(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_Divmod(ptr, other.ptr)));
+
+  /// python: a += b
+  PyObject inPlaceAdd(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceAdd(ptr, other.ptr)));
+
+  /// python: a -= b
+  PyObject inPlaceSubtract(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceSubtract(ptr, other.ptr)));
+
+  /// python: a *= b
+  PyObject inPlaceMultiply(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceMultiply(ptr, other.ptr)));
+
+  /// python: a @= b
+  PyObject inPlaceMatrixMultiply(PyObject other) => .fromHandle(
+    checked(() => api.PyNumber_InPlaceMatrixMultiply(ptr, other.ptr)),
+  );
+
+  /// python: a //= b
+  PyObject inPlaceFloorDivide(PyObject other) => .fromHandle(
+    checked(() => api.PyNumber_InPlaceFloorDivide(ptr, other.ptr)),
+  );
+
+  /// python: a /= b
+  PyObject inPlaceTrueDivide(PyObject other) => .fromHandle(
+    checked(() => api.PyNumber_InPlaceTrueDivide(ptr, other.ptr)),
+  );
+
+  /// python: a %= b
+  PyObject inPlaceRemainder(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceRemainder(ptr, other.ptr)));
+
+  /// python: a <<= b
+  PyObject inPlaceLshift(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceLshift(ptr, other.ptr)));
+
+  /// python: a >>= b
+  PyObject inPlaceRshift(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceRshift(ptr, other.ptr)));
+
+  /// python: a &= b
+  PyObject inPlaceAnd(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceAnd(ptr, other.ptr)));
+
+  /// python: a ^= b
+  PyObject inPlaceXor(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceXor(ptr, other.ptr)));
+
+  /// python: a |= b
+  PyObject inPlaceOr(PyObject other) =>
+      .fromHandle(checked(() => api.PyNumber_InPlaceOr(ptr, other.ptr)));
+
+  /// python: a ** b; with modulus: pow(a, b, modulus)
+  /// Python power, optionally with a modulus. An omitted modulus uses None.
+  PyObject pow(PyObject exponent, [PyObject? modulus]) {
+    modulus ??= PyNone();
+    return .fromHandle(
+      checked(() => api.PyNumber_Power(ptr, exponent.ptr, modulus!.ptr)),
+    );
+  }
+
+  /// python: a **= b; with modulus: a = pow(a, b, modulus)
+  /// Python power, optionally with a modulus. An omitted modulus uses None.
+  PyObject inPlacePower(PyObject exponent, [PyObject? modulus]) {
+    modulus ??= PyNone();
+    return .fromHandle(
+      checked(() => api.PyNumber_InPlacePower(ptr, exponent.ptr, modulus!.ptr)),
+    );
+  }
+
+  /// python: a < b, a <= b, a == b, a != b, a > b, a >= b (by comparison)
+  /// Preserves custom comparison results, such as array masks.
+  PyObject richCompare(PyObject other, PyComparison comparison) => .fromHandle(
+    checked(() => api.PyObject_RichCompare(ptr, other.ptr, comparison.index)),
+  );
+
+  /// python: bool(a < b), bool(a <= b), bool(a == b), bool(a != b), bool(a > b), bool(a >= b) (by comparison)
+  bool compare(PyObject other, PyComparison comparison) =>
+      checked(
+        () => api.PyObject_RichCompareBool(ptr, other.ptr, comparison.index),
+      ) !=
+      0;
+
+  // Extensions cannot override Object.==; use these methods for Python equality.
+  /// python: a == b
+  bool equals(PyObject other) => compare(other, .equal);
+
+  /// python: a != b
+  bool notEquals(PyObject other) => compare(other, .notEqual);
+
+  /// python: a < b
+  bool operator <(PyObject other) => compare(other, .lessThan);
+
+  /// python: a <= b
+  bool operator <=(PyObject other) => compare(other, .lessThanOrEqual);
+
+  /// python: a > b
+  bool operator >(PyObject other) => compare(other, .greaterThan);
+
+  /// python: a >= b
+  bool operator >=(PyObject other) => compare(other, .greaterThanOrEqual);
+}
+
 extension PyObjectWithContext on PyObject {
   T withContext<T>(T Function(PyObject) action) {
     final value = getAttr('__enter__').using((enter) => enter.call0());
@@ -165,6 +343,18 @@ class PyInt(int value) extends PyObject {
 /// 新对象的引用计数为 1，调用方需要分别释放各自的引用。
 class PyDouble(double value) extends PyObject {
   this : super(.fromHandle(api.PyFloat_FromDouble(value)));
+}
+
+/// python: None
+/// 所有实例共享 Python 的 None 单例；构造返回 borrowed reference，不增加引用计数。
+/// 不要直接调用 .using() 或 ref.discrement()；需要拥有引用时先调用 ref.increment()。
+/// 借用引用仅在 Python 解释器存活期间有效。
+class PyNone extends PyObject {
+  // Py_None 是宏；CPython 导出的数据符号地址就是 None 对象的指针。
+  // TODO：移入到 api 中，兼容一下 3.13
+  static final _ptr = pyDll.lookup<g.PyObject>('_Py_NoneStruct');
+
+  PyNone() : super(.fromHandle(checked(() => _ptr)));
 }
 
 class PyBool(bool value) extends PyObject {
@@ -203,8 +393,10 @@ class PyModule(String moduleName) extends PyObject {
 ///
 /// [PyTuple] 会管理接管所有权:
 /// {@example /test/object_test.dart#tuple-take-the-ownership}
-class PyTuple(int size) extends PyObject {
-  this : super(.fromHandle(checked(() => api.PyTuple_New(size))));
+class PyTuple.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
+  this : super(.fromHandle(ptr));
+
+  factory(int size) => .fromHandle(checked(() => api.PyTuple_New(size)));
 
   /// ref==
   factory fromList(List<PyObject> items) {
