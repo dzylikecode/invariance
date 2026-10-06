@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:py_embed/src/common.dart' as lib;
+import 'package:mustache_template/mustache_template.dart';
 
 String bindingName(lib.Version version) =>
     '${Platform.isWindows ? 'windows' : 'posix'}_${version.format(delimiter: '_')}';
@@ -11,10 +12,10 @@ Future<void> generateVersionWrapper(
 ) async {
   const marker = '{{binding}}';
   final template = await File.fromUri(
-    packageRoot.resolve('tool/version.dart.template'),
+    packageRoot.resolve('tool/version.dart.mustache'),
   ).readAsString();
   if (!template.contains(marker)) {
-    throw FormatException('Missing $marker in tool/version.dart.template');
+    throw FormatException('Missing $marker in tool/version.dart.mustache');
   }
 
   final name = bindingName(version);

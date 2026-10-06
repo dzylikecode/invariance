@@ -272,7 +272,7 @@ extension PyObjectOperator on PyObject {
   /// python: a ** b; with modulus: pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.
   PyObject pow(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= PyNone();
+    modulus ??= PyNone.borrowed;
     return .fromHandle(
       checked(() => api.PyNumber_Power(ptr, exponent.ptr, modulus!.ptr)),
     );
@@ -281,7 +281,7 @@ extension PyObjectOperator on PyObject {
   /// python: a **= b; with modulus: a = pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.
   PyObject inPlacePower(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= PyNone();
+    modulus ??= PyNone.borrowed;
     return .fromHandle(
       checked(() => api.PyNumber_InPlacePower(ptr, exponent.ptr, modulus!.ptr)),
     );
@@ -326,7 +326,8 @@ extension PyObjectWithContext on PyObject {
     try {
       return action(value);
     } finally {
-      getAttr('__exit__').using((exit) => exit.call0());
+      getAttr('__exit__')
+          .using((exit) => exit.callN([PyNone(), PyNone(), PyNone()]));
       value.ref.discrement();
     }
   }
@@ -354,7 +355,13 @@ class PyNone extends PyObject {
   // TODO：移入到 api 中，兼容一下 3.13
   static final _ptr = pyDll.lookup<g.PyObject>('_Py_NoneStruct');
 
-  PyNone() : super(.fromHandle(checked(() => _ptr)));
+  static final borrowed = PyNone._borrowed();
+  factory() {
+    final obj = PyNone.borrowed;
+    checked(() => obj.ref.increment());
+    return obj;
+  }
+  PyNone._borrowed() : super(.fromHandle(checked(() => _ptr)));
 }
 
 class PyBool(bool value) extends PyObject {
