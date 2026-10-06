@@ -263,7 +263,7 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
   Pointer<shared.PyObject> Py_GetConstantBorrowed(PyConst v) => switch (v) {
     .none => _Py_NoneStruct,
     _ => throw UnsupportedError(
-      'Py_GetConstantBorrowed only supports None before Python 3.13',
+      'TODO: need to fix $v',
     ),
   };
 

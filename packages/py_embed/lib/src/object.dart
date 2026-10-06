@@ -25,6 +25,10 @@ class const PyObject(final PyRef ref) {
   Pointer<g.PyObject> get ptr => ref.ptr;
 
   factory fromHandle(Pointer<g.PyObject> ptr) => .new(.fromHandle(ptr));
+  factory borrowedConst(PyConst v) =>
+      .fromHandle(checked(() => api.Py_GetConstantBorrowed(v)));
+  factory getConst(PyConst v) =>
+      .fromHandle(checked(() => api.Py_GetConstant(v)));
 
   @override
   String toString() => checked(() => api.callToString(ptr));
@@ -272,7 +276,7 @@ extension PyObjectOperator on PyObject {
   /// python: a ** b; with modulus: pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.
   PyObject pow(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= PyNone.borrowed;
+    modulus ??= .borrowedConst(.none);
     return .fromHandle(
       checked(() => api.PyNumber_Power(ptr, exponent.ptr, modulus!.ptr)),
     );
@@ -281,7 +285,7 @@ extension PyObjectOperator on PyObject {
   /// python: a **= b; with modulus: a = pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.
   PyObject inPlacePower(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= PyNone.borrowed;
+    modulus ??= .borrowedConst(.none);
     return .fromHandle(
       checked(() => api.PyNumber_InPlacePower(ptr, exponent.ptr, modulus!.ptr)),
     );
@@ -326,8 +330,10 @@ extension PyObjectWithContext on PyObject {
     try {
       return action(value);
     } finally {
-      getAttr('__exit__')
-          .using((exit) => exit.callN([PyNone(), PyNone(), PyNone()]));
+      getAttr('__exit__').using(
+        (exit) =>
+            exit.callN([.getConst(.none), .getConst(.none), .getConst(.none)]),
+      );
       value.ref.discrement();
     }
   }
@@ -345,24 +351,6 @@ class PyInt(int value) extends PyObject {
 class PyDouble(double value) extends PyObject {
   this : super(.fromHandle(api.PyFloat_FromDouble(value)));
 }
-
-/// python: None
-/// 所有实例共享 Python 的 None 单例；构造返回 borrowed reference，不增加引用计数。
-/// 不要直接调用 .using() 或 ref.discrement()；需要拥有引用时先调用 ref.increment()。
-/// 借用引用仅在 Python 解释器存活期间有效。
-class PyNone extends PyObject {
-  // Py_None 是宏；CPython 导出的数据符号地址就是 None 对象的指针。
-  static final _ptr = checked(() => api.Py_GetConstantBorrowed(.none));
-
-  static final borrowed = PyNone._borrowed();
-  factory() {
-    final obj = PyNone.borrowed;
-    checked(() => obj.ref.increment());
-    return obj;
-  }
-  PyNone._borrowed() : super(.fromHandle(checked(() => _ptr)));
-}
-
 
 class PyBool(bool value) extends PyObject {
   this : super(.fromHandle(api.PyBool_FromLong(value ? 1 : 0)));
