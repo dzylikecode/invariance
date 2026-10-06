@@ -1,9 +1,6 @@
-class const Version(final int major, final int minor, final int patch) {
-  factory parse(
-    String text, {
-    String delimiter = '.',
-    bool strict = false,
-  }) {
+class const Version(final int major, final int minor, final int patch)
+    implements Comparable<Version> {
+  factory parse(String text, {String delimiter = '.', bool strict = false}) {
     final pattern = RegExp(
       <String>[
         if (strict) '^',
@@ -34,4 +31,18 @@ class const Version(final int major, final int minor, final int patch) {
 
   @override
   String toString() => format();
+
+  @override
+  int compareTo(Version other) {
+    final majorOrder = major.compareTo(other.major);
+    if (majorOrder != 0) return majorOrder;
+    final minorOrder = minor.compareTo(other.minor);
+    if (minorOrder != 0) return minorOrder;
+    return patch.compareTo(other.patch);
+  }
+
+  bool operator <(Version other) => compareTo(other) < 0;
+  bool operator <=(Version other) => compareTo(other) <= 0;
+  bool operator >(Version other) => compareTo(other) > 0;
+  bool operator >=(Version other) => compareTo(other) >= 0;
 }

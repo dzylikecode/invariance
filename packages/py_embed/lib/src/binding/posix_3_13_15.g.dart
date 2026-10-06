@@ -737,6 +737,36 @@ class NativeLibrary {
   late final _PyTuple_Size =
       _PyTuple_SizePtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
 
+  ffi.Pointer<imp$1.PyObject> Py_GetConstant(int constant_id) {
+    return _Py_GetConstant(constant_id);
+  }
+
+  late final _Py_GetConstantPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.UnsignedInt)
+        >
+      >('Py_GetConstant');
+  late final _Py_GetConstant =
+      _Py_GetConstantPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(int)
+      >();
+
+  ffi.Pointer<imp$1.PyObject> Py_GetConstantBorrowed(int constant_id) {
+    return _Py_GetConstantBorrowed(constant_id);
+  }
+
+  late final _Py_GetConstantBorrowedPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<imp$1.PyObject> Function(ffi.UnsignedInt)
+        >
+      >('Py_GetConstantBorrowed');
+  late final _Py_GetConstantBorrowed =
+      _Py_GetConstantBorrowedPtr.asFunction<
+        ffi.Pointer<imp$1.PyObject> Function(int)
+      >();
+
   imp$1.PyStatus Py_InitializeFromConfig(ffi.Pointer<PyConfig> config) {
     return _Py_InitializeFromConfig(config);
   }

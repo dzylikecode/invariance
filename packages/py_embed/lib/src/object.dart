@@ -352,8 +352,7 @@ class PyDouble(double value) extends PyObject {
 /// 借用引用仅在 Python 解释器存活期间有效。
 class PyNone extends PyObject {
   // Py_None 是宏；CPython 导出的数据符号地址就是 None 对象的指针。
-  // TODO：移入到 api 中，兼容一下 3.13
-  static final _ptr = pyDll.lookup<g.PyObject>('_Py_NoneStruct');
+  static final _ptr = checked(() => api.Py_GetConstantBorrowed(.none));
 
   static final borrowed = PyNone._borrowed();
   factory() {
@@ -363,6 +362,7 @@ class PyNone extends PyObject {
   }
   PyNone._borrowed() : super(.fromHandle(checked(() => _ptr)));
 }
+
 
 class PyBool(bool value) extends PyObject {
   this : super(.fromHandle(api.PyBool_FromLong(value ? 1 : 0)));

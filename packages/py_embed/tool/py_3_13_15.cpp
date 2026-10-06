@@ -48,7 +48,8 @@ const auto funcs = std::tuple{
     &PySequence_GetItem,
     &PySequence_SetItem,
 
-    
+    &Py_GetConstant,
+    &Py_GetConstantBorrowed,
 };
 
 using structs = std::tuple<PyConfig>;

@@ -152,6 +152,9 @@ abstract class PlatformBaseApi {
     int index,
     Pointer<shared.PyObject> item,
   );
+
+  Pointer<shared.PyObject> Py_GetConstantBorrowed(PyConst v);
+  Pointer<shared.PyObject> Py_GetConstant(PyConst v);
 }
 
 abstract interface class BaseApi
@@ -249,4 +252,17 @@ extension ApiExt on BaseApi {
       Py_DecRef(obj);
     }
   }
+}
+/// Constant identifiers for Python's Py_GetConstant APIs.
+enum const PyConst(final int value) {
+  none(0),
+  falseValue(1),
+  trueValue(2),
+  ellipsis(3),
+  notImplemented(4),
+  zero(5),
+  one(6),
+  emptyStr(7),
+  emptyBytes(8),
+  emptyTuple(9);
 }

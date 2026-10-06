@@ -246,6 +246,15 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
     int index,
     Pointer<shared.PyObject> item,
   ) => _api.PySequence_SetItem(obj, index, item);
+
+  @override
+  Pointer<shared.PyObject> Py_GetConstantBorrowed(PyConst v) =>
+      _api.Py_GetConstantBorrowed(v.value);
+
+  @override
+  Pointer<shared.PyObject> Py_GetConstant(PyConst v) =>
+      _api.Py_GetConstant(v.value);
+
 }
 
 final class Api(super.dynamicLibrary)
