@@ -4,7 +4,6 @@ import 'package:ffi/ffi.dart' as ffi;
 
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
-import 'env/env_args.dart' show pyDll;
 import 'runtime.dart';
 
 import '../debug.dart';
