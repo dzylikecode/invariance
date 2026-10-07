@@ -1,7 +1,6 @@
 ## 0.3.1
 
 - remove PyNone, use PyObject.getConst(.none)
-- use mustache generate the code
 
 ## 0.3.0
 
@@ -12,7 +11,6 @@
 
 - + getItem
 - object.get -> object.getAttr
-
 
 ## 0.2.2
 

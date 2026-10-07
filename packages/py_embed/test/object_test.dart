@@ -7,12 +7,11 @@ void main() {
     test(
       "shares the cached object and reference count for the same small integer",
       () {
-        final a = PyInt(1);
-        final count = a.ref.count;
         // dart format off
+        final a = PyInt(1);     final count = a.ref.count;
                                 // 指针指向了同一处
         final b = PyInt(1);     expect(a.ptr, equals(b.ptr));
-                                expect(b.ref.count, equals(count+1));
+                                expect(b.ref.count, equals(count + 1));
         a.ref.discrement();     expect(b.ref.count, equals(count));
         // dart format on
       },
@@ -23,7 +22,7 @@ void main() {
     test("keeps independent reference counts for equal values", () {
       // dart format off
       final a = PyDouble(1);     expect(a.ref.count, equals(1));
-      final count = a.ref.count;
+                                 final count = a.ref.count;
       final b = PyDouble(1);     expect(b.ptr, isNot(equals(a.ptr)));
                                  expect(a.ref.count, equals(1));
                                  expect(b.ref.count, equals(1));
