@@ -247,15 +247,24 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
     Pointer<shared.PyObject> item,
   ) => _api.PySequence_SetItem(obj, index, item);
 
-  static final _Py_NoneStruct = pyDll.lookup<shared.PyObject>('_Py_NoneStruct');
+  static Pointer<shared.PyObject> _global(String name) => pyDll.lookup<shared.PyObject>(name);
+  // TODO：add more and test it
+  static final _const = <PyConst, Pointer<shared.PyObject>>{
+    // dart format off
+    .none          : _global('_Py_NoneStruct'),
+    .falseValue    : _global('_Py_FalseStruct'),
+    .trueValue     : _global('_Py_TrueStruct'),
+    .ellipsis      : _global('_Py_EllipsisObject'),
+    .notImplemented: _global('_Py_NotImplementedStruct'),
+    // dart format on
+  };
 
   @override
-  Pointer<shared.PyObject> Py_GetConstantBorrowed(PyConst v) => switch (v) {
-    .none => _Py_NoneStruct,
-    _ => throw UnsupportedError(
-      'Py_GetConstantBorrowed only supports None before Python 3.13',
-    ),
-  };
+  Pointer<shared.PyObject> Py_GetConstantBorrowed(PyConst v) {
+    final obj = _const[v];
+    if (obj == null) throw UnsupportedError("I need $v");
+    return obj;
+  }
 
   @override
   Pointer<shared.PyObject> Py_GetConstant(PyConst v) {
