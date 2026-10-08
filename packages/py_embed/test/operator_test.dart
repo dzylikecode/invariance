@@ -82,7 +82,7 @@ void main() {
     test("comparison operators", () {
       // dart format off
       final a = PyInt(5);
-      final b = PyInt(3);        expect(a > b, isTrue);
+      final b = PyInt(3);       expect(a > b, isTrue);
                                 expect(a >= b, isTrue);
                                 expect(a < b, isFalse);
                                 expect(a <= b, isFalse);
@@ -99,7 +99,7 @@ void main() {
     /// 原地修改列表；返回相同对象，但新增一次需要释放的引用。
     test("in-place addition mutates lists and returns an owned reference", () {
       // dart format off
-      final a = PyList(0);       expect(a.ref.count, equals(1));
+      final a = PyList(0);            expect(a.ref.count, equals(1));
       final b = PyList(0);
       final value = PyInt(9);
       b.add(value);

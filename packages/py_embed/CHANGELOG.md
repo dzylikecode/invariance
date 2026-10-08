@@ -1,3 +1,8 @@
+## 0.4.0
+
+- breaking change: 移除 PyObject.using，使用 Py.using, 更接近 ffi.using 的用法
+- 增加 forward
+
 ## 0.3.1
 
 - remove PyNone, use PyObject.getConst(.none)

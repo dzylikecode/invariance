@@ -5,6 +5,7 @@ import 'package:ffi/ffi.dart' as ffi;
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
 import 'runtime.dart';
+import 'scope.dart';
 
 import '../debug.dart';
 
@@ -73,16 +74,24 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getAttrInt(String attribute) =>
-      getAttr(attribute).using((attr) => attr.asInt());
-  double getAttrDouble(String attribute) =>
-      getAttr(attribute).using((attr) => attr.asDouble());
+  int getAttrInt(String attribute) => Py.using((refs) {
+    final attr = refs(getAttr(attribute));
+    return attr.asInt();
+  });
+  double getAttrDouble(String attribute) => Py.using((refs) {
+    final attr = refs(getAttr(attribute));
+    return attr.asDouble();
+  });
 
-  bool getAttrBool(String attribute) =>
-      getAttr(attribute).using((attr) => attr.asBool());
+  bool getAttrBool(String attribute) => Py.using((refs) {
+    final attr = refs(getAttr(attribute));
+    return attr.asBool();
+  });
 
-  String getAttrString(String attribute) =>
-      getAttr(attribute).using((attr) => attr.asString());
+  String getAttrString(String attribute) => Py.using((refs) {
+    final attr = refs(getAttr(attribute));
+    return attr.asString();
+  });
 
   PyObject getAttrObject(PyObject attribute) =>
       checked(() => .fromHandle(api.PyObject_GetAttr(ptr, attribute.ptr)));
@@ -106,19 +115,6 @@ extension PyObjectAttributes on PyObject {
       checked(() => api.PyObject_DelItem(ptr, key.ptr));
 }
 
-extension PyObjectReference on PyObject {
-  /// 同步执行 [action]，结束时释放当前拥有的一次引用，即使回调抛出异常。
-  /// 不增加引用计数，因此不能直接用于 borrowed reference。
-  /// 回调不得释放或转交这次引用；异步回调也不会被等待。
-  T using<T>(T Function(PyObject) action) {
-    try {
-      return action(this);
-    } finally {
-      ref.discrement();
-    }
-  }
-}
-
 extension PyObjectConverter on PyObject {
   int asInt() => checked(() => api.PyLong_AsLong(ptr));
   double asDouble() => checked(() => api.PyFloat_AsDouble(ptr));
@@ -130,15 +126,21 @@ extension PyObjectConverter on PyObject {
 extension PyObjectCall on PyObject {
   PyObject call(PyTuple args, [PyDict? kwargs]) => .fromHandle(
     checked(
-      () => api.PyObject_Call(ptr, args.ptr, kwargs == null ? nullptr : kwargs.ptr),
+      () => api.PyObject_Call(
+        ptr,
+        args.ptr,
+        kwargs == null ? nullptr : kwargs.ptr,
+      ),
     ),
   );
   PyObject call0() =>
       .fromHandle(checked(() => api.PyObject_CallObject(ptr, nullptr)));
 
   /// ref-- args 里面的引用会释放一次
-  PyObject callN(List<PyObject> args) =>
-      PyTuple.fromList(args).using((tuple) => call(tuple as PyTuple));
+  PyObject callN(List<PyObject> args) => Py.using((refs) {
+    final tuple = refs(PyTuple.fromList(args));
+    return call(tuple);
+  });
 }
 
 /// Python rich comparison operation codes.
@@ -151,7 +153,7 @@ enum PyComparison {
   greaterThanOrEqual,
 }
 
-/// Object results own a new reference; release them with [PyObjectReference.using]
+/// Object results own a new reference; release them with [Py.using]
 /// or [PyRef.discrement]. Operands retain their existing references.
 /// Dart compound assignments use the ordinary operators. Use the inPlace
 /// methods explicitly for Python augmented assignment semantics.
@@ -325,16 +327,18 @@ extension PyObjectOperator on PyObject {
 
 extension PyObjectWithContext on PyObject {
   T withContext<T>(T Function(PyObject) action) {
-    final value = getAttr('__enter__').using((enter) => enter.call0());
-    try {
-      return action(value);
-    } finally {
-      getAttr('__exit__').using(
-        (exit) =>
-            exit.callN([.getConst(.none), .getConst(.none), .getConst(.none)]),
-      );
-      value.ref.discrement();
-    }
+    return Py.using((scope) {
+      final enter = scope(getAttr('__enter__'));
+      final value = scope(enter.call0());
+      try {
+        return action(value);
+      } finally {
+        final exit = scope(getAttr('__exit__'));
+        scope(
+          exit.callN([.getConst(.none), .getConst(.none), .getConst(.none)]),
+        );
+      }
+    });
   }
 }
 
