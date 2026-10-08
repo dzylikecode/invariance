@@ -128,13 +128,13 @@ extension PyObjectConverter on PyObject {
 }
 
 extension PyObjectCall on PyObject {
-  PyObject call(PyTuple args, [PyDict? kwargs]) => checked(
-    () => .fromHandle(
-      api.PyObject_Call(ptr, args.ptr, kwargs == null ? nullptr : kwargs.ptr),
+  PyObject call(PyTuple args, [PyDict? kwargs]) => .fromHandle(
+    checked(
+      () => api.PyObject_Call(ptr, args.ptr, kwargs == null ? nullptr : kwargs.ptr),
     ),
   );
   PyObject call0() =>
-      checked(() => .fromHandle(api.PyObject_CallObject(ptr, nullptr)));
+      .fromHandle(checked(() => api.PyObject_CallObject(ptr, nullptr)));
 
   /// ref-- args 里面的引用会释放一次
   PyObject callN(List<PyObject> args) =>
