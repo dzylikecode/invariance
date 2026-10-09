@@ -30,6 +30,7 @@ const auto funcs = std::tuple{
     &PyObject_Repr,
     &PyObject_IsInstance,
     &PyUnicode_AsUTF8,
+    &PyObject_ASCII,
 
     &PyLong_FromLong,
     &PyFloat_FromDouble,

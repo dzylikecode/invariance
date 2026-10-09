@@ -911,6 +911,21 @@ class NativeLibrary {
         )
       >();
 
+  ffi.Pointer<PyObject> PyObject_ASCII(ffi.Pointer<PyObject> arg0) {
+    return _PyObject_ASCII(arg0);
+  }
+
+  late final _PyObject_ASCIIPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyObject_ASCII');
+  late final _PyObject_ASCII =
+      _PyObject_ASCIIPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
   ffi.Pointer<PyObject> PyObject_Call(
     ffi.Pointer<PyObject> callable,
     ffi.Pointer<PyObject> args,

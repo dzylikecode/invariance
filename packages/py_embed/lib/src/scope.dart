@@ -43,6 +43,12 @@ abstract final class Py {
   static bool isInstance(PyObject object, PyObject classInfo) =>
       checked(() => api.PyObject_IsInstance(object.ptr, classInfo.ptr)) != 0;
 
+  static PyObject str(PyObject object) =>
+      .fromHandle(checked(() => api.PyObject_Str(object.ptr)));
+
+  static PyObject ascii(PyObject object) =>
+      .fromHandle(checked(() => api.PyObject_ASCII(object.ptr)));
+
   /// Runs [action] synchronously, releasing registered references in reverse
   /// order on both success and failure. Async callbacks are not supported.
   ///

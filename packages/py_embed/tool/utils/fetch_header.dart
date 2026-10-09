@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:console_bars/console_bars.dart';
-import 'package:py_embed/src/common.dart' as lib;
 
 Future<void> fetchHeaders(List<String> versions, Uri packageRoot) async {
   final rootDir = Directory.fromUri(packageRoot);
