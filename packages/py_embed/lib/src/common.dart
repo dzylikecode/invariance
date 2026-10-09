@@ -45,4 +45,14 @@ class const Version(final int major, final int minor, final int patch)
   bool operator <=(Version other) => compareTo(other) <= 0;
   bool operator >(Version other) => compareTo(other) > 0;
   bool operator >=(Version other) => compareTo(other) >= 0;
+
+  @override
+  bool operator ==(Object other) => switch (other) {
+    Version _ =>
+      major == other.major && minor == other.minor && patch == other.patch,
+    _ => false,
+  };
+
+  @override
+  int get hashCode => Object.hash(major, minor, patch);
 }

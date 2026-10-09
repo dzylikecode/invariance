@@ -59,6 +59,7 @@ class PyConverter {
     };
   }
 
+  /// 用来检测是否循环引用了
   PyObject _container(Object value, PyObject Function() convert) {
     if (!_active.add(value)) {
       throw ArgumentError(
