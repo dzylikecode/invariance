@@ -10,26 +10,6 @@ conda activate rl
 dart run g1
 ```
 
-## Python 内置函数
-
-通过 `Py` 调用内置函数：`Py.len(obj)`、`Py.abs(obj)`、
-`Py.pow(base, exponent, [modulus])`、`Py.divmod(a, b)`、
-`Py.repr(obj)` 和 `Py.isInstance(obj, classInfo)`。
-其中 `len`、`repr`、`isInstance` 分别返回 Dart 的 `int`、`String`、`bool`。
-其他函数返回拥有新引用的 `PyObject`，应交给 `Py.using` 管理；参数引用不会被消耗。
-
-```dart
-Py.using((scope) {
-  final value = scope(PyInt(-7));
-  final absolute = scope(Py.abs(value));
-  print(absolute.asInt()); // 7
-  print(Py.len(scope(PyString('你好😀')))); // 3
-});
-```
-
-原先的 `obj.abs()`、`obj.pow(...)`、`obj.divmod(...)` 改为上述 `Py` 入口。
-容器的 `.length`、对象运算符和 `inPlacePower` 保持原有用法。
-
 ## env
 
 miniconda:
