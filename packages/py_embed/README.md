@@ -47,6 +47,10 @@ conda activate py_embed_3_8_20
 conda create -n py_embed_3_9_25 python=3.9.25 pip
 
 conda activate py_embed_3_9_25
+
+conda create -n py_embed_3_13_15 python=3.13.15 pip
+
+conda activate py_embed_3_13_15
 ```
 
 > 选取 3.8.20 是因为 mac M 系列只支持部分的 3.8，所以就干脆只有最后一个版本
