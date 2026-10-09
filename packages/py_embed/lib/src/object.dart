@@ -212,16 +212,9 @@ extension PyObjectOperator on PyObject {
   /// python: +a
   PyObject positive() => .fromHandle(checked(() => api.PyNumber_Positive(ptr)));
 
-  /// python: abs(a)
-  PyObject abs() => .fromHandle(checked(() => api.PyNumber_Absolute(ptr)));
-
   /// python: a @ b
   PyObject matrixMultiply(PyObject other) =>
       .fromHandle(checked(() => api.PyNumber_MatrixMultiply(ptr, other.ptr)));
-
-  /// python: divmod(a, b)
-  PyObject divmod(PyObject other) =>
-      .fromHandle(checked(() => api.PyNumber_Divmod(ptr, other.ptr)));
 
   /// python: a += b
   PyObject inPlaceAdd(PyObject other) =>
@@ -273,15 +266,6 @@ extension PyObjectOperator on PyObject {
   /// python: a |= b
   PyObject inPlaceOr(PyObject other) =>
       .fromHandle(checked(() => api.PyNumber_InPlaceOr(ptr, other.ptr)));
-
-  /// python: a ** b; with modulus: pow(a, b, modulus)
-  /// Python power, optionally with a modulus. An omitted modulus uses None.
-  PyObject pow(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= .borrowedConst(.none);
-    return .fromHandle(
-      checked(() => api.PyNumber_Power(ptr, exponent.ptr, modulus!.ptr)),
-    );
-  }
 
   /// python: a **= b; with modulus: a = pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.

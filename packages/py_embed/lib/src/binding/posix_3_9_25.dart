@@ -64,6 +64,9 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
   }
 
   @override
+  int PyObject_Size(Pointer<shared.PyObject> obj) => _api.PyObject_Size(obj);
+
+  @override
   Pointer<shared.PyObject> PyTuple_New(int size) => _api.PyTuple_New(size);
 
   @override

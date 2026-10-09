@@ -9,6 +9,8 @@ const auto funcs = std::tuple{
     &Py_InitializeFromConfig,
     &PyConfig_Clear,
 
+    &PyObject_Size,
+
     &PyTuple_New,
     &PyTuple_Size,
     &PyTuple_SetItem,

@@ -1082,6 +1082,24 @@ class NativeLibrary {
         int Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
       >();
 
+  int PyObject_IsInstance(
+    ffi.Pointer<PyObject> object,
+    ffi.Pointer<PyObject> typeorclass,
+  ) {
+    return _PyObject_IsInstance(object, typeorclass);
+  }
+
+  late final _PyObject_IsInstancePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
+        >
+      >('PyObject_IsInstance');
+  late final _PyObject_IsInstance =
+      _PyObject_IsInstancePtr.asFunction<
+        int Function(ffi.Pointer<PyObject>, ffi.Pointer<PyObject>)
+      >();
+
   int PyObject_IsTrue(ffi.Pointer<PyObject> arg0) {
     return _PyObject_IsTrue(arg0);
   }
@@ -1092,6 +1110,21 @@ class NativeLibrary {
       );
   late final _PyObject_IsTrue =
       _PyObject_IsTruePtr.asFunction<int Function(ffi.Pointer<PyObject>)>();
+
+  ffi.Pointer<PyObject> PyObject_Repr(ffi.Pointer<PyObject> arg0) {
+    return _PyObject_Repr(arg0);
+  }
+
+  late final _PyObject_ReprPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyObject_Repr');
+  late final _PyObject_Repr =
+      _PyObject_ReprPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
 
   ffi.Pointer<PyObject> PyObject_RichCompare(
     ffi.Pointer<PyObject> arg0,

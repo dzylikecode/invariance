@@ -35,6 +35,8 @@ final api = getApi();
 abstract class PlatformBaseApi {
   void initPy(String path);
 
+  int PyObject_Size(Pointer<shared.PyObject> obj);
+
   //-------------------------------------------
   // ## tuple
 

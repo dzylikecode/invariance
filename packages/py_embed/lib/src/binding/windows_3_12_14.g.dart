@@ -654,6 +654,19 @@ class NativeLibrary {
         )
       >();
 
+  int PyObject_Size(ffi.Pointer<imp$1.PyObject> o) {
+    return _PyObject_Size(o);
+  }
+
+  late final _PyObject_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject>)>
+      >('PyObject_Size');
+  late final _PyObject_Size =
+      _PyObject_SizePtr.asFunction<
+        int Function(ffi.Pointer<imp$1.PyObject>)
+      >();
+
   int PySequence_Size(ffi.Pointer<imp$1.PyObject> o) {
     return _PySequence_Size(o);
   }

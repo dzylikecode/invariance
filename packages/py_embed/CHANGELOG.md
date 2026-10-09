@@ -1,3 +1,9 @@
+## 0.5.0
+
+- Add `Py.len`, `Py.repr`, and `Py.isInstance`.
+- Move `PyObject.abs`, `pow`, and `divmod` to static `Py` built-ins.
+- Built-ins borrow arguments; object results own a new reference.
+
 ## 0.4.0
 
 - breaking change: 移除 PyObject.using，使用 Py.using, 更接近 ffi.using 的用法

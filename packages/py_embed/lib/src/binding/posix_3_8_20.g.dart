@@ -546,6 +546,17 @@ class NativeLibrary {
   late final _PyList_Sort =
       _PyList_SortPtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
 
+  int PyObject_Size(ffi.Pointer<imp$1.PyObject> o) {
+    return _PyObject_Size(o);
+  }
+
+  late final _PyObject_SizePtr =
+      _lookup<
+        ffi.NativeFunction<Py_ssize_t Function(ffi.Pointer<imp$1.PyObject>)>
+      >('PyObject_Size');
+  late final _PyObject_Size =
+      _PyObject_SizePtr.asFunction<int Function(ffi.Pointer<imp$1.PyObject>)>();
+
   ffi.Pointer<imp$1.PyObject> PySequence_Concat(
     ffi.Pointer<imp$1.PyObject> o1,
     ffi.Pointer<imp$1.PyObject> o2,
