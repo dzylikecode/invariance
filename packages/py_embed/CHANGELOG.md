@@ -1,3 +1,7 @@
+## 0.5.1
+
+- Protect PyDouble, PyInt, PyBool, and PyString construction with the GIL.
+
 ## 0.5.0
 
 - Add `Py.len`, `Py.repr`, and `Py.isInstance`.
