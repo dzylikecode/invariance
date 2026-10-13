@@ -49,7 +49,7 @@ class _PyConfig._(final Pointer<g.PyConfig> ptr) {
   }
 }
 
-mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
+mixin PlatformApi on CommonApi implements PlatformBaseApi {
   @override
   void initPy(String path) {
     final config = _PyConfig();
@@ -279,6 +279,6 @@ mixin PlatformApi on shared.NativeLibrary implements PlatformBaseApi {
 }
 
 final class Api(super.dynamicLibrary)
-    extends shared.NativeLibrary
+    extends CommonApi
     with PlatformApi
     implements BaseApi;

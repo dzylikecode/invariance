@@ -159,8 +159,20 @@ abstract class PlatformBaseApi {
   Pointer<shared.PyObject> Py_GetConstant(PyConst v);
 }
 
+class CommonApi(super.dynamicLibrary) extends shared.NativeLibrary {
+  static Pointer<shared.PyObject> _global(String name) =>
+      pyDll.lookup<shared.PyObject>(name);
+  static final _PyType_Type = _global('PyType_Type');
+  static final _PyBaseObject_Type = _global('PyBaseObject_Type');
+  static final _PySuper_Type = _global('PySuper_Type');
+
+  Pointer<shared.PyObject> get PyType_Type => _PyType_Type;
+  Pointer<shared.PyObject> get PyBaseObject_Type => _PyBaseObject_Type;
+  Pointer<shared.PyObject> get PySuper_Type => _PySuper_Type;
+}
+
 abstract interface class BaseApi
-    implements shared.NativeLibrary, PlatformBaseApi;
+    implements CommonApi, PlatformBaseApi;
 
 BaseApi _getApi() =>
     switch ((pyVersion.major, pyVersion.minor, pyVersion.patch)) {
@@ -255,6 +267,7 @@ extension ApiExt on BaseApi {
     }
   }
 }
+
 /// Constant identifiers for Python's Py_GetConstant APIs.
 enum const PyConst(final int value) {
   none(0),
@@ -266,5 +279,5 @@ enum const PyConst(final int value) {
   one(6),
   emptyStr(7),
   emptyBytes(8),
-  emptyTuple(9);
+  emptyTuple(9),
 }
