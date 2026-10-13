@@ -32,6 +32,12 @@ class const PyObject(final PyRef ref) {
 
   @override
   String toString() => checked(() => api.callToString(ptr));
+
+  @override
+  bool operator ==(Object other) => other is PyObject && ptr == other.ptr;
+
+  @override
+  int get hashCode => ptr.hashCode;
 }
 
 extension PyObjectAttributes on PyObject {

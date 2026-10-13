@@ -1,3 +1,7 @@
+## 0.5.2
+
+- 重载 PyObject 的比较，委托给 ptr
+
 ## 0.5.1
 
 - Protect PyDouble, PyInt, PyBool, and PyString construction with the GIL.

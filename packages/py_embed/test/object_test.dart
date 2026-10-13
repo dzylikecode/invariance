@@ -10,7 +10,7 @@ void main() {
         // dart format off
         final a = PyInt(1);     final count = a.ref.count;
                                 // 指针指向了同一处
-        final b = PyInt(1);     expect(a.ptr, equals(b.ptr));
+        final b = PyInt(1);     expect(a, equals(b));
                                 expect(b.ref.count, equals(count + 1));
         a.ref.discrement();     expect(b.ref.count, equals(count));
         // dart format on
@@ -23,7 +23,7 @@ void main() {
       // dart format off
       final a = PyDouble(1);     expect(a.ref.count, equals(1));
                                  final count = a.ref.count;
-      final b = PyDouble(1);     expect(b.ptr, isNot(equals(a.ptr)));
+      final b = PyDouble(1);     expect(b, isNot(equals(a)));
                                  expect(a.ref.count, equals(1));
                                  expect(b.ref.count, equals(1));
                                  expect(b.ref.count, isNot(equals(count+1)));
@@ -45,6 +45,12 @@ void main() {
   });
 
   group("PyObject", () {
+
+    test("equal", () {
+      final obj1 = PyObject.fromHandle(.fromAddress(1));
+      final obj2 = PyObject.fromHandle(.fromAddress(1));  expect(obj1, obj2);
+    });
+
     /// getAttr 对于方法：每次得到的是新的对象
     test("getAttr for methods: returns a new object on each lookup", () {
       final obj = PyString("hello");        expect(obj.hasAttr("upper"), isTrue);
@@ -62,10 +68,10 @@ void main() {
     /// getAttr 对于属性：新的对象 ｜ 共享对象且 ref++
     test("getAttr for attributes: new object | shared object with ref++", () {
       final obj = PyDouble(1.5);
-      final real = obj.getAttr("real");   expect(real.ptr, equals(obj.ptr)); // 同一个对象
+      final real = obj.getAttr("real");   expect(real, equals(obj)); // 同一个对象
                                           expect(real.ref.count, equals(2));
       final real2 = obj.getAttr("real");  expect(real2.ref.count, equals(3));
-                                          expect(real.ptr, equals(real2.ptr));
+                                          expect(real, equals(real2));
       final imag = obj.getAttr("imag");   expect(imag.ref.count, equals(1));  // 每次都在构造新的
       final imag2 = obj.getAttr("imag");  expect(imag2.ref.count, equals(1));
 
@@ -88,9 +94,9 @@ void main() {
       owner.add(a);               expect(a.ref.count, equals(2));
                                   // 返回一个引用且 ref++
       final i = PyInt(0);
-      final b = owner.getItem(i); expect(b.ptr, equals(a.ptr));
+      final b = owner.getItem(i); expect(b, equals(a));
                                   expect(b.ref.count, equals(3));
-      final c = owner[0];         expect(c.ptr, equals(a.ptr));
+      final c = owner[0];         expect(c, equals(a));
                                   expect(c.ref.count, equals(3));
 
       owner.ref.discrement();     expect(a.ref.count, equals(2));
