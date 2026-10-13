@@ -1287,6 +1287,21 @@ class NativeLibrary {
         ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
       >();
 
+  ffi.Pointer<PyObject> PyObject_Type(ffi.Pointer<PyObject> o) {
+    return _PyObject_Type(o);
+  }
+
+  late final _PyObject_TypePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyObject_Type');
+  late final _PyObject_Type =
+      _PyObject_TypePtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
   int PyRun_SimpleString(ffi.Pointer<ffi.Char> s) {
     return _PyRun_SimpleString(s);
   }

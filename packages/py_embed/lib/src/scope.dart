@@ -1,4 +1,5 @@
 import 'object.dart';
+import 'forward.dart';
 import 'binding/api.dart';
 import 'runtime.dart';
 
@@ -7,6 +8,38 @@ import 'runtime.dart';
 /// Built-ins borrow their arguments. PyObject results own a new reference;
 /// register them with [using] or release them with [PyRef.discrement].
 abstract final class Py {
+  /// Returns the Python type of [object].
+  static PyObject type(PyObject object) =>
+      PyObject.fromHandle(api.PyObject_Type(object.ptr));
+
+  /// Creates a class with [name], [bases], and [attributes].
+  ///
+  /// Equivalent to Python `type(name, bases, dict)`. Bases and attribute values
+  /// remain owned by the caller; the result owns a new reference.
+  static PyObject newType(
+    String name,
+    List<PyObject> bases,
+    Map<String, Object?> attributes,
+  ) => using((scope) {
+    final tuple = scope(PyTuple(bases.length));
+    for (var i = 0; i < bases.length; i++) {
+      bases[i].ref.increment();
+      tuple.setElementAt(i, bases[i]);
+    }
+    return PyObject.fromHandle(api.PyType_Type)
+        .forward([name, tuple, attributes]);
+  });
+
+  /// Creates a Python `object()` instance owning a new reference.
+  static PyObject object() =>
+      PyObject.fromHandle(api.PyBaseObject_Type).call0();
+
+  /// Creates a Python `super(type, object)` proxy owning a new reference.
+  ///
+  /// Both arguments are explicit; Python's implicit frame-based form is not used.
+  static PyObject super_(PyObject type, PyObject object) =>
+      PyObject.fromHandle(api.PySuper_Type).forward([type, object]);
+
   /// Python `len(object)`. Objects without a length raise TypeError.
   static int len(PyObject object) =>
       checked(() => api.PyObject_Size(object.ptr));

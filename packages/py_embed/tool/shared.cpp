@@ -91,6 +91,8 @@ const auto funcs = std::tuple{
     &PyNumber_InPlaceAnd,
     &PyNumber_InPlaceXor,
     &PyNumber_InPlaceOr,
+
+    &PyObject_Type,
 };
 
 using structs = std::tuple<PyStatus>;
