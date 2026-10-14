@@ -56,7 +56,7 @@ void main() {
       final obj = PyString("hello");        expect(obj.hasAttr("upper"), isTrue);
       final upper1 = obj.getAttr("upper");  expect(upper1.ref.count, equals(1));
                                             // ## proof 1: 得到新的对象
-      final upper2 = obj.getAttr("upper");  expect(upper2.ptr, isNot(equals(upper1.ptr)));
+      final upper2 = obj.getAttr("upper");  expect(upper2, isNot(equals(upper1)));
                                             expect(upper2.ref.count, equals(1));
       obj.ref.discrement();                 expect(upper1.ref.count, equals(1));
                                             // ## proof 2: 得到新的对象

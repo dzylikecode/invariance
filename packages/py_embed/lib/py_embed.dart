@@ -7,3 +7,4 @@ export 'src/forward.dart';
 export 'src/converter.dart';
 export 'src/scope.dart';
 export 'src/builtins.dart';
+export 'src/function.dart';

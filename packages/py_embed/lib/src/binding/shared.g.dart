@@ -29,6 +29,33 @@ class NativeLibrary {
   late final _PyBool_FromLong =
       _PyBool_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
 
+  ffi.Pointer<PyObject> PyCFunction_NewEx(
+    ffi.Pointer<PyMethodDef> arg0,
+    ffi.Pointer<PyObject> arg1,
+    ffi.Pointer<PyObject> arg2,
+  ) {
+    return _PyCFunction_NewEx(arg0, arg1, arg2);
+  }
+
+  late final _PyCFunction_NewExPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyMethodDef>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyCFunction_NewEx');
+  late final _PyCFunction_NewEx =
+      _PyCFunction_NewExPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyMethodDef>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   void PyErr_Fetch(
     ffi.Pointer<ffi.Pointer<PyObject>> arg0,
     ffi.Pointer<ffi.Pointer<PyObject>> arg1,
@@ -102,6 +129,24 @@ class NativeLibrary {
     'PyErr_Print',
   );
   late final _PyErr_Print = _PyErr_PrintPtr.asFunction<void Function()>();
+
+  void PyErr_SetString(
+    ffi.Pointer<PyObject> exception,
+    ffi.Pointer<ffi.Char> string,
+  ) {
+    return _PyErr_SetString(exception, string);
+  }
+
+  late final _PyErr_SetStringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
+        >
+      >('PyErr_SetString');
+  late final _PyErr_SetString =
+      _PyErr_SetStringPtr.asFunction<
+        void Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
+      >();
 
   ffi.Pointer<PyThreadState> PyEval_SaveThread() {
     return _PyEval_SaveThread();
@@ -1407,6 +1452,45 @@ enum PyGILState_STATE {
     1 => PyGILState_UNLOCKED,
     _ => throw ArgumentError('Unknown value for PyGILState_STATE: $value'),
   };
+}
+
+final class PyMethodDef extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> ml_name;
+
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Pointer<PyObject$1> Function(
+        ffi.Pointer<PyObject$1>,
+        ffi.Pointer<PyObject$1>,
+      )
+    >
+  >
+  ml_meth;
+
+  @ffi.Int()
+  external int ml_flags;
+
+  external ffi.Pointer<ffi.Char> ml_doc;
+
+  static ffi.Pointer<PyMethodDef> $allocate(
+    ffi.Allocator $allocator, {
+    required ffi.Pointer<ffi.Char> ml_name,
+    required ffi.Pointer<
+      ffi.NativeFunction<
+        ffi.Pointer<PyObject$1> Function(
+          ffi.Pointer<PyObject$1>,
+          ffi.Pointer<PyObject$1>,
+        )
+      >
+    >
+    ml_meth,
+    required int ml_flags,
+    required ffi.Pointer<ffi.Char> ml_doc,
+  }) => $allocator<PyMethodDef>()
+    ..ref.ml_name = ml_name
+    ..ref.ml_meth = ml_meth
+    ..ref.ml_flags = ml_flags
+    ..ref.ml_doc = ml_doc;
 }
 
 typedef PyObject = _object;

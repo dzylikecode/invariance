@@ -8,6 +8,7 @@ const auto funcs = std::tuple{
     
     &PyStatus_Exception,
     &PyErr_Occurred,
+    &PyErr_SetString,
 
 
     &PyObject_GetAttrString,
@@ -93,9 +94,11 @@ const auto funcs = std::tuple{
     &PyNumber_InPlaceOr,
 
     &PyObject_Type,
+
+    &PyCFunction_NewEx,
 };
 
-using structs = std::tuple<PyStatus>;
+using structs = std::tuple<PyStatus, PyMethodDef>;
 
 using alias = std::tuple<PyObject, PyGILState_STATE, PyThreadState>;
 

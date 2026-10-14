@@ -169,10 +169,14 @@ class CommonApi(super.dynamicLibrary) extends shared.NativeLibrary {
   Pointer<shared.PyObject> get PyType_Type => _PyType_Type;
   Pointer<shared.PyObject> get PyBaseObject_Type => _PyBaseObject_Type;
   Pointer<shared.PyObject> get PySuper_Type => _PySuper_Type;
+
+  static final _PyExc_RuntimeError = pyDll.lookup<Pointer<shared.PyObject>>(
+    'PyExc_RuntimeError',
+  );
+  Pointer<shared.PyObject> get PyExc_RuntimeError => _PyExc_RuntimeError.value;
 }
 
-abstract interface class BaseApi
-    implements CommonApi, PlatformBaseApi;
+abstract interface class BaseApi implements CommonApi, PlatformBaseApi;
 
 BaseApi _getApi() =>
     switch ((pyVersion.major, pyVersion.minor, pyVersion.patch)) {
