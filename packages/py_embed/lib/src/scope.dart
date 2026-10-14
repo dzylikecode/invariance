@@ -1,7 +1,9 @@
 import 'object.dart';
 
-/// Runs [action] synchronously, releasing registered references in reverse
-/// order on both success and failure. Async callbacks are not supported.
+/// Runs [action] synchronously and performs registered cleanup in reverse order.
+///
+/// References and deferred callbacks share one order on success and failure.
+/// Async callbacks are not supported.
 ///
 /// Returning a registered object does not keep it alive. Use scope.escape()
 /// to transfer its reference to the caller. Unregistered results are untouched.
@@ -20,7 +22,7 @@ R using<R>(R Function(PyScope scope) action) {
 /// registration requires a separate owned reference, even for the same object.
 /// Do not release or transfer a registered reference without escaping it first.
 final class PyScope._() {
-  final _references = <PyObject>[];
+  final _cleanup = <(PyObject?, void Function())>[];
   bool _closed = false;
 
   void _checkOpen() {
@@ -31,7 +33,7 @@ final class PyScope._() {
   /// Does not increment its reference count. Use [retain] for borrowed objects.
   T call<T extends PyObject>(T object) {
     _checkOpen();
-    _references.add(object);
+    _cleanup.add((object, object.ref.discrement));
     return object;
   }
 
@@ -39,7 +41,7 @@ final class PyScope._() {
   T retain<T extends PyObject>(T object) {
     _checkOpen();
     object.ref.increment();
-    _references.add(object);
+    _cleanup.add((object, object.ref.discrement));
     return object;
   }
 
@@ -51,7 +53,9 @@ final class PyScope._() {
   /// this scope to release the escaped reference.
   T escape<T extends PyObject>(T object) {
     _checkOpen();
-    final index = _references.lastIndexWhere((item) => identical(item, object));
+    final index = _cleanup.lastIndexWhere(
+      (entry) => identical(entry.$1, object),
+    );
     if (index < 0) {
       throw ArgumentError.value(
         object,
@@ -59,18 +63,28 @@ final class PyScope._() {
         'Not registered in this scope',
       );
     }
-    _references.removeAt(index);
+    _cleanup.removeAt(index);
     return object;
+  }
+
+  /// Registers [action] to run when this scope exits.
+  ///
+  /// Actions and owned references are cleaned up in reverse registration order.
+  /// Cleanup continues after a failure, then rethrows the first cleanup error.
+  /// The action must be synchronous.
+  void defer(void Function() action) {
+    _checkOpen();
+    _cleanup.add((null, action));
   }
 
   void _release() {
     _closed = true;
     Object? firstError;
     StackTrace? firstStack;
-    while (_references.isNotEmpty) {
-      final object = _references.removeLast();
+    while (_cleanup.isNotEmpty) {
+      final action = _cleanup.removeLast().$2;
       try {
-        object.ref.discrement();
+        action();
       } catch (error, stack) {
         // A failing release must not skip the remaining registrations.
         firstError ??= error;

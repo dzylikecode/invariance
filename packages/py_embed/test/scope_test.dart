@@ -3,6 +3,78 @@ import 'package:py_embed/debug.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('defer and references share reverse registration order', () {
+    using((outer) {
+      final value = outer(PyDouble(9.5));
+      final before = value.ref.count;
+      final order = <String>[];
+      using((scope) {
+        scope.defer(() {
+          expect(value.ref.count, before);
+          order.add('first');
+        });
+        scope.retain(value);
+        scope.defer(() {
+          expect(value.ref.count, before + 1);
+          order.add('last');
+        });
+      });
+      expect(order, ['last', 'first']);
+    });
+  });
+
+  test('defer runs on failure and continues after cleanup errors', () {
+    using((outer) {
+      final value = outer(PyDouble(10.5));
+      final before = value.ref.count;
+      final order = <String>[];
+      final first = StateError('first cleanup error');
+      expect(
+        () => using<void>((scope) {
+          scope.defer(() => order.add('finished'));
+          scope.retain(value);
+          scope.defer(() => throw StateError('later cleanup error'));
+          scope.defer(() => throw first);
+          throw ArgumentError('body error');
+        }),
+        throwsA(same(first)),
+      );
+      expect(order, ['finished']);
+      expect(value.ref.count, before);
+      final bodyError = StateError('body');
+      expect(
+        () => using<void>((scope) {
+          scope.defer(() => order.add('body cleanup'));
+          throw bodyError;
+        }),
+        throwsA(same(bodyError)),
+      );
+      expect(order.last, 'body cleanup');
+    });
+  });
+
+  test(
+    'escape leaves deferred actions registered and closed scopes reject defer',
+    () {
+      late PyScope closed;
+      var calls = 0;
+      final value = using((scope) {
+        closed = scope;
+        final value = scope(PyDouble(11.5));
+        scope.defer(() => calls++);
+        return scope.escape(value);
+      });
+      try {
+        expect(value.asDouble(), 11.5);
+        expect(calls, 1);
+        expect(() => closed.defer(() => calls++), throwsStateError);
+        expect(calls, 1);
+      } finally {
+        value.ref.discrement();
+      }
+    },
+  );
+
   test('register takes ownership; retain acquires a separate reference', () {
     using((refs) {
       final value = refs(PyDouble(1.5));

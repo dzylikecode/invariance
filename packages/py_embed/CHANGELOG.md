@@ -1,3 +1,7 @@
+## 0.7.0
+
+- 支持 defer
+
 ## 0.6.0
 
 - Breaking change: remove the static `Py` class. Call `using`, `len`, `repr`,

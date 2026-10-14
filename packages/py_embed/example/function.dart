@@ -1,18 +1,13 @@
 import 'package:py_embed/py_embed.dart';
 
-void main() {
+void main() => using((scope) {
   final offset = 10;
   final add = PyFunction(
     (args, kwargs) => PyInt(args[0].asInt() + offset),
     name: 'add_offset',
   );
-  try {
-    using((scope) {
-      final result = scope(add.forward([32]));
-      print(result.asInt()); // 42.
-    });
-  } finally {
-    // Remove any Python references before disposing the function.
-    add.dispose();
-  }
-}
+  // Register disposal before Python objects that may retain the callback.
+  scope.defer(add.dispose);
+  final result = scope(add.forward([32]));
+  print(result.asInt()); // 42.
+});
