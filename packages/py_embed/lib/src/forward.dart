@@ -1,6 +1,6 @@
 import 'object.dart';
 import 'converter.dart';
-import 'py.dart';
+import 'scope.dart';
 
 extension PyObjectForward on PyObject {
   /// Calls this Python callable with Dart positional and keyword arguments.
@@ -16,13 +16,13 @@ extension PyObjectForward on PyObject {
   /// conversion or the Python call fails. [converter] handles additional types,
   /// including values nested inside lists and maps.
   ///
-  /// The result owns one reference; register it with Py.using or release it with ref.discrement().
+  /// The result owns one reference; register it with using or release it with ref.discrement().
   /// Unlike callN(), this method never consumes the caller's argument references.
   PyObject forward(
     List<Object?> args, {
     Map<String, Object?>? kwargs,
     PyConverter? converter,
-  }) => Py.using((scope) {
+  }) => using((scope) {
     final conversion = converter ?? PyConverter();
     final positional = scope(PyTuple(args.length));
     for (var i = 0; i < args.length; i++) {

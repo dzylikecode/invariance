@@ -27,9 +27,9 @@ void main() {
       result6.ref.discrement();
       final result7 = a.positive();              expect(result7.asInt(), equals(-7));
       result7.ref.discrement();
-      final result8 = Py.abs(a);                   expect(result8.asInt(), equals(7));
+      final result8 = abs(a);                    expect(result8.asInt(), equals(7));
       result8.ref.discrement();
-      final result = Py.divmod(a, b);
+      final result = divmod(a, b);
       final tuple = PyTuple.fromHandle(result.ptr); expect(tuple[0].asInt(), equals(-3));
                                                    expect(tuple[1].asInt(), equals(2));
       result.ref.discrement();
@@ -64,12 +64,12 @@ void main() {
       // dart format off
       final a = PyInt(5);
       final b = PyInt(3);
-      final result0 = Py.pow(a, b);                  expect(result0.asInt(), equals(125));
+      final result0 = pow(a, b);                  expect(result0.asInt(), equals(125));
       result0.ref.discrement();
-      final result1 = a.inPlacePower(b);         expect(result1.asInt(), equals(125));
+      final result1 = a.inPlacePower(b);          expect(result1.asInt(), equals(125));
       result1.ref.discrement();
       final modulus = PyInt(7);
-      final result = Py.pow(a, b, modulus);           expect(result.asInt(), equals(6));
+      final result = pow(a, b, modulus);          expect(result.asInt(), equals(6));
       final inPlace = a.inPlacePower(b, modulus); expect(inPlace.asInt(), equals(6));
       result.ref.discrement();
       inPlace.ref.discrement();

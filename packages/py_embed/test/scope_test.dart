@@ -4,10 +4,10 @@ import 'package:test/test.dart';
 
 void main() {
   test('register takes ownership; retain acquires a separate reference', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(1.5));
       final before = value.ref.count;
-      Py.using((scope) {
+      using((scope) {
         value.ref.increment();
         expect(identical(scope(value), value), isTrue);
         expect(value.ref.count, before + 1);
@@ -19,10 +19,10 @@ void main() {
   });
 
   test('escape preserves concrete type and releases container temporaries', () {
-    Py.using((refs) {
+    using((refs) {
       final item = refs(PyDouble(2.5));
       final before = item.ref.count;
-      final list = Py.using((scope) {
+      final list = using((scope) {
         final list = scope(PyList(0));
         list.add(scope.retain(item));
         return scope.escape(list);
@@ -39,25 +39,25 @@ void main() {
   });
 
   test('ordinary return does not escape a registered reference', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(3.5));
       final before = value.ref.count;
-      final result = Py.using((scope) => scope.retain(value));
+      final result = using((scope) => scope.retain(value));
       expect(identical(result, value), isTrue);
       expect(value.ref.count, before); // Kept alive by the outer owner only.
     });
-    expect(Py.using((scope) => 42), 42);
+    expect(using((scope) => 42), 42);
   });
 
   test(
     'failure releases partially initialized objects and preserves error',
     () {
-      Py.using((refs) {
+      using((refs) {
         final value = refs(PyDouble(4.5));
         final before = value.ref.count;
         final failure = StateError('failed');
         expect(
-          () => Py.using((scope) {
+          () => using((scope) {
             final list = scope(PyList(0));
             list.add(scope.retain(value));
             throw failure;
@@ -70,10 +70,10 @@ void main() {
   );
 
   test('escape removes one registration without deduplicating references', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(5.5));
       final before = value.ref.count;
-      final result = Py.using((scope) {
+      final result = using((scope) {
         scope.retain(value);
         scope.retain(value);
         return scope.escape(value);
@@ -85,11 +85,11 @@ void main() {
   });
 
   test('nested scopes transfer ownership explicitly', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(6.5));
       final before = value.ref.count;
-      Py.using((outer) {
-        outer(Py.using((inner) => inner.escape(inner.retain(value))));
+      using((outer) {
+        outer(using((inner) => inner.escape(inner.retain(value))));
         expect(value.ref.count, before + 1);
       });
       expect(value.ref.count, before);
@@ -97,9 +97,9 @@ void main() {
   });
 
   test('unregistered and already escaped references are rejected', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(7.5));
-      Py.using((scope) {
+      using((scope) {
         expect(() => scope.escape(value), throwsArgumentError);
         scope.retain(value);
         final escaped = scope.escape(value);
@@ -114,10 +114,10 @@ void main() {
 
   test('closed scopes reject operations without consuming references', () {
     late PyScope closed;
-    Py.using((scope) {
+    using((scope) {
       closed = scope;
     });
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(8.5));
       final before = value.ref.count;
       expect(() => closed(value), throwsStateError);
@@ -136,10 +136,10 @@ class _ScopeReleaseProbe:
     def __del__(self):
         _scope_release_order.append(self.name)
 ''');
-    Py.using((scope) {
+    using((scope) {
       final main = scope(PyModule('__main__'));
       final constructor = scope(main.getAttr('_ScopeReleaseProbe'));
-      Py.using((inner) {
+      using((inner) {
         inner(constructor.forward(['first']));
         inner(constructor.forward(['second']));
       });

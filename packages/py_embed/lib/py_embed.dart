@@ -5,5 +5,5 @@ export 'src/object.dart';
 export 'src/binding/api.dart' show PyException;
 export 'src/forward.dart';
 export 'src/converter.dart';
-export 'src/scope.dart' show PyScope;
-export 'src/py.dart';
+export 'src/scope.dart';
+export 'src/builtins.dart';

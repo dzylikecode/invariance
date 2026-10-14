@@ -4,13 +4,13 @@ import 'package:test/test.dart';
 
 void main() {
   test('len supports containers and Unicode strings', () {
-    Py.using((scope) {
-      expect(Py.len(scope(PyList(0))), 0);
-      expect(Py.len(scope(PyTuple(0))), 0);
+    using((scope) {
+      expect(len(scope(PyList(0))), 0);
+      expect(len(scope(PyTuple(0))), 0);
       final dict = scope(PyDict());
       dict.setElementAtStr('key', scope(PyInt(42)));
-      expect(Py.len(dict), 1);
-      expect(Py.len(scope(PyString('你好😀'))), 3);
+      expect(len(dict), 1);
+      expect(len(scope(PyString('你好😀'))), 3);
     });
   });
 
@@ -24,20 +24,20 @@ class BuiltinProbe:
     def __repr__(self): return '<probe>'
 builtin_probe = BuiltinProbe()
 ''');
-    Py.using((scope) {
+    using((scope) {
       final main = scope(PyModule('__main__'));
       final probe = scope(main.getAttr('builtin_probe'));
       final count = probe.ref.count;
-      expect(Py.len(probe), 7);
-      expect(Py.repr(probe), '<probe>');
+      expect(len(probe), 7);
+      expect(repr(probe), '<probe>');
       expect(probe.ref.count, count);
       for (final operation in <PyObject Function()>[
-        () => Py.abs(probe),
-        () => Py.pow(probe, scope(PyInt(2))),
-        () => Py.pow(probe, scope(PyInt(2)), scope(PyInt(3))),
-        () => Py.divmod(probe, scope(PyInt(2))),
+        () => abs(probe),
+        () => pow(probe, scope(PyInt(2))),
+        () => pow(probe, scope(PyInt(2)), scope(PyInt(3))),
+        () => divmod(probe, scope(PyInt(2))),
       ]) {
-        Py.using((results) {
+        using((results) {
           final result = results(operation());
           expect(result.ptr, probe.ptr);
           expect(probe.ref.count, count + 1);
@@ -48,20 +48,20 @@ builtin_probe = BuiltinProbe()
   });
 
   test('repr and isinstance follow Python semantics', () {
-    Py.using((scope) {
+    using((scope) {
       final builtins = scope(PyModule('builtins'));
       final intType = scope(builtins.getAttr('int'));
       final strType = scope(builtins.getAttr('str'));
       final boolValue = scope(PyBool(true));
-      expect(Py.isInstance(boolValue, intType), isTrue);
-      expect(Py.isInstance(boolValue, strType), isFalse);
+      expect(isInstance(boolValue, intType), isTrue);
+      expect(isInstance(boolValue, strType), isFalse);
       final types = scope(PyTuple(2));
       strType.ref.increment();
       types[0] = strType;
       intType.ref.increment();
       types[1] = intType;
-      expect(Py.isInstance(boolValue, types), isTrue);
-      expect(Py.repr(scope(PyString('a\nb'))), "'a\\nb'");
+      expect(isInstance(boolValue, types), isTrue);
+      expect(repr(scope(PyString('a\nb'))), "'a\\nb'");
     });
   });
 
@@ -72,22 +72,22 @@ class BrokenBuiltinProbe:
     def __repr__(self): raise RuntimeError('broken repr')
 broken_builtin_probe = BrokenBuiltinProbe()
 ''');
-    Py.using((scope) {
+    using((scope) {
       final number = scope(PyInt(2));
       final text = scope(PyString('x'));
       final main = scope(PyModule('__main__'));
       final broken = scope(main.getAttr('broken_builtin_probe'));
       for (final operation in <Object Function()>[
-        () => Py.len(number),
-        () => Py.abs(text),
-        () => Py.pow(number, text),
-        () => Py.divmod(number, scope(PyInt(0))),
-        () => Py.isInstance(number, number),
-        () => Py.len(broken),
-        () => Py.repr(broken),
+        () => len(number),
+        () => abs(text),
+        () => pow(number, text),
+        () => divmod(number, scope(PyInt(0))),
+        () => isInstance(number, number),
+        () => len(broken),
+        () => repr(broken),
       ]) {
         expect(operation, throwsA(isA<PyException>()));
-        expect(Py.len(text), 1);
+        expect(len(text), 1);
       }
     });
   });

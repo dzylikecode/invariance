@@ -1,3 +1,10 @@
+## Unreleased
+
+- Breaking change: remove the static `Py` class. Call `using`, `len`, `repr`,
+  `newType`, and the other Python built-ins as top-level functions instead.
+- Keep reference scopes in `scope.dart` and Python built-ins in `builtins.dart`.
+- Use an import prefix such as `as py` when names conflict with other libraries.
+
 ## 0.5.2
 
 - 重载 PyObject 的比较，委托给 ptr

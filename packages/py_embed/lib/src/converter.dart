@@ -1,7 +1,7 @@
 import 'dart:collection';
 
 import 'object.dart';
-import 'py.dart';
+import 'scope.dart';
 
 /// A Dart object that holds a Python object by composition.
 ///
@@ -73,7 +73,7 @@ class PyConverter {
     }
   }
 
-  PyList _list(List<Object?> values) => Py.using((scope) {
+  PyList _list(List<Object?> values) => using((scope) {
     final list = scope(PyList(0));
     for (final value in values) {
       list.add(scope(toPyObject(value)));
@@ -81,7 +81,7 @@ class PyConverter {
     return scope.escape(list);
   });
 
-  PyDict _map(Map<Object?, Object?> values) => Py.using((scope) {
+  PyDict _map(Map<Object?, Object?> values) => using((scope) {
     final dict = scope(PyDict());
     for (final entry in values.entries) {
       final key = scope(toPyObject(entry.key));

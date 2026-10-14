@@ -2,7 +2,7 @@ import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 import 'package:test/test.dart';
 
-PyObject evaluate(String expression) => Py.using((refs) {
+PyObject evaluate(String expression) => using((refs) {
   final builtins = refs(PyModule('builtins'));
 
   final eval = refs(builtins.getAttr('eval'));
@@ -69,7 +69,7 @@ class ObjectWrapper implements PyObjectWrapper {
 
 void main() {
   test('converts scalars, nested containers and keyword arguments', () {
-    Py.using((refs) {
+    using((refs) {
       final fn = refs(
         evaluate(
           'lambda *args, **kw: args == (None, True, 1234, 1.5, "中文", '
@@ -100,14 +100,14 @@ void main() {
   });
 
   test('supports no arguments and repeated acyclic containers', () {
-    Py.using((refs) {
+    using((refs) {
       final fn = refs(evaluate('lambda: 42'));
 
       final result = refs(fn.forward([]));
       expect(result.asInt(), 42);
     });
     final shared = [1, 2];
-    Py.using((refs) {
+    using((refs) {
       final fn = refs(evaluate('lambda xs: xs == [[1, 2], [1, 2]]'));
 
       final r = refs(
@@ -120,7 +120,7 @@ void main() {
   });
 
   test('retains caller-owned objects and returns an owned reference', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(3.5));
 
       final fn = refs(evaluate('lambda x: x'));
@@ -139,7 +139,7 @@ void main() {
       list.setElementAt(0, PyDouble(4.5));
       final borrowed = list.elementAt(0);
       final before = borrowed.ref.count;
-      Py.using((refs) {
+      using((refs) {
         final fn = refs(evaluate('lambda x: None'));
         fn.forward([borrowed]).ref.discrement();
       });
@@ -151,7 +151,7 @@ void main() {
   });
 
   test('custom converter handles nested values and explicit Python None', () {
-    Py.using((refs) {
+    using((refs) {
       final fn = refs(evaluate('lambda x: x == {"labels": ["hello", None]}'));
 
       final result = refs(
@@ -166,7 +166,7 @@ void main() {
   });
 
   test('cleans partial positional, list, map and keyword conversions', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(5.5));
 
       final fn = refs(evaluate('lambda *args, **kw: None'));
@@ -208,7 +208,7 @@ void main() {
   });
 
   test('cleans references on Python call and dictionary insertion errors', () {
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(6.5));
       final before = value.ref.count;
 
@@ -230,7 +230,7 @@ void main() {
   });
 
   test('call0 reports Python exceptions before wrapping a null pointer', () {
-    Py.using((refs) {
+    using((refs) {
       final fn = refs(evaluate('lambda: 1 / 0'));
       expect(() => fn.call0(), throwsA(isA<PyException>()));
     });
@@ -241,7 +241,7 @@ void main() {
     list.add(list);
     final map = <String, Object?>{};
     map['self'] = map;
-    Py.using((refs) {
+    using((refs) {
       final value = refs(PyDouble(7.5));
       final before = value.ref.count;
 
@@ -256,10 +256,10 @@ void main() {
     'converter works standalone and can be reused after conversion failure',
     () {
       final converter = LabelConverter();
-      Py.using((refs) {
+      using((refs) {
         final value = refs(PyDouble(8.5));
         final before = value.ref.count;
-        Py.using((refs) {
+        using((refs) {
           final copy = refs(converter.toPyObject(value));
           expect(copy.ptr, value.ptr);
           expect(value.ref.count, before + 1);
@@ -269,7 +269,7 @@ void main() {
       final values = <Object?>[Object()];
       expect(() => converter.toPyObject(values), throwsArgumentError);
       values[0] = Label('hello');
-      Py.using((refs) {
+      using((refs) {
         final result = refs(converter.toPyObject(values));
 
         final index = refs(PyInt(0));
@@ -281,7 +281,7 @@ void main() {
       cyclic.add(cyclic);
       expect(() => converter.toPyObject(cyclic), throwsArgumentError);
       cyclic.clear();
-      Py.using((refs) {
+      using((refs) {
         final result = refs(converter.toPyObject(cyclic));
         expect(result.asBool(), isFalse);
       });
@@ -309,7 +309,7 @@ void main() {
     final wrapper = ObjectWrapper(PyDouble(10.5));
     try {
       final before = wrapper.handle.ref.count;
-      Py.using((refs) {
+      using((refs) {
         final fn = refs(
           evaluate(
             'lambda xs, mapping, *, value: xs[0] is value and mapping[value] is value',
@@ -338,7 +338,7 @@ void main() {
     final disposed = ObjectWrapper(PyDouble(12.5))..dispose();
     try {
       final before = wrapper.handle.ref.count;
-      Py.using((refs) {
+      using((refs) {
         final fn = refs(evaluate('lambda *args: 1 / 0'));
         expect(() => fn.forward([wrapper]), throwsA(isA<PyException>()));
         expect(wrapper.handle.ref.count, before);

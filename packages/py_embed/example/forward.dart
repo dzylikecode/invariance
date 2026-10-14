@@ -27,7 +27,7 @@ class PythonValue implements PyObjectWrapper {
 }
 
 void main() {
-  Py.using((scope) {
+  using((scope) {
     final builtins = scope(PyModule('builtins'));
     final repr = scope(builtins.getAttr('repr'));
     final handle = scope(PyDouble(3.5));

@@ -5,7 +5,7 @@ import 'package:ffi/ffi.dart' as ffi;
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
 import 'runtime.dart';
-import 'py.dart';
+import 'scope.dart';
 
 import '../debug.dart';
 
@@ -80,21 +80,21 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getAttrInt(String attribute) => Py.using((refs) {
+  int getAttrInt(String attribute) => using((refs) {
     final attr = refs(getAttr(attribute));
     return attr.asInt();
   });
-  double getAttrDouble(String attribute) => Py.using((refs) {
+  double getAttrDouble(String attribute) => using((refs) {
     final attr = refs(getAttr(attribute));
     return attr.asDouble();
   });
 
-  bool getAttrBool(String attribute) => Py.using((refs) {
+  bool getAttrBool(String attribute) => using((refs) {
     final attr = refs(getAttr(attribute));
     return attr.asBool();
   });
 
-  String getAttrString(String attribute) => Py.using((refs) {
+  String getAttrString(String attribute) => using((refs) {
     final attr = refs(getAttr(attribute));
     return attr.asString();
   });
@@ -143,7 +143,7 @@ extension PyObjectCall on PyObject {
       .fromHandle(checked(() => api.PyObject_CallObject(ptr, nullptr)));
 
   /// ref-- args 里面的引用会释放一次
-  PyObject callN(List<PyObject> args) => Py.using((refs) {
+  PyObject callN(List<PyObject> args) => using((refs) {
     final tuple = refs(PyTuple.fromList(args));
     return call(tuple);
   });
@@ -159,7 +159,7 @@ enum PyComparison {
   greaterThanOrEqual,
 }
 
-/// Object results own a new reference; release them with [Py.using]
+/// Object results own a new reference; release them with [using]
 /// or [PyRef.discrement]. Operands retain their existing references.
 /// Dart compound assignments use the ordinary operators. Use the inPlace
 /// methods explicitly for Python augmented assignment semantics.
@@ -317,7 +317,7 @@ extension PyObjectOperator on PyObject {
 
 extension PyObjectWithContext on PyObject {
   T withContext<T>(T Function(PyObject) action) {
-    return Py.using((scope) {
+    return using((scope) {
       final enter = scope(getAttr('__enter__'));
       final value = scope(enter.call0());
       try {

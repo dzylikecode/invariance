@@ -1,7 +1,7 @@
 import 'package:py_embed/py_embed.dart';
 
 void main() {
-  final PyList list = Py.using((scope) {
+  final PyList list = using((scope) {
     final list = scope(PyList(0));
     for (final value in [3, 1, 2]) {
       list.add(scope(PyInt(value)));
@@ -9,7 +9,7 @@ void main() {
     return scope.escape(list);
   });
 
-  Py.using((scope) {
+  using((scope) {
     scope(list); // Take ownership of the escaped reference.
     final builtins = scope(PyModule('builtins'));
     final sorted = scope(builtins.getAttr('sorted'));
