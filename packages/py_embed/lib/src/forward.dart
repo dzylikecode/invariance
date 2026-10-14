@@ -1,6 +1,6 @@
 import 'object.dart';
 import 'converter.dart';
-import 'scope.dart';
+import 'py.dart';
 
 extension PyObjectForward on PyObject {
   /// Calls this Python callable with Dart positional and keyword arguments.

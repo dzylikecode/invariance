@@ -5,7 +5,7 @@ import 'package:ffi/ffi.dart' as ffi;
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
 import 'runtime.dart';
-import 'scope.dart';
+import 'py.dart';
 
 import '../debug.dart';
 

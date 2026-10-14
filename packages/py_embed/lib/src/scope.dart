@@ -1,111 +1,27 @@
 import 'object.dart';
-import 'forward.dart';
-import 'binding/api.dart';
-import 'runtime.dart';
 
-/// Python built-ins and scoped reference ownership.
+/// Runs [action] synchronously, releasing registered references in reverse
+/// order on both success and failure. Async callbacks are not supported.
 ///
-/// Built-ins borrow their arguments. PyObject results own a new reference;
-/// register them with [using] or release them with [PyRef.discrement].
-abstract final class Py {
-  /// Returns the Python type of [object].
-  static PyObject type(PyObject object) =>
-      PyObject.fromHandle(api.PyObject_Type(object.ptr));
-
-  /// Creates a class with [name], [bases], and [attributes].
-  ///
-  /// Equivalent to Python `type(name, bases, dict)`. Bases and attribute values
-  /// remain owned by the caller; the result owns a new reference.
-  static PyObject newType(
-    String name,
-    List<PyObject> bases,
-    Map<String, Object?> attributes,
-  ) => using((scope) {
-    final tuple = scope(PyTuple(bases.length));
-    for (var i = 0; i < bases.length; i++) {
-      bases[i].ref.increment();
-      tuple.setElementAt(i, bases[i]);
-    }
-    return PyObject.fromHandle(api.PyType_Type)
-        .forward([name, tuple, attributes]);
-  });
-
-  /// Creates a Python `object()` instance owning a new reference.
-  static PyObject object() =>
-      PyObject.fromHandle(api.PyBaseObject_Type).call0();
-
-  /// Creates a Python `super(type, object)` proxy owning a new reference.
-  ///
-  /// Both arguments are explicit; Python's implicit frame-based form is not used.
-  static PyObject super_(PyObject type, PyObject object) =>
-      PyObject.fromHandle(api.PySuper_Type).forward([type, object]);
-
-  /// Python `len(object)`. Objects without a length raise TypeError.
-  static int len(PyObject object) =>
-      checked(() => api.PyObject_Size(object.ptr));
-
-  /// Python `abs(object)`, preserving custom Python return types.
-  static PyObject abs(PyObject object) =>
-      .fromHandle(checked(() => api.PyNumber_Absolute(object.ptr)));
-
-  /// Python `pow(base, exponent)` or `pow(base, exponent, modulus)`.
-  static PyObject pow(PyObject base, PyObject exponent, [PyObject? modulus]) =>
-      .fromHandle(
-        checked(
-          () => api.PyNumber_Power(
-            base.ptr,
-            exponent.ptr,
-            modulus?.ptr ?? api.Py_GetConstantBorrowed(.none),
-          ),
-        ),
-      );
-
-  /// Python `divmod(a, b)`, preserving custom Python return types.
-  static PyObject divmod(PyObject a, PyObject b) =>
-      .fromHandle(checked(() => api.PyNumber_Divmod(a.ptr, b.ptr)));
-
-  /// Python `repr(object)`, copied into a Dart string.
-  static String repr(PyObject object) => using((scope) {
-    final result = scope(
-      PyObject.fromHandle(checked(() => api.PyObject_Repr(object.ptr))),
-    );
-    return result.asString();
-  });
-
-  /// Python `isinstance(object, classInfo)`, including tuples of types.
-  static bool isInstance(PyObject object, PyObject classInfo) =>
-      checked(() => api.PyObject_IsInstance(object.ptr, classInfo.ptr)) != 0;
-
-  static PyObject str(PyObject object) =>
-      .fromHandle(checked(() => api.PyObject_Str(object.ptr)));
-
-  static PyObject ascii(PyObject object) =>
-      .fromHandle(checked(() => api.PyObject_ASCII(object.ptr)));
-
-  /// Runs [action] synchronously, releasing registered references in reverse
-  /// order on both success and failure. Async callbacks are not supported.
-  ///
-  /// Returning a registered object does not keep it alive. Use scope.escape()
-  /// to transfer its reference to the caller. Unregistered results are untouched.
-  static R using<R>(R Function(PyScope scope) action) {
-    final scope = PyScope._();
-    try {
-      return action(scope);
-    } finally {
-      scope._release();
-    }
+/// Returning a registered object does not keep it alive. Use scope.escape()
+/// to transfer its reference to the caller. Unregistered results are untouched.
+R using<R>(R Function(PyScope scope) action) {
+  final scope = PyScope._();
+  try {
+    return action(scope);
+  } finally {
+    scope._release();
   }
 }
 
-/// A synchronous scope created by [Py.using].
+/// A synchronous scope created by [using].
 ///
 /// Registrations represent owned references, not unique Python objects. Each
 /// registration requires a separate owned reference, even for the same object.
 /// Do not release or transfer a registered reference without escaping it first.
-final class PyScope {
+final class PyScope._() {
   final _references = <PyObject>[];
   bool _closed = false;
-  PyScope._();
 
   void _checkOpen() {
     if (_closed) throw StateError('Python reference scope has closed');

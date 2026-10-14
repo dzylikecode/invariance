@@ -1,5 +1,7 @@
 import 'package:py_embed/py_embed.dart';
 
+// TODO: isolate
+
 void main() async {
   print('python version: ${pyRuntime.version}');
 

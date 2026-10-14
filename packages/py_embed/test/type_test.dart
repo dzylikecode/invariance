@@ -38,7 +38,7 @@ def type_test_init(self):
       expect(scope(Py.type(instance)), modelClass);
       final method = scope(instance.getAttr('forward'));
       expect(scope(method.forward([3])).asInt(), 21);
-      final parent = scope(Py.super_(modelClass, instance));
+      final parent = scope(Py.superOf(modelClass, instance));
       final parentMethod = scope(parent.getAttr('forward'));
       expect(scope(parentMethod.forward([3])).asInt(), 10);
       // Creation borrows arguments, which remain usable after the call.

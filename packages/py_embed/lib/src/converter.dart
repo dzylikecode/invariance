@@ -1,7 +1,7 @@
 import 'dart:collection';
 
 import 'object.dart';
-import 'scope.dart';
+import 'py.dart';
 
 /// A Dart object that holds a Python object by composition.
 ///
