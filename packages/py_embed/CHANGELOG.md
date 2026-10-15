@@ -1,3 +1,7 @@
+## 0.8.1
+
+- 修复匿名模块无法 import
+
 ## 0.8.0
 
 - 支持字符串定义 python 模块 PyModule.fromSource

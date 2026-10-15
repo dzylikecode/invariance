@@ -175,6 +175,17 @@ class NativeLibrary {
         )
       >();
 
+  ffi.Pointer<PyObject> PyEval_GetBuiltins() {
+    return _PyEval_GetBuiltins();
+  }
+
+  late final _PyEval_GetBuiltinsPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<PyObject> Function()>>(
+        'PyEval_GetBuiltins',
+      );
+  late final _PyEval_GetBuiltins =
+      _PyEval_GetBuiltinsPtr.asFunction<ffi.Pointer<PyObject> Function()>();
+
   ffi.Pointer<PyThreadState> PyEval_SaveThread() {
     return _PyEval_SaveThread();
   }

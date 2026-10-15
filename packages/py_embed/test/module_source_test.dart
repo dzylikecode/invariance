@@ -9,6 +9,40 @@ class Model:
 ''';
 
 void main() {
+  test(
+    'anonymous modules initialize builtins for imports and class definitions',
+    () {
+      using((scope) {
+        final module = scope(
+          PyModule.fromSource('''
+import math
+class Model(object):
+    def forward(self):
+        values = list(range(4))
+        return sum(values) + int(math.sqrt(1296))
+answer = Model().forward()
+count = len([1, 2, 3])
+'''),
+        );
+        expect(module.getAttrInt('answer'), 42);
+        expect(module.getAttrInt('count'), 3);
+        final constructor = scope(module.getAttr('Model'));
+        final instance = scope(constructor.call0());
+        expect(scope(scope(instance.getAttr('forward')).call0()).asInt(), 42);
+      });
+      expect(
+        () => PyModule.fromSource('raise ValueError("expected")'),
+        throwsA(
+          isA<PyException>().having(
+            (e) => e.type,
+            'type',
+            contains('ValueError'),
+          ),
+        ),
+      );
+    },
+  );
+
   test('named source is importable and supports class pickle round trips', () {
     using((scope) {
       final sys = scope(PyModule('sys'));

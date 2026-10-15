@@ -416,6 +416,11 @@ class PyModule.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
       final globals = checked(
         () => api.PyModule_GetDict(module.ptr),
       ); // Borrowed.
+      // Unlike PyImport_ExecCodeModule, PyEval_EvalCode does not inject builtins.
+      final builtinsDict = PyObject.fromHandle(
+        checked(() => api.PyEval_GetBuiltins()),
+      ); // Borrowed; the globals dictionary retains it.
+      PyDict.fromHandle(globals).setElementAtStr('__builtins__', builtinsDict);
       scope(
         PyObject.fromHandle(
           checked(() => api.PyEval_EvalCode(code.ptr, globals, globals)),
