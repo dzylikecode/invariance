@@ -1,3 +1,7 @@
+## 0.8.0
+
+- 支持字符串定义 python 模块 PyModule.fromSource
+
 ## 0.7.0
 
 - 支持 defer

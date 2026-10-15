@@ -9,9 +9,7 @@ import 'scope.dart';
 
 import '../debug.dart';
 
-class PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
-  this : assert(_ptr != nullptr);
-
+class const PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
   Pointer<g.PyObject> get ptr => _ptr;
 
   void increment() => checked(() => api.Py_IncRef(ptr));
@@ -38,6 +36,8 @@ class const PyObject(final PyRef ref) {
 
   @override
   int get hashCode => ptr.hashCode;
+
+  void dispose() => ref.discrement();
 }
 
 extension PyObjectAttributes on PyObject {
@@ -364,19 +364,66 @@ class PyString(String value) extends PyObject {
       );
 }
 
-class PyModule(String moduleName) extends PyObject {
-  this
-    : super(
-        .fromHandle(
-          ffi.using(
-            (arena) => checked(
-              () => api.PyImport_ImportModule(
-                moduleName.toNativeUtf8(allocator: arena).cast<Char>(),
-              ),
+class PyModule.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
+  this : super(.fromHandle(ptr));
+
+  /// Imports a module and owns a new reference to it.
+  factory PyModule(String moduleName) => ffi.using(
+    (arena) => .fromHandle(
+      checked(
+        () => api.PyImport_ImportModule(
+          moduleName.toNativeUtf8(allocator: arena).cast<Char>(),
+        ),
+      ),
+    ),
+  );
+
+  /// Creates a module by compiling and executing [source].
+  ///
+  /// With [name], registers the module in sys.modules. An existing module's
+  /// namespace is reused; execution failure removes that sys.modules entry,
+  /// following PyImport_ExecCodeModule semantics. Without [name], creates an
+  /// independent module named `_anonymous` without registering it for import.
+  /// The caller owns the returned reference. Python errors propagate normally.
+  factory PyModule.fromSource(String source, {String? name}) => ffi.using(
+    (arena) => using((scope) {
+      final code = scope(
+        PyObject.fromHandle(
+          checked(
+            () => api.Py_CompileStringExFlags(
+              source.toNativeUtf8(allocator: arena).cast<Char>(),
+              (name == null ? '<string>' : '<$name>')
+                  .toNativeUtf8(allocator: arena)
+                  .cast<Char>(),
+              257, // Py_file_input in Python 3.8 through 3.13.
+              nullptr,
+              -1,
             ),
           ),
         ),
       );
+      final moduleName = (name ?? '_anonymous')
+          .toNativeUtf8(allocator: arena)
+          .cast<Char>();
+      if (name != null) {
+        return PyModule.fromHandle(
+          checked(() => api.PyImport_ExecCodeModule(moduleName, code.ptr)),
+        );
+      }
+      final module = scope(
+        PyModule.fromHandle(checked(() => api.PyModule_New(moduleName))),
+      );
+      final globals = checked(
+        () => api.PyModule_GetDict(module.ptr),
+      ); // Borrowed.
+      scope(
+        PyObject.fromHandle(
+          checked(() => api.PyEval_EvalCode(code.ptr, globals, globals)),
+        ),
+      );
+      return scope.escape(module);
+    }),
+  );
 }
 
 /// tuple

@@ -88,7 +88,7 @@ void main() {
                                 expect(a <= b, isFalse);
                                 expect(a.equals(b), isFalse);
                                 expect(a.notEquals(b), isTrue);
-      final result = a.richCompare(b, PyComparison.greaterThan);
+      final result = a.richCompare(b, .greaterThan);
                                 expect(result.asBool(), isTrue);
       result.ref.discrement();
       a.ref.discrement();

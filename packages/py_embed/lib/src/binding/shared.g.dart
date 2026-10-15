@@ -148,6 +148,33 @@ class NativeLibrary {
         void Function(ffi.Pointer<PyObject>, ffi.Pointer<ffi.Char>)
       >();
 
+  ffi.Pointer<PyObject> PyEval_EvalCode(
+    ffi.Pointer<PyObject> arg0,
+    ffi.Pointer<PyObject> arg1,
+    ffi.Pointer<PyObject> arg2,
+  ) {
+    return _PyEval_EvalCode(arg0, arg1, arg2);
+  }
+
+  late final _PyEval_EvalCodePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyEval_EvalCode');
+  late final _PyEval_EvalCode =
+      _PyEval_EvalCodePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   ffi.Pointer<PyThreadState> PyEval_SaveThread() {
     return _PyEval_SaveThread();
   }
@@ -205,6 +232,30 @@ class NativeLibrary {
   late final _PyGILState_Release =
       _PyGILState_ReleasePtr.asFunction<void Function(int)>();
 
+  ffi.Pointer<PyObject> PyImport_ExecCodeModule(
+    ffi.Pointer<ffi.Char> name,
+    ffi.Pointer<PyObject> co,
+  ) {
+    return _PyImport_ExecCodeModule(name, co);
+  }
+
+  late final _PyImport_ExecCodeModulePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<PyObject>,
+          )
+        >
+      >('PyImport_ExecCodeModule');
+  late final _PyImport_ExecCodeModule =
+      _PyImport_ExecCodeModulePtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<PyObject>,
+        )
+      >();
+
   ffi.Pointer<PyObject> PyImport_ImportModule(ffi.Pointer<ffi.Char> name) {
     return _PyImport_ImportModule(name);
   }
@@ -241,6 +292,36 @@ class NativeLibrary {
       );
   late final _PyLong_FromLong =
       _PyLong_FromLongPtr.asFunction<ffi.Pointer<PyObject> Function(int)>();
+
+  ffi.Pointer<PyObject> PyModule_GetDict(ffi.Pointer<PyObject> arg0) {
+    return _PyModule_GetDict(arg0);
+  }
+
+  late final _PyModule_GetDictPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+        >
+      >('PyModule_GetDict');
+  late final _PyModule_GetDict =
+      _PyModule_GetDictPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<PyObject>)
+      >();
+
+  ffi.Pointer<PyObject> PyModule_New(ffi.Pointer<ffi.Char> name) {
+    return _PyModule_New(name);
+  }
+
+  late final _PyModule_NewPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+        >
+      >('PyModule_New');
+  late final _PyModule_New =
+      _PyModule_NewPtr.asFunction<
+        ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
+      >();
 
   ffi.Pointer<PyObject> PyNumber_Absolute(ffi.Pointer<PyObject> o) {
     return _PyNumber_Absolute(o);
@@ -1399,6 +1480,39 @@ class NativeLibrary {
         ffi.Pointer<PyObject> Function(ffi.Pointer<ffi.Char>)
       >();
 
+  ffi.Pointer<PyObject> Py_CompileStringExFlags(
+    ffi.Pointer<ffi.Char> str,
+    ffi.Pointer<ffi.Char> filename,
+    int start,
+    ffi.Pointer<PyCompilerFlags> flags,
+    int optimize,
+  ) {
+    return _Py_CompileStringExFlags(str, filename, start, flags, optimize);
+  }
+
+  late final _Py_CompileStringExFlagsPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<PyObject> Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Int,
+            ffi.Pointer<PyCompilerFlags>,
+            ffi.Int,
+          )
+        >
+      >('Py_CompileStringExFlags');
+  late final _Py_CompileStringExFlags =
+      _Py_CompileStringExFlagsPtr.asFunction<
+        ffi.Pointer<PyObject> Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          int,
+          ffi.Pointer<PyCompilerFlags>,
+          int,
+        )
+      >();
+
   void Py_DecRef(ffi.Pointer<PyObject> arg0) {
     return _Py_DecRef(arg0);
   }
@@ -1439,6 +1553,8 @@ class NativeLibrary {
   late final _Py_IsInitialized =
       _Py_IsInitializedPtr.asFunction<int Function()>();
 }
+
+final class PyCompilerFlags extends ffi.Opaque {}
 
 enum PyGILState_STATE {
   PyGILState_LOCKED(0),

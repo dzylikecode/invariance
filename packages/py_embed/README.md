@@ -75,3 +75,42 @@ dart run test --concurrency=1
 >
 > 这里的 xmake 这是为了用来生成 compile_commands.json 给 IDE 提示用的
 > 执行 xmake build 出错无妨
+
+## TODO
+
+参考 [ndarray](https://github.com/google/scientific_dart) 设计
+
+
+```dart
+using((scope) {
+  final a = PyInt(1);
+  final b = PyInt(2);
+  scope.defer(() => print("hello world"));
+  return scope.escape(a + b);
+});
+```
+
+### Modules from source strings
+
+```dart
+using((scope) {
+  final module = scope(PyModule.fromSource('''
+class Model:
+    def forward(self, x):
+        return x + 1
+''', name: 'my_model'));
+  final constructor = scope(module.getAttr('Model'));
+  final model = scope(constructor.call0());
+});
+```
+
+With `name`, the module is registered in `sys.modules` and can be imported with
+`PyModule(name)`. Reusing a name executes in the existing module namespace;
+execution failure removes that registry entry, matching
+`PyImport_ExecCodeModule`. Releasing the Dart wrapper does not unregister it.
+Omit `name` for an independent module named `_anonymous` that is not registered.
+Both forms return a new owned reference and propagate Python exceptions.
+
+Pickled instances of named classes still require the same module/class to be
+recreated before loading in a new process; the source string is not embedded in
+pickle. See `example/module_from_source.dart`.

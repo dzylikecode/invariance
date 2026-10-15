@@ -96,6 +96,12 @@ const auto funcs = std::tuple{
     &PyObject_Type,
 
     &PyCFunction_NewEx,
+
+    &Py_CompileStringExFlags,
+    &PyImport_ExecCodeModule,
+    &PyModule_New,
+    &PyModule_GetDict,
+    &PyEval_EvalCode
 };
 
 using structs = std::tuple<PyStatus, PyMethodDef>;
