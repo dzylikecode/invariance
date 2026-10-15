@@ -1,0 +1,57 @@
+name: py_embed tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    defaults:
+      run:
+        shell: bash -el {0}
+        working-directory: packages/py_embed
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.13.0"
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: py-embed-test
+          python-version: ${{ matrix.python }}
+          channels: conda-forge
+          channel-priority: strict
+          auto-activate-base: false
+
+      - name: Show environment
+        run: |
+          dart --version
+          python --version
+          python -c "import sys; print(sys.executable); print(sys.base_prefix)"
+
+      - name: Install Dart dependencies
+        # Resolve this package independently of the workspace's Flutter examples.
+        run: |
+          printf 'resolution:\n' > pubspec_overrides.yaml
+          dart pub get
+
+      - name: Run tests
+        # CPython is embedded in the test process; run test files serially.
+        run: dart test --concurrency=1 --reporter=expanded
