@@ -89,28 +89,3 @@ using((scope) {
   return scope.escape(a + b);
 });
 ```
-
-### Modules from source strings
-
-```dart
-using((scope) {
-  final module = scope(PyModule.fromSource('''
-class Model:
-    def forward(self, x):
-        return x + 1
-''', name: 'my_model'));
-  final constructor = scope(module.getAttr('Model'));
-  final model = scope(constructor.call0());
-});
-```
-
-With `name`, the module is registered in `sys.modules` and can be imported with
-`PyModule(name)`. Reusing a name executes in the existing module namespace;
-execution failure removes that registry entry, matching
-`PyImport_ExecCodeModule`. Releasing the Dart wrapper does not unregister it.
-Omit `name` for an independent module named `_anonymous` that is not registered.
-Both forms return a new owned reference and propagate Python exceptions.
-
-Pickled instances of named classes still require the same module/class to be
-recreated before loading in a new process; the source string is not embedded in
-pickle. See `example/module_from_source.dart`.
