@@ -3,6 +3,8 @@ name: py_embed tests
 on:
   push:
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
