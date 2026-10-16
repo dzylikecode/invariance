@@ -6,17 +6,16 @@ void main() {
   tearDown(() => expect(ResourceScope.checkNoLeaks(), isTrue));
 
   test("PyRef and PyObject compare by Python pointer", () {
-    ResourceScope.scope(() {
-      // dart format off
-      final aRef = PyRef.fromHandle(.fromAddress(1));
-      final bRef = PyRef.fromHandle(.fromAddress(1)); expect(aRef, bRef);
-                                                      expect(aRef, isNot(same(bRef)));
+    // 不需要被 ResourceScope.scope 守护，因为这是 fake PyObject, 不能被释放
+    // dart format off
+    final aRef = PyRef.fromHandle(.fromAddress(1));
+    final bRef = PyRef.fromHandle(.fromAddress(1)); expect(aRef, bRef);
+                                                    expect(aRef, isNot(same(bRef)));
 
-      final aObj = PyObject(aRef);
-      final bObj = PyObject(bRef);                    expect(aObj, bObj);
-                                                      expect(aObj, isNot(same(bObj)));
-      // dart format on
-    });
+    final aObj = PyObject(aRef);
+    final bObj = PyObject(bRef);                    expect(aObj, bObj);
+                                                    expect(aObj, isNot(same(bObj)));
+    // dart format on
   });
 
   test('equal Python pointers still own independent references', () {
