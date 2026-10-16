@@ -130,7 +130,7 @@ void main() {
     test(
       "custom matrix and comparison results preserve Python dispatch",
       () => ResourceScope.scope(() {
-        runString('''
+        final module = PyModule.fromSource('''
 class OperatorProbe:
     def __matmul__(self, other): return 42
     def __imatmul__(self, other): return 43
@@ -138,7 +138,6 @@ class OperatorProbe:
 operator_probe = OperatorProbe()
 ''');
         // dart format off
-      final module = PyModule('__main__');
       final a = module.getAttr('operator_probe');
       final result = a.matrixMultiply(a);        expect(result.asInt(), equals(42));
       final inPlace = a.inPlaceMatrixMultiply(a);expect(inPlace.asInt(), equals(43));

@@ -16,7 +16,8 @@ void main() {
   });
 
   test('built-ins preserve custom dispatch and argument ownership', () {
-    runString('''
+    ResourceScope.scope(() {
+      final module = PyModule.fromSource('''
 class BuiltinProbe:
     def __len__(self): return 7
     def __abs__(self): return self
@@ -25,9 +26,7 @@ class BuiltinProbe:
     def __repr__(self): return '<probe>'
 builtin_probe = BuiltinProbe()
 ''');
-    ResourceScope.scope(() {
-      final main = PyModule('__main__');
-      final probe = main.getAttr('builtin_probe');
+      final probe = module.getAttr('builtin_probe');
       final count = probe.ref.count;
       expect(len(probe), 7);
       expect(repr(probe), '<probe>');
@@ -65,17 +64,16 @@ builtin_probe = BuiltinProbe()
   });
 
   test('built-in errors propagate and leave the interpreter usable', () {
-    runString('''
+    ResourceScope.scope(() {
+      final module = PyModule.fromSource('''
 class BrokenBuiltinProbe:
     def __len__(self): return -1
     def __repr__(self): raise RuntimeError('broken repr')
 broken_builtin_probe = BrokenBuiltinProbe()
 ''');
-    ResourceScope.scope(() {
       final number = PyInt(2);
       final text = PyString('x');
-      final main = PyModule('__main__');
-      final broken = main.getAttr('broken_builtin_probe');
+      final broken = module.getAttr('broken_builtin_probe');
       for (final operation in <Object Function()>[
         () => len(number),
         () => abs(text),

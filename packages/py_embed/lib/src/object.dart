@@ -11,21 +11,21 @@ import 'runtime.dart';
 /// One owned Python reference, automatically registered in the current scope.
 ///
 /// Separate references to the same pointer must use separate PyRef instances.
-class PyRef implements ScopedResource {
-  final Pointer<g.PyObject> _ptr;
+class PyRef.fromHandle(final Pointer<g.PyObject> _ptr)
+    implements ScopedResource {
   bool _disposed = false;
 
   /// Takes ownership of an existing new reference, without incrementing it.
-  PyRef.fromHandle(this._ptr) {
+  this {
     if (_ptr == nullptr) throw ArgumentError('Null Python reference');
     ResourceScope.track(this);
   }
 
   /// Acquires an independent owned reference from a borrowed pointer.
-  factory PyRef.fromBorrowedHandle(Pointer<g.PyObject> ptr) {
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) {
     if (ptr == nullptr) throw ArgumentError('Null Python reference');
     checked(() => api.Py_IncRef(ptr));
-    return PyRef.fromHandle(ptr);
+    return .fromHandle(ptr);
   }
 
   /// The native pointer, available only while this reference is alive.
@@ -71,6 +71,12 @@ class PyRef implements ScopedResource {
       api.Py_DecRef(_ptr);
     });
   }
+
+  @override
+  bool operator ==(Object other) => other is PyRef && ptr == other.ptr;
+
+  @override
+  int get hashCode => ptr.hashCode;
 }
 
 class const PyObject(final PyRef ref) implements ScopedResource {
@@ -114,10 +120,10 @@ class const PyObject(final PyRef ref) implements ScopedResource {
   String toString() => checked(() => api.callToString(ptr));
 
   @override
-  bool operator ==(Object other) => other is PyObject && ptr == other.ptr;
+  bool operator ==(Object other) => other is PyObject && ref == other.ref;
 
   @override
-  int get hashCode => ptr.hashCode;
+  int get hashCode => ref.hashCode;
 
   @override
   void dispose() => ref.dispose();
@@ -452,19 +458,16 @@ class PyString(String value) extends PyObject {
       );
 }
 
-class PyModule extends PyObject {
+class PyModule.fromRef(super.ref) extends PyObject {
   /// Takes ownership of one new native reference.
-  PyModule.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
+  factory fromHandle(Pointer<g.PyObject> ptr) => .fromRef(.fromHandle(ptr));
 
   /// Acquires an owned reference from a borrowed native pointer.
-  PyModule.fromBorrowedHandle(Pointer<g.PyObject> ptr)
-    : super(.fromBorrowedHandle(ptr));
-
-  /// Shares an existing reference without incrementing its count.
-  PyModule.fromRef(super.ref);
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) =>
+      .fromRef(.fromBorrowedHandle(ptr));
 
   /// Imports a module and owns a new reference to it.
-  factory PyModule(String moduleName) => ffi.using(
+  factory(String moduleName) => ffi.using(
     (arena) => .fromHandle(
       checked(
         () => api.PyImport_ImportModule(
@@ -481,7 +484,7 @@ class PyModule extends PyObject {
   /// following PyImport_ExecCodeModule semantics. Without [name], creates an
   /// independent module named `_anonymous` without registering it for import.
   /// The caller owns the returned reference. Python errors propagate normally.
-  factory PyModule.fromSource(String source, {String? name}) => ffi.using(
+  factory fromSource(String source, {String? name}) => ffi.using(
     (arena) => ResourceScope.returning(() {
       final code = PyObject.fromHandle(
         checked(
@@ -529,22 +532,18 @@ class PyModule extends PyObject {
 ///
 /// Insertion retains items; the caller keeps its own references:
 /// {@example /test/object_test.dart#tuple-take-the-ownership}
-class PyTuple extends PyObject {
+class PyTuple.fromRef(super.ref) extends PyObject {
   /// Takes ownership of one new native reference.
-  PyTuple.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
+  factory fromHandle(Pointer<g.PyObject> ptr) => .fromRef(.fromHandle(ptr));
 
   /// Acquires an owned reference from a borrowed native pointer.
-  PyTuple.fromBorrowedHandle(Pointer<g.PyObject> ptr)
-    : super(.fromBorrowedHandle(ptr));
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) =>
+      .fromRef(.fromBorrowedHandle(ptr));
 
-  /// Shares an existing reference without incrementing its count.
-  PyTuple.fromRef(super.ref);
-
-  factory PyTuple(int size) =>
-      .fromHandle(checked(() => api.PyTuple_New(size)));
+  factory(int size) => .fromHandle(checked(() => api.PyTuple_New(size)));
 
   /// Retains each input without consuming the caller's references.
-  factory PyTuple.fromList(List<PyObject> items) => ResourceScope.returning(() {
+  factory fromList(List<PyObject> items) => ResourceScope.returning(() {
     final tuple = PyTuple(items.length);
     for (var i = 0; i < items.length; i++) {
       tuple.setElementAt(i, items[i]);
@@ -575,18 +574,15 @@ class PyTuple extends PyObject {
   PyObject operator [](int index) => elementAt(index);
 }
 
-class PyList extends PyObject {
+class PyList.fromRef(super.ref) extends PyObject {
   /// Takes ownership of one new native reference.
-  PyList.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
+  factory fromHandle(Pointer<g.PyObject> ptr) => .fromRef(.fromHandle(ptr));
 
   /// Acquires an owned reference from a borrowed native pointer.
-  PyList.fromBorrowedHandle(Pointer<g.PyObject> ptr)
-    : super(.fromBorrowedHandle(ptr));
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) =>
+      .fromRef(.fromBorrowedHandle(ptr));
 
-  /// Shares an existing reference without incrementing its count.
-  PyList.fromRef(super.ref);
-
-  factory PyList(int size) => .fromHandle(checked(() => api.PyList_New(size)));
+  factory(int size) => .fromHandle(checked(() => api.PyList_New(size)));
 
   int get length => checked(() => api.PyList_Size(ptr));
 
@@ -624,18 +620,15 @@ class PyList extends PyObject {
 ///
 /// Lookups, copies and snapshot lists return independent owned references.
 /// They are automatically managed by the active scope.
-class PyDict extends PyObject {
+class PyDict.fromRef(super.ref) extends PyObject {
   /// Takes ownership of one new native reference.
-  PyDict.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
+  factory fromHandle(Pointer<g.PyObject> ptr) => .fromRef(.fromHandle(ptr));
 
   /// Acquires an owned reference from a borrowed native pointer.
-  PyDict.fromBorrowedHandle(Pointer<g.PyObject> ptr)
-    : super(.fromBorrowedHandle(ptr));
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) =>
+      .fromRef(.fromBorrowedHandle(ptr));
 
-  /// Shares an existing reference without incrementing its count.
-  PyDict.fromRef(super.ref);
-
-  factory PyDict() => .fromHandle(checked(() => api.PyDict_New()));
+  factory() => .fromHandle(checked(() => api.PyDict_New()));
 
   int get length => checked(() => api.PyDict_Size(ptr));
   bool get isEmpty => length == 0;

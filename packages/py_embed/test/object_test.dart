@@ -4,12 +4,26 @@ import 'package:py_embed/debug.dart';
 
 void main() {
   tearDown(() => expect(ResourceScope.checkNoLeaks(), isTrue));
+
+  test("PyRef and PyObject compare by Python pointer", () {
+    ResourceScope.scope(() {
+      // dart format off
+      final aRef = PyRef.fromHandle(.fromAddress(1));
+      final bRef = PyRef.fromHandle(.fromAddress(1)); expect(aRef, bRef);
+                                                      expect(aRef, isNot(same(bRef)));
+
+      final aObj = PyObject(aRef);
+      final bObj = PyObject(bRef);                    expect(aObj, bObj);
+                                                      expect(aObj, isNot(same(bObj)));
+      // dart format on
+    });
+  });
+
   test('equal Python pointers still own independent references', () {
     ResourceScope.scope(() {
       // dart format off
       final a = PyInt(1000000);
       final b = a.retain();                               expect(a, b);
-                                                          expect(identical(a.ref, b.ref), isFalse);
                                                           expect(a.ref.count, 2);
       a.dispose();                                        expect(b.asInt(), 1000000);
                                                           expect(b.ref.count, 1);

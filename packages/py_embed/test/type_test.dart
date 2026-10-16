@@ -14,7 +14,8 @@ void main() {
   });
 
   test('newType inherits init, binds methods and supports super', () {
-    runString('''
+    ResourceScope.scope(() {
+      final module = PyModule.fromSource('''
 class TypeTestBase:
     def __init__(self): self.value = 7
     def forward(self, x): return self.value + x
@@ -26,10 +27,8 @@ def type_test_init(self):
     TypeTestBase.__init__(self)
     self.value = 9
 ''');
-    ResourceScope.scope(() {
-      final main = PyModule('__main__');
-      final base = main.getAttr('TypeTestBase');
-      final forward = main.getAttr('type_test_forward');
+      final base = module.getAttr('TypeTestBase');
+      final forward = module.getAttr('type_test_forward');
       final modelClass = newType('Model', [base], {'forward': forward});
       final instance = modelClass.call0();
       expect(instance.getAttrInt('value'), 7);
@@ -41,7 +40,7 @@ def type_test_init(self):
       final parentMethod = parent.getAttr('forward');
       expect(parentMethod.forward([3]).asInt(), 10);
       // Creation borrows arguments, which remain usable after the call.
-      final customInit = main.getAttr('type_test_init');
+      final customInit = module.getAttr('type_test_init');
       final customClass = newType(
         'Custom',
         [base],

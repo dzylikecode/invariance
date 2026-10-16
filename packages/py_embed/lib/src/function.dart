@@ -32,14 +32,9 @@ typedef _NativeCallback = Pointer<g.PyObject> Function(
 /// this function. The active scope releases both its Python reference and native
 /// callback memory. A retained Python reference does not extend callback memory's
 /// lifetime; keep the original function alive while Python can call it.
-final class PyFunction extends PyObject {
-  PyFunction._(_FunctionRef super.ref);
-
+final class PyFunction._(_FunctionRef super.ref) extends PyObject {
   /// Creates a callable named [name] that invokes [callback].
-  factory PyFunction(
-    PyFunctionCallback callback, {
-    String name = 'dart_function',
-  }) {
+  factory(PyFunctionCallback callback, {String name = 'dart_function'}) {
     late _FunctionRef reference;
     final native = NativeCallable<_NativeCallback>.isolateLocal((
       Pointer<g.PyObject> self,
@@ -114,14 +109,15 @@ final class PyFunction extends PyObject {
 }
 
 // Native resources share the lifetime of the initial owned Python reference.
-final class _FunctionRef extends PyRef {
-  final NativeCallable<_NativeCallback> callback;
-  final Pointer<g.PyMethodDef> method;
-  final Pointer<Char> name;
-  int activeCalls = 0;
+final class _FunctionRef(
+  super.ptr,
+  final NativeCallable<_NativeCallback> callback,
+  final Pointer<g.PyMethodDef> method,
+  final Pointer<Char> name,
+) extends PyRef {
+  this : super.fromHandle();
 
-  _FunctionRef(super.ptr, this.callback, this.method, this.name)
-    : super.fromHandle();
+  int activeCalls = 0;
 
   @override
   void dispose() {
