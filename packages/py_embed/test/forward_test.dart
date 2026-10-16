@@ -2,10 +2,9 @@ import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 import 'package:test/test.dart';
 
-PyObject evaluate(String expression) => using((refs) {
-  final builtins = refs(PyModule('builtins'));
-
-  final eval = refs(builtins.getAttr('eval'));
+PyObject evaluate(String expression) => ResourceScope.returning(() {
+  final builtins = PyModule('builtins');
+  final eval = builtins.getAttr('eval');
   return eval.callN([PyString(expression), PyDict()]);
 });
 
@@ -40,8 +39,7 @@ class RetainingConverter extends PyConverter {
   @override
   PyObject toPyObject(Object? value) {
     if (value is Label) {
-      handle.ref.increment();
-      return handle;
+      return handle.retain();
     }
     return super.toPyObject(value);
   }
@@ -63,113 +61,104 @@ class ObjectWrapper implements PyObjectWrapper {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _handle.ref.discrement();
+    _handle.dispose();
   }
 }
 
 void main() {
+  tearDown(() => expect(ResourceScope.checkNoLeaks(), isTrue));
   test('converts scalars, nested containers and keyword arguments', () {
-    using((refs) {
-      final fn = refs(
-        evaluate(
-          'lambda *args, **kw: args == (None, True, 1234, 1.5, "中文", '
-          '[1, {"x": [False, None]}]) and kw == {"answer": 42}',
-        ),
+    ResourceScope.scope(() {
+      final fn = evaluate(
+        'lambda *args, **kw: args == (None, True, 1234, 1.5, "中文", '
+        '[1, {"x": [False, None]}]) and kw == {"answer": 42}',
       );
 
-      final result = refs(
-        fn.forward(
+      final result = fn.forward(
+        [
+          null,
+          true,
+          1234,
+          1.5,
+          '中文',
           [
-            null,
-            true,
-            1234,
-            1.5,
-            '中文',
-            [
-              1,
-              {
-                'x': [false, null],
-              },
-            ],
+            1,
+            {
+              'x': [false, null],
+            },
           ],
-          kwargs: {'answer': 42},
-        ),
+        ],
+        kwargs: {'answer': 42},
       );
       expect(result.asBool(), isTrue);
     });
   });
 
   test('supports no arguments and repeated acyclic containers', () {
-    using((refs) {
-      final fn = refs(evaluate('lambda: 42'));
+    ResourceScope.scope(() {
+      final fn = evaluate('lambda: 42');
 
-      final result = refs(fn.forward([]));
+      final result = fn.forward([]);
       expect(result.asInt(), 42);
     });
     final shared = [1, 2];
-    using((refs) {
-      final fn = refs(evaluate('lambda xs: xs == [[1, 2], [1, 2]]'));
+    ResourceScope.scope(() {
+      final fn = evaluate('lambda xs: xs == [[1, 2], [1, 2]]');
 
-      final r = refs(
-        fn.forward([
-          [shared, shared],
-        ]),
-      );
+      final r = fn.forward([
+        [shared, shared],
+      ]);
       expect(r.asBool(), isTrue);
     });
   });
 
   test('retains caller-owned objects and returns an owned reference', () {
-    using((refs) {
-      final value = refs(PyDouble(3.5));
+    ResourceScope.scope(() {
+      final value = PyDouble(3.5);
 
-      final fn = refs(evaluate('lambda x: x'));
+      final fn = evaluate('lambda x: x');
       final before = value.ref.count;
       final result = fn.forward([value]);
       expect(result.ptr, value.ptr);
       expect(value.ref.count, before + 1);
-      result.ref.discrement();
+      result.dispose();
       expect(value.ref.count, before);
     });
   });
 
-  test('accepts borrowed objects without consuming their owners reference', () {
-    final list = PyList(1);
-    try {
+  test('accepts container lookups without consuming their reference', () {
+    ResourceScope.scope(() {
+      final list = PyList(1);
       list.setElementAt(0, PyDouble(4.5));
-      final borrowed = list.elementAt(0);
-      final before = borrowed.ref.count;
-      using((refs) {
-        final fn = refs(evaluate('lambda x: None'));
-        fn.forward([borrowed]).ref.discrement();
+      final value = list.elementAt(0);
+      final before = value.ref.count;
+      ResourceScope.scope(() {
+        final fn = evaluate('lambda x: None');
+        fn.forward([value]);
       });
-      expect(borrowed.ref.count, before);
-      expect(borrowed.asDouble(), 4.5);
-    } finally {
-      list.ref.discrement();
-    }
+      expect(value.ref.count, before);
+      expect(value.asDouble(), 4.5);
+    });
   });
 
   test('custom converter handles nested values and explicit Python None', () {
-    using((refs) {
-      final fn = refs(evaluate('lambda x: x == {"labels": ["hello", None]}'));
+    ResourceScope.scope(() {
+      final fn = evaluate('lambda x: x == {"labels": ["hello", None]}');
 
-      final result = refs(
-        fn.forward([
-          {
-            'labels': [Label('hello'), Label('none')],
-          },
-        ], converter: LabelConverter()),
-      );
+      final result = fn.forward([
+        {
+          'labels': [Label('hello'), Label('none')],
+        },
+      ], converter: LabelConverter());
       expect(result.asBool(), isTrue);
     });
   });
 
   test('cleans partial positional, list, map and keyword conversions', () {
-    using((refs) {
-      final value = refs(PyDouble(5.5));
+    ResourceScope.scope(() {
+      final value = PyDouble(5.5);
 
-      final fn = refs(evaluate('lambda *args, **kw: None'));
+      final fn = evaluate('lambda *args, **kw: None');
       final before = value.ref.count;
       for (final args in <List<Object?>>[
         [value, Object()],
@@ -208,16 +197,16 @@ void main() {
   });
 
   test('cleans references on Python call and dictionary insertion errors', () {
-    using((refs) {
-      final value = refs(PyDouble(6.5));
+    ResourceScope.scope(() {
+      final value = PyDouble(6.5);
       final before = value.ref.count;
 
-      final fn = refs(evaluate('lambda x: 1 / 0'));
+      final fn = evaluate('lambda x: 1 / 0');
       expect(() => fn.forward([value]), throwsA(isA<PyException>()));
 
       expect(value.ref.count, before);
 
-      final dictFn = refs(evaluate('lambda x: None'));
+      final dictFn = evaluate('lambda x: None');
       expect(
         () => dictFn.forward([
           {<int>[]: value},
@@ -230,8 +219,8 @@ void main() {
   });
 
   test('call0 reports Python exceptions before wrapping a null pointer', () {
-    using((refs) {
-      final fn = refs(evaluate('lambda: 1 / 0'));
+    ResourceScope.scope(() {
+      final fn = evaluate('lambda: 1 / 0');
       expect(() => fn.call0(), throwsA(isA<PyException>()));
     });
   });
@@ -241,11 +230,11 @@ void main() {
     list.add(list);
     final map = <String, Object?>{};
     map['self'] = map;
-    using((refs) {
-      final value = refs(PyDouble(7.5));
+    ResourceScope.scope(() {
+      final value = PyDouble(7.5);
       final before = value.ref.count;
 
-      final fn = refs(evaluate('lambda *args, **kw: None'));
+      final fn = evaluate('lambda *args, **kw: None');
       for (final invalid in [list, map]) {
         expect(() => fn.forward([value, invalid]), throwsArgumentError);
         expect(value.ref.count, before);
@@ -256,11 +245,11 @@ void main() {
     'converter works standalone and can be reused after conversion failure',
     () {
       final converter = LabelConverter();
-      using((refs) {
-        final value = refs(PyDouble(8.5));
+      ResourceScope.scope(() {
+        final value = PyDouble(8.5);
         final before = value.ref.count;
-        using((refs) {
-          final copy = refs(converter.toPyObject(value));
+        ResourceScope.scope(() {
+          final copy = converter.toPyObject(value);
           expect(copy.ptr, value.ptr);
           expect(value.ref.count, before + 1);
         });
@@ -269,20 +258,20 @@ void main() {
       final values = <Object?>[Object()];
       expect(() => converter.toPyObject(values), throwsArgumentError);
       values[0] = Label('hello');
-      using((refs) {
-        final result = refs(converter.toPyObject(values));
+      ResourceScope.scope(() {
+        final result = converter.toPyObject(values);
 
-        final index = refs(PyInt(0));
+        final index = PyInt(0);
 
-        final item = refs(result.getItem(index));
+        final item = result.getItem(index);
         expect(item.asString(), 'hello');
       });
       final cyclic = <Object?>[];
       cyclic.add(cyclic);
       expect(() => converter.toPyObject(cyclic), throwsArgumentError);
       cyclic.clear();
-      using((refs) {
-        final result = refs(converter.toPyObject(cyclic));
+      ResourceScope.scope(() {
+        final result = converter.toPyObject(cyclic);
         expect(result.asBool(), isFalse);
       });
     },
@@ -300,7 +289,7 @@ void main() {
         expect(result.asDouble(), 9.5);
       } finally {
         wrapper.dispose();
-        result.ref.discrement();
+        result.dispose();
       }
     },
   );
@@ -309,21 +298,17 @@ void main() {
     final wrapper = ObjectWrapper(PyDouble(10.5));
     try {
       final before = wrapper.handle.ref.count;
-      using((refs) {
-        final fn = refs(
-          evaluate(
-            'lambda xs, mapping, *, value: xs[0] is value and mapping[value] is value',
-          ),
+      ResourceScope.scope(() {
+        final fn = evaluate(
+          'lambda xs, mapping, *, value: xs[0] is value and mapping[value] is value',
         );
 
-        final result = refs(
-          fn.forward(
-            [
-              [wrapper],
-              {wrapper: wrapper},
-            ],
-            kwargs: {'value': wrapper},
-          ),
+        final result = fn.forward(
+          [
+            [wrapper],
+            {wrapper: wrapper},
+          ],
+          kwargs: {'value': wrapper},
         );
         expect(result.asBool(), isTrue);
       });
@@ -338,8 +323,8 @@ void main() {
     final disposed = ObjectWrapper(PyDouble(12.5))..dispose();
     try {
       final before = wrapper.handle.ref.count;
-      using((refs) {
-        final fn = refs(evaluate('lambda *args: 1 / 0'));
+      ResourceScope.scope(() {
+        final fn = evaluate('lambda *args: 1 / 0');
         expect(() => fn.forward([wrapper]), throwsA(isA<PyException>()));
         expect(wrapper.handle.ref.count, before);
         expect(() => fn.forward([wrapper, Object()]), throwsArgumentError);

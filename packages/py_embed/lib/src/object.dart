@@ -2,31 +2,113 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
 
+import 'package:resource_scope/resource_scope.dart';
+
 import 'binding/shared.g.dart' as g;
 import 'binding/api.dart';
 import 'runtime.dart';
-import 'scope.dart';
 
-import '../debug.dart';
+/// One owned Python reference, automatically registered in the current scope.
+///
+/// Separate references to the same pointer must use separate PyRef instances.
+class PyRef implements ScopedResource {
+  final Pointer<g.PyObject> _ptr;
+  bool _disposed = false;
 
-class const PyRef.fromHandle(final Pointer<g.PyObject> _ptr) {
-  Pointer<g.PyObject> get ptr => _ptr;
+  /// Takes ownership of an existing new reference, without incrementing it.
+  PyRef.fromHandle(this._ptr) {
+    if (_ptr == nullptr) throw ArgumentError('Null Python reference');
+    ResourceScope.track(this);
+  }
 
+  /// Acquires an independent owned reference from a borrowed pointer.
+  factory PyRef.fromBorrowedHandle(Pointer<g.PyObject> ptr) {
+    if (ptr == nullptr) throw ArgumentError('Null Python reference');
+    checked(() => api.Py_IncRef(ptr));
+    return PyRef.fromHandle(ptr);
+  }
+
+  /// The native pointer, available only while this reference is alive.
+  Pointer<g.PyObject> get ptr {
+    if (_disposed) throw StateError('Python reference is disposed');
+    return _ptr;
+  }
+
+  @override
+  bool get isDisposed => _disposed;
+
+  @override
+  PyRef detachFromScope() {
+    if (isDisposed) throw StateError('Python reference is disposed');
+    ResourceScope.untrack(this);
+    return this;
+  }
+
+  @override
+  PyRef detachToParentScope() {
+    if (isDisposed) throw StateError('Python reference is disposed');
+    ResourceScope.promoteToParent(this);
+    return this;
+  }
+
+  /// Acquires a separately managed reference to the same Python object.
+  PyRef retain() => PyRef.fromBorrowedHandle(ptr);
+
+  /// Acquires a raw reference for transfer to native code. Prefer [retain]
+  /// when the new reference should be managed by Dart.
   void increment() => checked(() => api.Py_IncRef(ptr));
-  void discrement() {
-    assert(count > 0);
-    checked(() => api.Py_DecRef(ptr));
+
+  /// Releases this owned reference. Prefer [dispose].
+  @Deprecated('Use dispose() for owned references')
+  void discrement() => dispose();
+
+  @override
+  void dispose() {
+    if (_disposed) return;
+    checked(() {
+      _disposed = true;
+      ResourceScope.untrack(this);
+      api.Py_DecRef(_ptr);
+    });
   }
 }
 
-class const PyObject(final PyRef ref) {
+class const PyObject(final PyRef ref) implements ScopedResource {
   Pointer<g.PyObject> get ptr => ref.ptr;
 
+  /// Whether the shared owned reference has been disposed.
+  @override
+  bool get isDisposed => ref.isDisposed;
+
+  @override
+  PyObject detachFromScope() {
+    ref.detachFromScope();
+    return this;
+  }
+
+  @override
+  PyObject detachToParentScope() {
+    ref.detachToParentScope();
+    return this;
+  }
+
+  /// Takes ownership of one new reference.
+  ///
+  /// For aliases, use [PyObject.new] with the existing [ref].
   factory fromHandle(Pointer<g.PyObject> ptr) => .new(.fromHandle(ptr));
+
+  /// Acquires an owned reference from a borrowed native pointer.
+  factory fromBorrowedHandle(Pointer<g.PyObject> ptr) =>
+      .new(.fromBorrowedHandle(ptr));
+
+  /// Returns an owned reference even though CPython supplies a borrowed one.
   factory borrowedConst(PyConst v) =>
-      .fromHandle(checked(() => api.Py_GetConstantBorrowed(v)));
+      .fromBorrowedHandle(checked(() => api.Py_GetConstantBorrowed(v)));
   factory getConst(PyConst v) =>
       .fromHandle(checked(() => api.Py_GetConstant(v)));
+
+  /// Acquires a separately scoped reference to this Python object.
+  PyObject retain() => PyObject(ref.retain());
 
   @override
   String toString() => checked(() => api.callToString(ptr));
@@ -37,7 +119,8 @@ class const PyObject(final PyRef ref) {
   @override
   int get hashCode => ptr.hashCode;
 
-  void dispose() => ref.discrement();
+  @override
+  void dispose() => ref.dispose();
 }
 
 extension PyObjectAttributes on PyObject {
@@ -80,27 +163,27 @@ extension PyObjectAttributes on PyObject {
     return result != 0;
   });
 
-  int getAttrInt(String attribute) => using((refs) {
-    final attr = refs(getAttr(attribute));
+  int getAttrInt(String attribute) => ResourceScope.scope(() {
+    final attr = getAttr(attribute);
     return attr.asInt();
   });
-  double getAttrDouble(String attribute) => using((refs) {
-    final attr = refs(getAttr(attribute));
+  double getAttrDouble(String attribute) => ResourceScope.scope(() {
+    final attr = getAttr(attribute);
     return attr.asDouble();
   });
 
-  bool getAttrBool(String attribute) => using((refs) {
-    final attr = refs(getAttr(attribute));
+  bool getAttrBool(String attribute) => ResourceScope.scope(() {
+    final attr = getAttr(attribute);
     return attr.asBool();
   });
 
-  String getAttrString(String attribute) => using((refs) {
-    final attr = refs(getAttr(attribute));
+  String getAttrString(String attribute) => ResourceScope.scope(() {
+    final attr = getAttr(attribute);
     return attr.asString();
   });
 
   PyObject getAttrObject(PyObject attribute) =>
-      checked(() => .fromHandle(api.PyObject_GetAttr(ptr, attribute.ptr)));
+      .fromHandle(checked(() => api.PyObject_GetAttr(ptr, attribute.ptr)));
   void setAttrObject(PyObject attribute, PyObject value) =>
       checked(() => api.PyObject_SetAttr(ptr, attribute.ptr, value.ptr));
   bool hasAttrObject(PyObject attribute) =>
@@ -142,9 +225,9 @@ extension PyObjectCall on PyObject {
   PyObject call0() =>
       .fromHandle(checked(() => api.PyObject_CallObject(ptr, nullptr)));
 
-  /// ref-- args 里面的引用会释放一次
-  PyObject callN(List<PyObject> args) => using((refs) {
-    final tuple = refs(PyTuple.fromList(args));
+  /// Calls with arguments whose ownership remains with the caller.
+  PyObject callN(List<PyObject> args) => ResourceScope.returning(() {
+    final tuple = PyTuple.fromList(args);
     return call(tuple);
   });
 }
@@ -159,8 +242,8 @@ enum PyComparison {
   greaterThanOrEqual,
 }
 
-/// Object results own a new reference; release them with [using]
-/// or [PyRef.discrement]. Operands retain their existing references.
+/// Object results own a new reference, managed by [ResourceScope.scope].
+/// Outside a scope, release results with [PyObject.dispose]. Operands keep their references.
 /// Dart compound assignments use the ordinary operators. Use the inPlace
 /// methods explicitly for Python augmented assignment semantics.
 extension PyObjectOperator on PyObject {
@@ -276,9 +359,14 @@ extension PyObjectOperator on PyObject {
   /// python: a **= b; with modulus: a = pow(a, b, modulus)
   /// Python power, optionally with a modulus. An omitted modulus uses None.
   PyObject inPlacePower(PyObject exponent, [PyObject? modulus]) {
-    modulus ??= .borrowedConst(.none);
     return .fromHandle(
-      checked(() => api.PyNumber_InPlacePower(ptr, exponent.ptr, modulus!.ptr)),
+      checked(
+        () => api.PyNumber_InPlacePower(
+          ptr,
+          exponent.ptr,
+          modulus?.ptr ?? api.Py_GetConstantBorrowed(.none),
+        ),
+      ),
     );
   }
 
@@ -316,20 +404,20 @@ extension PyObjectOperator on PyObject {
 }
 
 extension PyObjectWithContext on PyObject {
-  T withContext<T>(T Function(PyObject) action) {
-    return using((scope) {
-      final enter = scope(getAttr('__enter__'));
-      final value = scope(enter.call0());
-      try {
-        return action(value);
-      } finally {
-        final exit = scope(getAttr('__exit__'));
-        scope(
-          exit.callN([.getConst(.none), .getConst(.none), .getConst(.none)]),
-        );
-      }
-    });
-  }
+  /// Runs a synchronous Python context manager in a temporary resource scope.
+  ///
+  /// To return a locally created resource beyond this boundary, use its
+  /// [PyObject.detachToParentScope] method before returning it.
+  T withContext<T>(T Function(PyObject) action) => ResourceScope.scope(() {
+    final enter = getAttr('__enter__');
+    final value = enter.call0();
+    try {
+      return action(value);
+    } finally {
+      final exit = getAttr('__exit__');
+      exit.callN([.getConst(.none), .getConst(.none), .getConst(.none)]);
+    }
+  });
 }
 
 /// CPython 会缓存小整数，相同的缓存值（例如 1）共享底层对象和引用计数。
@@ -364,8 +452,16 @@ class PyString(String value) extends PyObject {
       );
 }
 
-class PyModule.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
-  this : super(.fromHandle(ptr));
+class PyModule extends PyObject {
+  /// Takes ownership of one new native reference.
+  PyModule.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
+
+  /// Acquires an owned reference from a borrowed native pointer.
+  PyModule.fromBorrowedHandle(Pointer<g.PyObject> ptr)
+    : super(.fromBorrowedHandle(ptr));
+
+  /// Shares an existing reference without incrementing its count.
+  PyModule.fromRef(super.ref);
 
   /// Imports a module and owns a new reference to it.
   factory PyModule(String moduleName) => ffi.using(
@@ -386,19 +482,17 @@ class PyModule.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
   /// independent module named `_anonymous` without registering it for import.
   /// The caller owns the returned reference. Python errors propagate normally.
   factory PyModule.fromSource(String source, {String? name}) => ffi.using(
-    (arena) => using((scope) {
-      final code = scope(
-        PyObject.fromHandle(
-          checked(
-            () => api.Py_CompileStringExFlags(
-              source.toNativeUtf8(allocator: arena).cast<Char>(),
-              (name == null ? '<string>' : '<$name>')
-                  .toNativeUtf8(allocator: arena)
-                  .cast<Char>(),
-              257, // Py_file_input in Python 3.8 through 3.13.
-              nullptr,
-              -1,
-            ),
+    (arena) => ResourceScope.returning(() {
+      final code = PyObject.fromHandle(
+        checked(
+          () => api.Py_CompileStringExFlags(
+            source.toNativeUtf8(allocator: arena).cast<Char>(),
+            (name == null ? '<string>' : '<$name>')
+                .toNativeUtf8(allocator: arena)
+                .cast<Char>(),
+            257, // Py_file_input in Python 3.8 through 3.13.
+            nullptr,
+            -1,
           ),
         ),
       );
@@ -410,75 +504,106 @@ class PyModule.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
           checked(() => api.PyImport_ExecCodeModule(moduleName, code.ptr)),
         );
       }
-      final module = scope(
-        PyModule.fromHandle(checked(() => api.PyModule_New(moduleName))),
+      final module = PyModule.fromHandle(
+        checked(() => api.PyModule_New(moduleName)),
       );
       final globals = checked(
         () => api.PyModule_GetDict(module.ptr),
       ); // Borrowed.
       // Unlike PyImport_ExecCodeModule, PyEval_EvalCode does not inject builtins.
-      final builtinsDict = PyObject.fromHandle(
+      final builtinsDict = PyObject.fromBorrowedHandle(
         checked(() => api.PyEval_GetBuiltins()),
-      ); // Borrowed; the globals dictionary retains it.
-      PyDict.fromHandle(globals).setElementAtStr('__builtins__', builtinsDict);
-      scope(
-        PyObject.fromHandle(
-          checked(() => api.PyEval_EvalCode(code.ptr, globals, globals)),
-        ),
+      ); // Acquire an owned reference to the borrowed builtins dictionary.
+      PyDict.fromBorrowedHandle(globals)
+          .setElementAtStr('__builtins__', builtinsDict);
+
+      PyObject.fromHandle(
+        checked(() => api.PyEval_EvalCode(code.ptr, globals, globals)),
       );
-      return scope.escape(module);
+      return module;
     }),
   );
 }
 
 /// tuple
 ///
-/// [PyTuple] 会管理接管所有权:
+/// Insertion retains items; the caller keeps its own references:
 /// {@example /test/object_test.dart#tuple-take-the-ownership}
-class PyTuple.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
-  this : super(.fromHandle(ptr));
+class PyTuple extends PyObject {
+  /// Takes ownership of one new native reference.
+  PyTuple.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
 
-  factory(int size) => .fromHandle(checked(() => api.PyTuple_New(size)));
+  /// Acquires an owned reference from a borrowed native pointer.
+  PyTuple.fromBorrowedHandle(Pointer<g.PyObject> ptr)
+    : super(.fromBorrowedHandle(ptr));
 
-  /// ref==
-  factory fromList(List<PyObject> items) {
+  /// Shares an existing reference without incrementing its count.
+  PyTuple.fromRef(super.ref);
+
+  factory PyTuple(int size) =>
+      .fromHandle(checked(() => api.PyTuple_New(size)));
+
+  /// Retains each input without consuming the caller's references.
+  factory PyTuple.fromList(List<PyObject> items) => ResourceScope.returning(() {
     final tuple = PyTuple(items.length);
     for (var i = 0; i < items.length; i++) {
       tuple.setElementAt(i, items[i]);
     }
     return tuple;
-  }
+  });
 
   int get length => checked(() => api.PyTuple_Size(ptr));
 
   /// Set the item at [index] in the tuple to [item].
   ///
-  /// ref ==
-  void setElementAt(int index, PyObject item) =>
-      checked(() => api.PyTuple_SetItem(ptr, index, item.ptr));
+  /// Retains [item]; the caller keeps its existing reference.
+  void setElementAt(int index, PyObject item) => checked(() {
+    final tuple = ptr;
+    final value = item.ptr;
+    api.Py_IncRef(value);
+    api.PyTuple_SetItem(tuple, index, value);
+  });
 
-  /// ref ==
-  PyObject elementAt(int index) =>
-      .fromHandle(checked(() => api.PyTuple_GetItem(ptr, index)));
+  /// Returns an independent owned reference.
+  PyObject elementAt(int index) => checked(
+    () => PyObject.fromBorrowedHandle(
+      checked(() => api.PyTuple_GetItem(ptr, index)),
+    ),
+  );
 
   void operator []=(int index, PyObject item) => setElementAt(index, item);
   PyObject operator [](int index) => elementAt(index);
 }
 
-class PyList.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
-  this : super(.fromHandle(ptr));
+class PyList extends PyObject {
+  /// Takes ownership of one new native reference.
+  PyList.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
 
-  factory(int size) => .fromHandle(checked(() => api.PyList_New(size)));
+  /// Acquires an owned reference from a borrowed native pointer.
+  PyList.fromBorrowedHandle(Pointer<g.PyObject> ptr)
+    : super(.fromBorrowedHandle(ptr));
+
+  /// Shares an existing reference without incrementing its count.
+  PyList.fromRef(super.ref);
+
+  factory PyList(int size) => .fromHandle(checked(() => api.PyList_New(size)));
 
   int get length => checked(() => api.PyList_Size(ptr));
 
-  /// ref ==
-  void setElementAt(int index, PyObject item) =>
-      checked(() => api.PyList_SetItem(ptr, index, item.ptr));
+  /// Retains [item]; the caller keeps its existing reference.
+  void setElementAt(int index, PyObject item) => checked(() {
+    final list = ptr;
+    final value = item.ptr;
+    api.Py_IncRef(value);
+    api.PyList_SetItem(list, index, value);
+  });
 
-  /// ref ==
-  PyObject elementAt(int index) =>
-      .fromHandle(checked(() => api.PyList_GetItem(ptr, index)));
+  /// Returns an independent owned reference.
+  PyObject elementAt(int index) => checked(
+    () => PyObject.fromBorrowedHandle(
+      checked(() => api.PyList_GetItem(ptr, index)),
+    ),
+  );
 
   /// ref++
   void add(PyObject item) => checked(() => api.PyList_Append(ptr, item.ptr));
@@ -497,14 +622,20 @@ class PyList.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
 
 /// A Python dictionary. Keys and values are retained when inserted.
 ///
-/// Lookups return borrowed references, like [PyList.elementAt]. Do not release
-/// them unless you first call [PyRef.increment]; they are valid only while the
-/// dictionary retains the value. Copies and snapshot lists own new references
-/// and must be released by their caller.
-class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
-  this : super(.fromHandle(ptr));
+/// Lookups, copies and snapshot lists return independent owned references.
+/// They are automatically managed by the active scope.
+class PyDict extends PyObject {
+  /// Takes ownership of one new native reference.
+  PyDict.fromHandle(Pointer<g.PyObject> ptr) : super(.fromHandle(ptr));
 
-  factory() => .fromHandle(checked(() => api.PyDict_New()));
+  /// Acquires an owned reference from a borrowed native pointer.
+  PyDict.fromBorrowedHandle(Pointer<g.PyObject> ptr)
+    : super(.fromBorrowedHandle(ptr));
+
+  /// Shares an existing reference without incrementing its count.
+  PyDict.fromRef(super.ref);
+
+  factory PyDict() => .fromHandle(checked(() => api.PyDict_New()));
 
   int get length => checked(() => api.PyDict_Size(ptr));
   bool get isEmpty => length == 0;
@@ -514,26 +645,28 @@ class PyDict.fromHandle(Pointer<g.PyObject> ptr) extends PyObject {
   void setElementAt(PyObject key, PyObject item) =>
       checked(() => api.PyDict_SetItem(ptr, key.ptr, item.ptr));
 
-  /// ref ==
-  PyObject? elementAt(PyObject key) {
+  /// Returns an independent owned reference.
+  PyObject? elementAt(PyObject key) => checked(() {
     final item = checked(() => api.PyDict_GetItem(ptr, key.ptr));
-    return item == nullptr ? null : .fromHandle(item);
-  }
+    return item == nullptr ? null : PyObject.fromBorrowedHandle(item);
+  });
 
   bool contains(PyObject key) =>
       checked(() => api.PyDict_Contains(ptr, key.ptr)) != 0;
 
   /// Deletes [key], throwing a Python KeyError if it is absent.
   void remove(PyObject key) => checked(() => api.PyDict_DelItem(ptr, key.ptr));
-  PyObject? elementAtStr(String key) => ffi.using((arena) {
-    final item = checked(
-      () => api.PyDict_GetItemString(
-        ptr,
-        key.toNativeUtf8(allocator: arena).cast(),
-      ),
-    );
-    return item == nullptr ? null : .fromHandle(item);
-  });
+  PyObject? elementAtStr(String key) => ffi.using(
+    (arena) => checked(() {
+      final item = checked(
+        () => api.PyDict_GetItemString(
+          ptr,
+          key.toNativeUtf8(allocator: arena).cast(),
+        ),
+      );
+      return item == nullptr ? null : PyObject.fromBorrowedHandle(item);
+    }),
+  );
   void setElementAtStr(String key, PyObject item) => ffi.using(
     (arena) => checked(
       () => api.PyDict_SetItemString(

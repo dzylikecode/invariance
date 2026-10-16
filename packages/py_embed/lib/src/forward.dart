@@ -1,6 +1,7 @@
+import 'package:resource_scope/resource_scope.dart';
+
 import 'object.dart';
 import 'converter.dart';
-import 'scope.dart';
 
 extension PyObjectForward on PyObject {
   /// Calls this Python callable with Dart positional and keyword arguments.
@@ -16,29 +17,29 @@ extension PyObjectForward on PyObject {
   /// conversion or the Python call fails. [converter] handles additional types,
   /// including values nested inside lists and maps.
   ///
-  /// The result owns one reference; register it with using or release it with ref.discrement().
-  /// Unlike callN(), this method never consumes the caller's argument references.
+  /// The result is automatically registered in the caller's active scope.
+  /// Outside a scope, the caller must dispose it. Argument ownership is preserved.
   PyObject forward(
     List<Object?> args, {
     Map<String, Object?>? kwargs,
     PyConverter? converter,
-  }) => using((scope) {
+  }) => ResourceScope.returning(() {
     final conversion = converter ?? PyConverter();
-    final positional = scope(PyTuple(args.length));
+    final positional = PyTuple(args.length);
     for (var i = 0; i < args.length; i++) {
-      // PyTuple_SetItem consumes the encoded reference, also on failure.
+      // The tuple retains its own reference; conversion temporaries stay scoped.
       positional.setElementAt(i, conversion.toPyObject(args[i]));
     }
     PyDict? keywords;
     if (kwargs != null) {
-      final dict = scope(PyDict());
+      final dict = PyDict();
       keywords = dict;
       for (final entry in kwargs.entries) {
-        final value = scope(conversion.toPyObject(entry.value));
+        final value = conversion.toPyObject(entry.value);
         dict.setElementAtStr(entry.key, value);
       }
     }
-    // call() returns a new owned reference which is not registered here.
+    // returning promotes the result into the caller's scope.
     return call(positional, keywords);
   });
 }

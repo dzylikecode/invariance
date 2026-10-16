@@ -1,19 +1,19 @@
 import 'package:py_embed/py_embed.dart';
 
 void main() {
-  final PyList list = using((scope) {
-    final list = scope(PyList(0));
+  final PyList list = ResourceScope.returning(() {
+    final list = PyList(0);
     for (final value in [3, 1, 2]) {
-      list.add(scope(PyInt(value)));
+      list.add(PyInt(value));
     }
-    return scope.escape(list);
+    return list;
   });
 
-  using((scope) {
-    scope(list); // Take ownership of the escaped reference.
-    final builtins = scope(PyModule('builtins'));
-    final sorted = scope(builtins.getAttr('sorted'));
-    final result = scope(sorted.forward([list]));
+  ResourceScope.scope(() {
+    ResourceScope.track(list.ref); // Adopt the manually owned reference.
+    final builtins = PyModule('builtins');
+    final sorted = builtins.getAttr('sorted');
+    final result = sorted.forward([list]);
     print(result); // [1, 2, 3]
   });
 }

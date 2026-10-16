@@ -19,7 +19,7 @@ class PointConverter extends PyConverter {
   }
 }
 
-// This view borrows its handle; the surrounding using() scope owns it.
+// This view borrows its handle; the surrounding ResourceScope.scope owns it.
 class PythonValue implements PyObjectWrapper {
   @override
   final PyObject handle;
@@ -27,32 +27,30 @@ class PythonValue implements PyObjectWrapper {
 }
 
 void main() {
-  using((scope) {
-    final builtins = scope(PyModule('builtins'));
-    final repr = scope(builtins.getAttr('repr'));
-    final handle = scope(PyDouble(3.5));
+  ResourceScope.scope(() {
+    final builtins = PyModule('builtins');
+    final repr = builtins.getAttr('repr');
+    final handle = PyDouble(3.5);
     final wrapped = PythonValue(handle);
     // The default converter understands wrappers.
-    final text = scope(repr.forward([wrapped]));
+    final text = repr.forward([wrapped]);
     print(text.asString());
 
-    final sorted = scope(builtins.getAttr('sorted'));
-    final result = scope(
-      sorted.forward(
-        [
-          [3, 1, 2],
-        ],
-        kwargs: {'reverse': true},
-      ),
+    final sorted = builtins.getAttr('sorted');
+    final result = sorted.forward(
+      [
+        [3, 1, 2],
+      ],
+      kwargs: {'reverse': true},
     );
     print(result); // [3, 2, 1]
 
     // A binding package supplies a converter for domain-specific values.
-    final types = scope(PyModule('types'));
-    final constructor = scope(types.getAttr('SimpleNamespace'));
-    final point = scope(
-      repr.forward([Point(1, 2)], converter: PointConverter(constructor)),
-    );
+    final types = PyModule('types');
+    final constructor = types.getAttr('SimpleNamespace');
+    final point = repr.forward([
+      Point(1, 2),
+    ], converter: PointConverter(constructor));
     print(point.asString());
   });
 }

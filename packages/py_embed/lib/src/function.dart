@@ -2,17 +2,20 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart' as ffi;
 
+import 'package:resource_scope/resource_scope.dart';
+
 import 'binding/api.dart';
 import 'binding/shared.g.dart' as g;
 import 'object.dart';
 import 'runtime.dart';
 
-/// A synchronous callback receiving borrowed positional and keyword arguments.
+/// A synchronous callback receiving scoped positional and keyword arguments.
 ///
-/// Arguments are valid during the callback. Retain any objects kept afterward.
+/// Arguments are valid during the callback. Retain and detach objects kept afterward.
 /// Keyword arguments are `null` when Python supplies no keyword dictionary.
-/// The returned object must own one reference, transferred to Python. Retain
-/// an existing object before returning it; do not release the returned reference.
+/// The result is borrowed from the callback: the bridge acquires a new reference
+/// for Python before cleaning up the callback scope. Return new objects, arguments,
+/// or existing caller-owned objects directly, without incrementing their counts.
 typedef PyFunctionCallback = PyObject Function(PyTuple args, PyDict? kwargs);
 
 typedef _NativeCallback = Pointer<g.PyObject> Function(
@@ -25,35 +28,41 @@ typedef _NativeCallback = Pointer<g.PyObject> Function(
 ///
 /// Supports positional and keyword arguments. Python must invoke it on the thread
 /// of the creating Dart isolate; calling from another thread aborts the process.
-/// Call [dispose] before shutting down Python, after removing every Python
-/// reference to this function. Do not register this object's initial reference
-/// in a Python scope or release it through `ref.discrement()`; [dispose] owns it.
+/// Dispose before shutting down Python, after removing every Python reference to
+/// this function. The active scope releases both its Python reference and native
+/// callback memory. A retained Python reference does not extend callback memory's
+/// lifetime; keep the original function alive while Python can call it.
 final class PyFunction extends PyObject {
-  final NativeCallable<_NativeCallback> _callback;
-  final Pointer<g.PyMethodDef> _method;
-  final Pointer<Char> _name;
-  bool _disposed = false;
-  int _activeCalls = 0;
-
-  PyFunction._(super.ref, this._callback, this._method, this._name);
+  PyFunction._(_FunctionRef super.ref);
 
   /// Creates a callable named [name] that invokes [callback].
   factory PyFunction(
     PyFunctionCallback callback, {
     String name = 'dart_function',
   }) {
-    late PyFunction function;
+    late _FunctionRef reference;
     final native = NativeCallable<_NativeCallback>.isolateLocal((
       Pointer<g.PyObject> self,
       Pointer<g.PyObject> args,
       Pointer<g.PyObject> kwargs,
     ) {
-      function._activeCalls++;
+      reference.activeCalls++;
       try {
-        return callback(
-          .fromHandle(args),
-          kwargs == nullptr ? null : PyDict.fromHandle(kwargs),
-        ).ptr;
+        // Keep Python's result reference separate from every scoped wrapper.
+        Pointer<g.PyObject> result = nullptr;
+        try {
+          ResourceScope.scope(() {
+            result = callback(
+              .fromBorrowedHandle(args),
+              kwargs == nullptr ? null : PyDict.fromBorrowedHandle(kwargs),
+            ).ptr;
+            api.Py_IncRef(result);
+          });
+          return result;
+        } catch (_) {
+          if (result != nullptr) api.Py_DecRef(result);
+          rethrow;
+        }
       } catch (error) {
         var message = 'Dart callback failed';
         try {
@@ -69,11 +78,12 @@ final class PyFunction extends PyObject {
         });
         return nullptr;
       } finally {
-        function._activeCalls--;
+        reference.activeCalls--;
       }
     });
     Pointer<Char> nativeName = nullptr;
     Pointer<g.PyMethodDef> method = nullptr;
+    var transferred = false;
     try {
       nativeName = name.toNativeUtf8().cast();
       method = ffi.calloc<g.PyMethodDef>();
@@ -89,27 +99,42 @@ final class PyFunction extends PyObject {
         () => api.PyCFunction_NewEx(method, nullptr, nullptr),
       );
       if (ptr == nullptr) throw StateError('Failed to create Python function');
-      return function = ._(.fromHandle(ptr), native, method, nativeName);
+      transferred = true;
+      reference = _FunctionRef(ptr, native, method, nativeName);
+      return PyFunction._(reference);
     } catch (_) {
-      native.close();
-      if (method != nullptr) ffi.calloc.free(method);
-      if (nativeName != nullptr) ffi.malloc.free(nativeName);
+      if (!transferred) {
+        native.close();
+        if (method != nullptr) ffi.calloc.free(method);
+        if (nativeName != nullptr) ffi.malloc.free(nativeName);
+      }
       rethrow;
     }
   }
+}
 
-  /// Releases the owned Python reference and native callback resources.
-  ///
-  /// Python must no longer hold references to this function. Repeated calls
-  /// have no effect. Throws [StateError] if called during this function's callback
-  /// or after the Python runtime has shut down.
+// Native resources share the lifetime of the initial owned Python reference.
+final class _FunctionRef extends PyRef {
+  final NativeCallable<_NativeCallback> callback;
+  final Pointer<g.PyMethodDef> method;
+  final Pointer<Char> name;
+  int activeCalls = 0;
+
+  _FunctionRef(super.ptr, this.callback, this.method, this.name)
+    : super.fromHandle();
+
+  @override
   void dispose() {
-    if (_disposed) return;
-    if (_activeCalls != 0) throw StateError('Python function is executing');
-    checked(() => api.Py_DecRef(super.ptr));
-    _disposed = true;
-    _callback.close();
-    ffi.calloc.free(_method);
-    ffi.malloc.free(_name);
+    if (isDisposed) return;
+    if (activeCalls != 0) throw StateError('Python function is executing');
+    try {
+      super.dispose();
+    } finally {
+      if (isDisposed) {
+        callback.close();
+        ffi.calloc.free(method);
+        ffi.malloc.free(name);
+      }
+    }
   }
 }
