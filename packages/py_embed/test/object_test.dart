@@ -3,336 +3,242 @@ import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 
 void main() {
-  group("PyInt", () {
-    test(
-      "shares the cached object and reference count for the same small integer",
-      () {
-        // dart format off
-        final a = PyInt(1);     final count = a.ref.count;
-                                // 指针指向了同一处
-        final b = PyInt(1);     expect(a, equals(b));
-                                expect(b.ref.count, equals(count + 1));
-        a.ref.discrement();     expect(b.ref.count, equals(count));
-        // dart format on
-      },
-    );
+  tearDown(() => expect(ResourceScope.checkNoLeaks(), isTrue));
+
+  test("PyRef and PyObject compare by Python pointer", () {
+    // 不需要被 ResourceScope.scope 守护，因为这是 fake PyObject, 不能被释放
+    // dart format off
+    final aRef = PyRef.fromHandle(.fromAddress(1));
+    final bRef = PyRef.fromHandle(.fromAddress(1)); expect(aRef, bRef);
+                                                    expect(aRef, isNot(same(bRef)));
+
+    final aObj = PyObject(aRef);
+    final bObj = PyObject(bRef);                    expect(aObj, bObj);
+                                                    expect(aObj, isNot(same(bObj)));
+    // 为避免影响验证内存泄漏，不追踪它
+    ResourceScope.untrack(aRef);
+    ResourceScope.untrack(bRef);
+    // dart format on
   });
 
-  group("PyDouble", () {
-    test("keeps independent reference counts for equal values", () {
+  test('equal Python pointers still own independent references', () {
+    ResourceScope.scope(() {
       // dart format off
-      final a = PyDouble(1);     expect(a.ref.count, equals(1));
-                                 final count = a.ref.count;
-      final b = PyDouble(1);     expect(b, isNot(equals(a)));
-                                 expect(a.ref.count, equals(1));
-                                 expect(b.ref.count, equals(1));
-                                 expect(b.ref.count, isNot(equals(count+1)));
-      a.ref.discrement();        expect(b.ref.count, equals(1));
-
+      final a = PyInt(1000000);
+      final b = a.retain();                               expect(a, b);
+                                                          expect(a.ref.count, 2);
+      a.dispose();                                        expect(b.asInt(), 1000000);
+                                                          expect(b.ref.count, 1);
       // dart format on
     });
   });
 
-  group("PyString", () {
-    test("shares the cached object and reference count", () {
-      final a = PyString('a');
-      final count = a.ref.count;
+  test('equal doubles are independent Python objects', () {
+    ResourceScope.scope(() {
       // dart format off
-        final b = PyString('a');  expect(b.ref.count, equals(count+1));
-        a.ref.discrement();       expect(b.ref.count, equals(count));
-        // dart format on
+      final a = PyDouble(1.5);
+      final b = PyDouble(1.5);                            expect(a, isNot(b));
+                                                          expect(a.ref.count, 1);
+                                                          expect(b.ref.count, 1);
+      // dart format on
     });
   });
 
-  group("PyObject", () {
-
-    test("equal", () {
-      final obj1 = PyObject.fromHandle(.fromAddress(1));
-      final obj2 = PyObject.fromHandle(.fromAddress(1));  expect(obj1, obj2);
-    });
-
-    /// getAttr 对于方法：每次得到的是新的对象
-    test("getAttr for methods: returns a new object on each lookup", () {
-      final obj = PyString("hello");        expect(obj.hasAttr("upper"), isTrue);
-      final upper1 = obj.getAttr("upper");  expect(upper1.ref.count, equals(1));
-                                            // ## proof 1: 得到新的对象
-      final upper2 = obj.getAttr("upper");  expect(upper2, isNot(equals(upper1)));
-                                            expect(upper2.ref.count, equals(1));
-      obj.ref.discrement();                 expect(upper1.ref.count, equals(1));
-                                            // ## proof 2: 得到新的对象
-      upper1.ref.discrement();              expect(upper1.ref.count, equals(0));
-                                            expect(upper2.ref.count, equals(1));
-      upper2.ref.discrement();              expect(upper2.ref.count, equals(0));
-    });
-
-    /// getAttr 对于属性：新的对象 ｜ 共享对象且 ref++
-    test("getAttr for attributes: new object | shared object with ref++", () {
+  test('attribute lookups own new references, including shared attributes', () {
+    ResourceScope.scope(() {
+      // dart format off
       final obj = PyDouble(1.5);
-      final real = obj.getAttr("real");   expect(real, equals(obj)); // 同一个对象
-                                          expect(real.ref.count, equals(2));
-      final real2 = obj.getAttr("real");  expect(real2.ref.count, equals(3));
-                                          expect(real, equals(real2));
-      final imag = obj.getAttr("imag");   expect(imag.ref.count, equals(1));  // 每次都在构造新的
-      final imag2 = obj.getAttr("imag");  expect(imag2.ref.count, equals(1));
-
-      real.ref.discrement();
-      real2.ref.discrement();
-                                          // 说明 imag 返回的是一个新的对象
-      imag.ref.discrement();              expect(imag.ref.count, equals(0));
-                                          expect(imag2.ref.count, equals(1));
-      imag2.ref.discrement();
-
-      obj.ref.discrement();
-
-      // 所以无论哪一种都是需要 ref--，对于 getDouble
+      final real = obj.getAttr('real');
+      final real2 = obj.getAttr('real');                  expect(real, obj);
+                                                          expect(real2.ref.count, 3);
+      real.dispose();
+      real2.dispose();                                    expect(obj.ref.count, 1);
+      final text = PyString('hello');                     expect(text.hasAttr('upper'), isTrue);
+      final first = text.getAttr('upper');
+      final second = text.getAttr('upper');               expect(first, isNot(second));
+                                                          expect(first.ref.count, 1);
+                                                          expect(second.ref.count, 1);
+      // dart format on
     });
+  });
 
-    /// getItem: ref++
-    test("getItem: ref++", () {
-      final owner = PyList(0);
-      final a = PyDouble(1);      expect(a.ref.count, equals(1));
-      owner.add(a);               expect(a.ref.count, equals(2));
-                                  // 返回一个引用且 ref++
-      final i = PyInt(0);
-      final b = owner.getItem(i); expect(b, equals(a));
-                                  expect(b.ref.count, equals(3));
-      final c = owner[0];         expect(c, equals(a));
-                                  expect(c.ref.count, equals(3));
-
-      owner.ref.discrement();     expect(a.ref.count, equals(2));
-      a.ref.discrement();         expect(a.ref.count, equals(1));
-      b.ref.discrement();         expect(a.ref.count, equals(0));
-      i.ref.discrement();
+  test('typed aliases share the same lifetime without duplicate ownership', () {
+    ResourceScope.scope(() {
+      // dart format off
+      final raw = PyConverter().toPyObject([1, 2]);
+      final list = PyList.fromRef(raw.ref);               expect(list.length, 2);
+                                                          expect(raw.ref.count, 1);
+      list.dispose();                                     expect(raw.isDisposed, isTrue);
+      // dart format on
     });
   });
 
   group('PyTuple', () {
-    test('fromList', () {
-      final a = PyDouble(1);                  expect(a.ref.count, equals(1));
-      final b = PyDouble(2);                  expect(b.ref.count, equals(1));
-      final tuple = PyTuple.fromList([a, b]); expect(a.ref.count, equals(1));
-                                              expect(b.ref.count, equals(1));
-      tuple.ref.discrement();                 expect(a.ref.count, equals(0));
-                                              expect(b.ref.count, equals(0));
+    test('fromList retains inputs and survives disposal of their wrappers', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final a = PyDouble(1.5);
+        final b = PyDouble(2.5);
+        final tuple = PyTuple.fromList([a, b]);           expect(a.ref.count, 2);
+                                                          expect(b.ref.count, 2);
+        a.dispose();
+        b.dispose();                                      expect(tuple[0].asDouble(), 1.5);
+                                                          expect(tuple[1].asDouble(), 2.5);
+        // dart format on
+      });
     });
 
-    test('takes ownership', () {
+    test('insertion retains the caller reference', () {
       // #region tuple-take-the-ownership
-      final tuple = PyTuple(1);
-      // dart format off
-      final obj = PyTuple(1);  expect(obj.ref.count, equals(1));
-      tuple[0] = obj;          expect(obj.ref.count, equals(1));
-      tuple.ref.discrement();  expect(obj.ref.count, equals(0)); // tuple 释放 obj
-      // dart format on
+      ResourceScope.scope(() {
+        // dart format off
+        final tuple = PyTuple(1);
+        final value = PyDouble(3.5);
+        tuple[0] = value;                                 expect(value.ref.count, 2);
+        tuple.dispose();                                  expect(value.ref.count, 1);
+                                                          expect(value.asDouble(), 3.5);
+        // dart format on
+      });
       // #endregion
     });
 
-    test('takes ownership of primitive types', () {
-      final tuple = PyTuple(1);
-      // dart format off
-      final obj = PyDouble(1); expect(obj.ref.count, equals(1));
-      tuple[0] = obj;          expect(obj.ref.count, equals(1));
-      tuple.ref.discrement();  expect(obj.ref.count, equals(0));
-      // dart format on
+    test('failed setter releases only its temporary retained reference', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final tuple = PyTuple(1);
+        final value = PyDouble(4.5);                      expect(() => tuple[2] = value, throwsA(isA<PyException>()));
+                                                          expect(value.ref.count, 1);
+                                                          expect(() => tuple[2], throwsA(isA<PyException>()));
+        // dart format on
+      });
     });
 
-    test('throws for an out-of-range index', () {
-      final tuple = PyTuple(1);
-
-      expect(
-        () => tuple[2],
-        throwsA(
-          isA<PyException>()
-              .having((e) => e.type, 'type', contains('IndexError'))
-              .having((e) => e.message, 'message', "tuple index out of range"),
-        ),
-      );
+    test('lookup stays alive after container release', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final tuple = PyTuple.fromList([PyDouble(5.5)]);
+        final value = tuple[0];
+        tuple.dispose();                                  expect(value.asDouble(), 5.5);
+        // dart format on
+      });
     });
   });
 
   group('PyList', () {
-    test('append retains the item', () {
-      final owner = PyList(1);
-      // dart format off
-      final part = PyTuple(1); expect(part.ref.count, equals(1));
-      owner.add(part);         expect(part.ref.count, equals(2));
-      owner.ref.discrement();  expect(part.ref.count, equals(1));
-      part.ref.discrement();   expect(part.ref.count, equals(0));
-      // dart format on
+    test('append, insert and set retain the caller reference', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final list = PyList(0);
+        final value = PyDouble(6.5);
+        list.add(value);
+        list.insert(0, value);
+        list[1] = value;                                  expect(value.ref.count, 3);
+        list.dispose();                                   expect(value.ref.count, 1);
+        // dart format on
+      });
     });
 
-    test('insert retains the item', () {
-      final owner = PyList(1);
-      // dart format off
-      final part = PyTuple(1); expect(part.ref.count, equals(1));
-      owner.insert(0, part);   expect(part.ref.count, equals(2));
-      owner.ref.discrement();  expect(part.ref.count, equals(1));
-      part.ref.discrement();   expect(part.ref.count, equals(0));
-      // dart format on
+    test('failed setter leaves caller ownership intact', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final list = PyList(0);
+        final value = PyDouble(7.5);                      expect(() => list[0] = value, throwsA(isA<PyException>()));
+                                                          expect(value.ref.count, 1);
+                                                          expect(() => list[0], throwsA(isA<PyException>()));
+        // dart format on
+      });
     });
 
-    test('setItem takes ownership of primitive types', () {
-      final owner = PyList(1);
-      // dart format off
-      final obj = PyDouble(1); expect(obj.ref.count, equals(1));
-      owner[0] = obj;          expect(obj.ref.count, equals(1));
-      owner.ref.discrement();  expect(obj.ref.count, equals(0));
-      // dart format on
+    test('lookup and getItem own independent references', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final list = PyList(0);
+        final value = PyDouble(8.5);
+        list.add(value);
+        final first = list[0];
+        final second = list.getItem(PyInt(0));            expect(value.ref.count, 4);
+        list.dispose();
+        value.dispose();                                  expect(first.asDouble(), 8.5);
+        second.dispose();                                 expect(first.ref.count, 1);
+        // dart format on
+      });
+    });
+
+    test('sort and reverse mutate the list', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final list = PyList.fromRef(PyConverter().toPyObject([3, 1, 2]).ref);
+        list.sort();                                      expect(list.toString(), '[1, 2, 3]');
+        list.reverse();                                   expect(list.toString(), '[3, 2, 1]');
+        // dart format on
+      });
     });
   });
 
-  group("PyDict", () {
-    test("starts with zero length and is empty", () {
-      final owner = PyDict();
-      expect(owner.length, equals(0));
-      expect(owner.isEmpty, isTrue);
+  group('PyDict', () {
+    test('insert retains key and value; lookup owns a new reference', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final dict = PyDict();                            expect(dict.isEmpty, isTrue);
+        final key = PyDouble(1.5);
+        final value = PyDouble(9.5);
+        dict[key] = value;                                expect(key.ref.count, 2);
+                                                          expect(value.ref.count, 2);
+        final lookup = dict[key]!;                        expect(value.ref.count, 3);
+                                                          expect(dict.contains(key), isTrue);
+        dict.remove(key);                                 expect(key.ref.count, 1);
+                                                          expect(value.ref.count, 2);
+                                                          expect(dict[key], isNull);
+        value.dispose();                                  expect(lookup.asDouble(), 9.5);
+        // dart format on
+      });
     });
 
-    test("setItem retains both the key and value", () {
-      final owner = PyDict();
-      // dart format off
-      final key = PyDouble(1);    expect(key.ref.count, equals(1));
-      final value = PyDouble(11); expect(value.ref.count, equals(1));
-      owner[key] = value;         expect(key.ref.count, equals(2));
-                                  expect(value.ref.count, equals(2));
-      owner.ref.discrement();     expect(key.ref.count, equals(1));
-                                  expect(value.ref.count, equals(1));
-      key.ref.discrement();       expect(key.ref.count, equals(0));
-      value.ref.discrement();     expect(value.ref.count, equals(0));
-      // dart format on
+    test('string lookup owns a reference and survives clear', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final dict = PyDict();
+        final value = PyDouble(10.5);
+        dict.setElementAtStr('a', value);
+        final lookup = dict.elementAtStr('a')!;           expect(value.ref.count, 3);
+        dict.clear();                                     expect(dict.elementAtStr('a'), isNull);
+                                                          expect(value.ref.count, 2);
+        value.dispose();                                  expect(lookup.asDouble(), 10.5);
+        // dart format on
+      });
     });
 
-    test(
-      "lookup returns a borrowed value without increasing its reference count",
-      () {
-      final owner = PyDict();
-      // dart format off
-      final key = PyDouble(1);    expect(key.ref.count, equals(1));
-      final value = PyDouble(11); expect(value.ref.count, equals(1));
-      owner[key] = value;         expect(key.ref.count, equals(2));
-                                  expect(value.ref.count, equals(2));
-      final v = owner[key];       expect(v, isNotNull);
-                                  expect(v!.asDouble(), closeTo(11, 0.1));
-                                  expect(v.ptr, equals(value.ptr));
-                                  expect(v.ref.count, equals(2));
-                                  expect(key.ref.count, equals(2));
-      owner.ref.discrement();     expect(key.ref.count, equals(1));
-                                  expect(value.ref.count, equals(1));
-      key.ref.discrement();       expect(key.ref.count, equals(0));
-      value.ref.discrement();     expect(value.ref.count, equals(0));
-      // dart format on
-      },
-    );
-
-    test("remove releases both the key and value references", () {
-      final owner = PyDict();
-      // dart format off
-      final key = PyDouble(1);    expect(key.ref.count, equals(1));
-      final value = PyDouble(11); expect(value.ref.count, equals(1));
-      owner[key] = value;         expect(key.ref.count, equals(2));
-                                  expect(value.ref.count, equals(2));
-      owner.remove(key);          expect(key.ref.count, equals(1));
-                                  expect(value.ref.count, equals(1));
-                                  expect(owner.isEmpty, isTrue);
-                                  expect(owner[key], isNull);
-      owner.ref.discrement();     expect(key.ref.count, equals(1));
-                                  expect(value.ref.count, equals(1));
-      key.ref.discrement();
-      value.ref.discrement();
-      // dart format on
+    test('snapshots and copy survive original dictionary disposal', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final dict = PyDict();
+        dict.setElementAtStr('a', PyDouble(11.5));
+        final keys = dict.keys;
+        final values = dict.values;
+        final items = dict.items;
+        final copy = dict.copy();
+        dict.dispose();                                   expect(keys[0].asString(), 'a');
+                                                          expect(values[0].asDouble(), 11.5);
+                                                          expect(PyTuple.fromRef(items[0].ref)[1].asDouble(), 11.5);
+                                                          expect(copy.elementAtStr('a')!.asDouble(), 11.5);
+        // dart format on
+      });
     });
 
-    test("clear releases all key and value references", () {
-      final owner = PyDict();
-      // dart format off
-      final key1 = PyDouble(1);    expect(key1.ref.count, equals(1));
-      final value1 = PyDouble(11); expect(value1.ref.count, equals(1));
-      final key2 = PyDouble(2);    expect(key2.ref.count, equals(1));
-      final value2 = PyDouble(22); expect(value2.ref.count, equals(1));
-      owner[key1] = value1;        expect(key1.ref.count, equals(2));
-                                   expect(value1.ref.count, equals(2));
-      owner[key2] = value2;        expect(key2.ref.count, equals(2));
-                                   expect(value2.ref.count, equals(2));
-      owner.clear();               expect(key1.ref.count, equals(1));
-                                   expect(value1.ref.count, equals(1));
-                                   expect(key2.ref.count, equals(1));
-                                   expect(value2.ref.count, equals(1));
-                                   expect(owner.isEmpty, isTrue);
-                                   expect(owner[key1], isNull);
-                                   expect(owner[key2], isNull);
-      owner.ref.discrement();      expect(key1.ref.count, equals(1));
-                                   expect(value1.ref.count, equals(1));
-                                   expect(key2.ref.count, equals(1));
-                                   expect(value2.ref.count, equals(1));
-      key1.ref.discrement();
-      value1.ref.discrement();
-      key2.ref.discrement();
-      value2.ref.discrement();
-      // dart format on
-    });
-
-    test("keys and values snapshots retain entries after dict release", () {
-      final owner = PyDict();
-      // dart format off
-      final key = PyDouble(1);    expect(key.ref.count, equals(1));
-      final value = PyDouble(11); expect(value.ref.count, equals(1));
-      owner[key] = value;         expect(key.ref.count, equals(2));
-                                  expect(value.ref.count, equals(2));
-      final keys = owner.keys;    expect(keys.ref.count, equals(1));
-      final values = owner.values;expect(values.ref.count, equals(1));
-      // 释放不会影响 keys
-      owner.ref.discrement();     expect(keys.ref.count, equals(1));
-                                  expect(values.ref.count, equals(1));
-      keys.ref.discrement();
-      values.ref.discrement();
-                                  expect(key.ref.count, equals(1));
-                                  expect(value.ref.count, equals(1));
-      key.ref.discrement();       expect(key.ref.count, equals(0));
-      value.ref.discrement();     expect(value.ref.count, equals(0));
-      // dart format on
-    });
-
-    test('returns null for a missing key', () {
-      final tuple = PyDict();
-      final key = PyDouble(1);
-      expect(tuple[key], isNull);
-    });
-
-    test(
-      "getStringKey looks up a PyString key without retaining the key or value",
-      () {
-      final owner = PyDict();
-      // dart format off
-      final key = PyString("a");
-      final keyCount = key.ref.count;
-      final value = PyDouble(11);         expect(value.ref.count, equals(1));
-      owner[key] = value;                 expect(key.ref.count, equals(keyCount + 1));
-                                          expect(value.ref.count, equals(2));
-      final v = owner.elementAtStr('a');  expect(v, isNotNull);
-                                          expect(v!.asDouble(), closeTo(11, 0.1));
-                                          expect(key.ref.count, equals(keyCount + 1));
-                                          expect(value.ref.count, equals(2));
-                                          expect(v.ref.count, equals(2));
-      owner.ref.discrement();             expect(key.ref.count, equals(keyCount));
-                                          expect(value.ref.count, equals(1));
-      key.ref.discrement();
-      value.ref.discrement();
-      // dart format on
-      },
-    );
-
-    test("setStringKey retains the value and getStringKey borrows it", () {
-      final owner = PyDict();
-      // dart format off
-      final value = PyDouble(11);         expect(value.ref.count, equals(1));
-      owner.setElementAtStr("a", value);  expect(value.ref.count, equals(2));
-      final v = owner.elementAtStr('a');  expect(v, isNotNull);
-                                          expect(v!.asDouble(), closeTo(11, 0.1));
-                                          expect(value.ref.count, equals(2));
-                                          expect(v.ref.count, equals(2));
-      owner.ref.discrement();             expect(value.ref.count, equals(1));
-      value.ref.discrement();
-      // dart format on
+    test('update, merge and string removal preserve ownership', () {
+      ResourceScope.scope(() {
+        // dart format off
+        final a = PyDict();
+        final b = PyDict();
+        a.setElementAtStr('x', PyDouble(1.5));
+        b.setElementAtStr('x', PyDouble(2.5));
+        b.setElementAtStr('y', PyDouble(3.5));
+        a.merge(b, override: false);                      expect(a.elementAtStr('x')!.asDouble(), 1.5);
+        a.update(b);                                      expect(a.elementAtStr('x')!.asDouble(), 2.5);
+        a.removeStr('y');                                 expect(a.elementAtStr('y'), isNull);
+                                                          expect(() => a.removeStr('y'), throwsA(isA<PyException>()));
+        // dart format on
+      });
     });
   });
 }

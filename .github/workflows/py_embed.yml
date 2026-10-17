@@ -1,8 +1,10 @@
 name: py_embed tests
 
 on:
-  push:
   pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -10,6 +12,7 @@ permissions:
 
 jobs:
   test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: ${{ matrix.os }} / Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -54,4 +57,5 @@ jobs:
 
       - name: Run tests
         # CPython is embedded in the test process; run test files serially.
-        run: dart test --concurrency=1 --reporter=expanded
+        # Compile from source so the allocation-tracking define reaches tests.
+        run: dart -DTRACK_RESOURCE_ALLOCATIONS=true test --compiler=source --concurrency=1 --reporter=expanded

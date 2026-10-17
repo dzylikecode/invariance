@@ -424,6 +424,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  resource_scope:
+    dependency: transitive
+    description:
+      name: resource_scope
+      sha256: cae00de60e6598cf840ba7c2953785144af99cc46621209dc6c5a4d578003428
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   shelf:
     dependency: transitive
     description:

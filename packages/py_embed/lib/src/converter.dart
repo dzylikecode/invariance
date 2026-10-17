@@ -1,7 +1,8 @@
 import 'dart:collection';
 
+import 'package:resource_scope/resource_scope.dart';
+
 import 'object.dart';
-import 'scope.dart';
 
 /// A Dart object that holds a Python object by composition.
 ///
@@ -36,12 +37,10 @@ class PyConverter {
     if (value is PyObjectWrapper) {
       // Read once: the getter may perform lifetime validation.
       final handle = value.handle;
-      handle.ref.increment();
-      return handle;
+      return handle.retain();
     }
     if (value is PyObject) {
-      value.ref.increment();
-      return value;
+      return value.retain();
     }
     return switch (value) {
       null => .getConst(.none),
@@ -73,21 +72,21 @@ class PyConverter {
     }
   }
 
-  PyList _list(List<Object?> values) => using((scope) {
-    final list = scope(PyList(0));
+  PyList _list(List<Object?> values) => ResourceScope.returning(() {
+    final list = PyList(0);
     for (final value in values) {
-      list.add(scope(toPyObject(value)));
+      list.add(toPyObject(value));
     }
-    return scope.escape(list);
+    return list;
   });
 
-  PyDict _map(Map<Object?, Object?> values) => using((scope) {
-    final dict = scope(PyDict());
+  PyDict _map(Map<Object?, Object?> values) => ResourceScope.returning(() {
+    final dict = PyDict();
     for (final entry in values.entries) {
-      final key = scope(toPyObject(entry.key));
-      final value = scope(toPyObject(entry.value));
+      final key = toPyObject(entry.key);
+      final value = toPyObject(entry.value);
       dict.setElementAt(key, value);
     }
-    return scope.escape(dict);
+    return dict;
   });
 }

@@ -1,223 +1,296 @@
+import 'dart:async';
+
 import 'package:py_embed/py_embed.dart';
 import 'package:py_embed/debug.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('defer and references share reverse registration order', () {
-    using((outer) {
-      final value = outer(PyDouble(9.5));
-      final before = value.ref.count;
-      final order = <String>[];
-      using((scope) {
-        scope.defer(() {
-          expect(value.ref.count, before);
-          order.add('first');
-        });
-        scope.retain(value);
-        scope.defer(() {
-          expect(value.ref.count, before + 1);
-          order.add('last');
-        });
-      });
-      expect(order, ['last', 'first']);
+  tearDown(() => expect(ResourceScope.checkNoLeaks(), isTrue));
+
+  test('constructors, aliases and operators use the same resource scope', () {
+    late PyObject sum;
+    late PyObject alias;
+    ResourceScope.scope(() {
+      final value = PyDouble(2.5);
+      alias = PyObject(value.ref);
+      sum = value + PyDouble(1.5);
+      expect(sum.asDouble(), 4);
+      expect(identical(alias.ref, value.ref), isTrue);
     });
+    expect(sum.isDisposed, isTrue);
+    expect(alias.isDisposed, isTrue);
+    expect(() => sum.ptr, throwsStateError);
+    sum.dispose();
   });
 
-  test('defer runs on failure and continues after cleanup errors', () {
-    using((outer) {
-      final value = outer(PyDouble(10.5));
-      final before = value.ref.count;
-      final order = <String>[];
-      final first = StateError('first cleanup error');
+  test('manual disposal is idempotent and cancels scoped ownership', () {
+    final value = PyDouble(3.5);
+    try {
+      ResourceScope.scope(() {
+        final retained = value.retain();
+        expect(value.ref.count, 2);
+        retained.dispose();
+        retained.dispose();
+        expect(value.ref.count, 1);
+      });
+      expect(value.ref.count, 1);
+    } finally {
+      value.dispose();
+    }
+  });
+
+  test('independent references to equal pointers are released separately', () {
+    final value = PyDouble(4.5);
+    try {
+      ResourceScope.scope(() {
+        final first = value.retain();
+        final second = value.retain();
+        expect(first, second);
+        expect(identical(first.ref, second.ref), isFalse);
+        expect(value.ref.count, 3);
+      });
+      expect(value.ref.count, 1);
+    } finally {
+      value.dispose();
+    }
+  });
+
+  test('body errors release temporary references and preserve the error', () {
+    final value = PyDouble(5.5);
+    final failure = StateError('body');
+    try {
       expect(
-        () => using<void>((scope) {
-          scope.defer(() => order.add('finished'));
-          scope.retain(value);
-          scope.defer(() => throw StateError('later cleanup error'));
-          scope.defer(() => throw first);
-          throw ArgumentError('body error');
+        () => ResourceScope.scope(() {
+          final list = PyList(0);
+          list.add(value.retain());
+          throw failure;
         }),
-        throwsA(same(first)),
+        throwsA(same(failure)),
       );
-      expect(order, ['finished']);
-      expect(value.ref.count, before);
-      final bodyError = StateError('body');
-      expect(
-        () => using<void>((scope) {
-          scope.defer(() => order.add('body cleanup'));
-          throw bodyError;
-        }),
-        throwsA(same(bodyError)),
-      );
-      expect(order.last, 'body cleanup');
+      expect(value.ref.count, 1);
+    } finally {
+      value.dispose();
+    }
+  });
+
+  test('ordinary return is disposed; returning preserves concrete type', () {
+    final disposed = ResourceScope.scope(() => PyDouble(7.5));
+    expect(disposed.isDisposed, isTrue);
+    final PyList result = ResourceScope.returning(() {
+      final list = PyList(0);
+      list.add(PyDouble(8.5));
+      return list;
     });
+    try {
+      ResourceScope.scope(() => expect(result[0].asDouble(), 8.5));
+    } finally {
+      result.dispose();
+    }
   });
 
   test(
-    'escape leaves deferred actions registered and closed scopes reject defer',
+    'returning promotes to parent; detachFromScope leaves manual ownership',
     () {
-      late PyScope closed;
-      var calls = 0;
-      final value = using((scope) {
-        closed = scope;
-        final value = scope(PyDouble(11.5));
-        scope.defer(() => calls++);
-        return scope.escape(value);
+      late PyDouble adopted;
+      late PyObject detached;
+      ResourceScope.scope(() {
+        adopted = ResourceScope.returning(() => PyDouble(9.5));
+        detached = ResourceScope.scope(() => PyDouble(10.5).detachFromScope());
+        expect(adopted.asDouble(), 9.5);
       });
-      try {
-        expect(value.asDouble(), 11.5);
-        expect(calls, 1);
-        expect(() => closed.defer(() => calls++), throwsStateError);
-        expect(calls, 1);
-      } finally {
-        value.ref.discrement();
-      }
+      expect(adopted.isDisposed, isTrue);
+      expect(detached.isDisposed, isFalse);
+      detached.dispose();
     },
   );
 
-  test('register takes ownership; retain acquires a separate reference', () {
-    using((refs) {
-      final value = refs(PyDouble(1.5));
-      final before = value.ref.count;
-      using((scope) {
-        value.ref.increment();
-        expect(identical(scope(value), value), isTrue);
-        expect(value.ref.count, before + 1);
-        expect(identical(scope.retain(value), value), isTrue);
-        expect(value.ref.count, before + 2);
+  test('detachToParentScope delegates to the shared reference', () {
+    late PyObject alias;
+    late PyList original;
+    ResourceScope.scope(() {
+      ResourceScope.scope(() {
+        original = PyList(0);
+        alias = PyList.fromRef(original.ref);
+        expect(identical(alias.detachToParentScope(), alias), isTrue);
       });
-      expect(value.ref.count, before);
+      expect(original.isDisposed, isFalse);
+      expect(alias.isDisposed, isFalse);
     });
+    expect(original.isDisposed, isTrue);
+    expect(alias.isDisposed, isTrue);
   });
 
-  test('escape preserves concrete type and releases container temporaries', () {
-    using((refs) {
-      final item = refs(PyDouble(2.5));
-      final before = item.ref.count;
-      final list = using((scope) {
-        final list = scope(PyList(0));
-        list.add(scope.retain(item));
-        return scope.escape(list);
-      });
-      try {
-        expect(list.length, 1);
-        expect(list.elementAt(0).asDouble(), 2.5);
-        expect(item.ref.count, before + 1);
-      } finally {
-        list.ref.discrement();
-      }
-      expect(item.ref.count, before);
+  test('detachFromScope through an alias detaches the original reference', () {
+    late PyList original;
+    ResourceScope.scope(() {
+      original = PyList(0);
+      PyObject(original.ref).detachFromScope();
     });
+    expect(original.isDisposed, isFalse);
+    original.dispose();
   });
 
-  test('ordinary return does not escape a registered reference', () {
-    using((refs) {
-      final value = refs(PyDouble(3.5));
-      final before = value.ref.count;
-      final result = using((scope) => scope.retain(value));
-      expect(identical(result, value), isTrue);
-      expect(value.ref.count, before); // Kept alive by the outer owner only.
+  test('disposing an outer reference from an inner scope releases it once', () {
+    final observer = PyDouble(11.5);
+    try {
+      ResourceScope.scope(() {
+        final value = observer.retain();
+        ResourceScope.scope(value.dispose);
+        expect(value.isDisposed, isTrue);
+        expect(observer.ref.count, 1);
+      });
+      expect(observer.ref.count, 1);
+    } finally {
+      observer.dispose();
+    }
+  });
+
+  test('async scopes track allocations before and after await', () async {
+    late PyDouble first;
+    late PyDouble second;
+    final result = await ResourceScope.scope(() async {
+      first = PyDouble(13.5);
+      await Future<void>.delayed(Duration.zero);
+      second = PyDouble(14.5);
+      return (first + second).detachFromScope();
     });
-    expect(using((scope) => 42), 42);
+    try {
+      expect(first.isDisposed, isTrue);
+      expect(second.isDisposed, isTrue);
+      expect(result.asDouble(), 28);
+    } finally {
+      result.dispose();
+    }
   });
 
   test(
-    'failure releases partially initialized objects and preserves error',
-    () {
-      using((refs) {
-        final value = refs(PyDouble(4.5));
-        final before = value.ref.count;
-        final failure = StateError('failed');
-        expect(
-          () => using((scope) {
-            final list = scope(PyList(0));
-            list.add(scope.retain(value));
-            throw failure;
-          }),
-          throwsA(same(failure)),
-        );
-        expect(value.ref.count, before);
+    'concurrent async scopes clean independently on success and failure',
+    () async {
+      final gate = Completer<void>();
+      late PyDouble first;
+      late PyDouble second;
+      final pending = ResourceScope.scope(() async {
+        first = PyDouble(1);
+        await gate.future;
+        expect(second.isDisposed, isTrue);
+        expect(first.asDouble(), 1);
       });
+      await expectLater(
+        ResourceScope.scope(() async {
+          second = PyDouble(2);
+          await Future<void>.delayed(Duration.zero);
+          throw StateError('async failure');
+        }),
+        throwsStateError,
+      );
+      gate.complete();
+      await pending;
+      expect(first.isDisposed, isTrue);
     },
   );
 
-  test('escape removes one registration without deduplicating references', () {
-    using((refs) {
-      final value = refs(PyDouble(5.5));
-      final before = value.ref.count;
-      final result = using((scope) {
-        scope.retain(value);
-        scope.retain(value);
-        return scope.escape(value);
-      });
-      expect(value.ref.count, before + 1);
-      result.ref.discrement();
-      expect(value.ref.count, before);
-    });
-  });
-
-  test('nested scopes transfer ownership explicitly', () {
-    using((refs) {
-      final value = refs(PyDouble(6.5));
-      final before = value.ref.count;
-      using((outer) {
-        outer(using((inner) => inner.escape(inner.retain(value))));
-        expect(value.ref.count, before + 1);
-      });
-      expect(value.ref.count, before);
-    });
-  });
-
-  test('unregistered and already escaped references are rejected', () {
-    using((refs) {
-      final value = refs(PyDouble(7.5));
-      using((scope) {
-        expect(() => scope.escape(value), throwsArgumentError);
-        scope.retain(value);
-        final escaped = scope.escape(value);
-        try {
-          expect(() => scope.escape(value), throwsArgumentError);
-        } finally {
-          escaped.ref.discrement();
-        }
-      });
-    });
-  });
-
-  test('closed scopes reject operations without consuming references', () {
-    late PyScope closed;
-    using((scope) {
-      closed = scope;
-    });
-    using((refs) {
-      final value = refs(PyDouble(8.5));
-      final before = value.ref.count;
-      expect(() => closed(value), throwsStateError);
-      expect(() => closed.retain(value), throwsStateError);
-      expect(() => closed.escape(value), throwsStateError);
-      expect(value.ref.count, before);
-    });
-  });
-
-  test('references are released in reverse registration order', () {
-    runString('''
-_scope_release_order = []
-class _ScopeReleaseProbe:
-    def __init__(self, name):
-        self.name = name
-    def __del__(self):
-        _scope_release_order.append(self.name)
+  test('Python temporaries are destroyed before the inner scope returns', () {
+    ResourceScope.scope(() {
+      final module = PyModule.fromSource('''
+order = []
+class Probe:
+    def __init__(self, name): self.name = name
+    def __del__(self): order.append(self.name)
 ''');
-    using((scope) {
-      final main = scope(PyModule('__main__'));
-      final constructor = scope(main.getAttr('_ScopeReleaseProbe'));
-      using((inner) {
-        inner(constructor.forward(['first']));
-        inner(constructor.forward(['second']));
+      final constructor = module.getAttr('Probe');
+      ResourceScope.scope(() {
+        constructor.forward(['first']);
+        constructor.forward(['second']);
       });
-      final order = scope(main.getAttr('_scope_release_order'));
-      expect(scope(order.getItem(scope(PyInt(0)))).asString(), 'second');
-      expect(scope(order.getItem(scope(PyInt(1)))).asString(), 'first');
+      final order = PyList.fromRef(module.getAttr('order').ref);
+      expect([
+        order[0].asString(),
+        order[1].asString(),
+      ], unorderedEquals(['first', 'second']));
     });
+  });
+
+  test(
+    'internal returning scopes adopt results and work without an outer scope',
+    () {
+      late PyObject result;
+      ResourceScope.scope(() {
+        final module = PyModule.fromSource('def identity(x): return x');
+        result = module.getAttr('identity').forward([3]);
+        expect(result.asInt(), 3);
+        expect(
+          PyConverter().toPyObject([
+            1,
+            {'a': 2},
+          ]).toString(),
+          "[1, {'a': 2}]",
+        );
+      });
+      expect(result.isDisposed, isTrue);
+      final module = PyModule.fromSource('answer = 42');
+      try {
+        expect(module.getAttrInt('answer'), 42);
+      } finally {
+        module.dispose();
+      }
+    },
+  );
+
+  test('unmanaged objects outlive enclosing scopes', () {
+    late PyDouble value;
+    ResourceScope.scope(() {
+      value = ResourceScope.unmanaged(() => PyDouble(3.5));
+    });
+    expect(value.asDouble(), 3.5);
+    value.dispose();
+  });
+
+  test(
+    'late allocations into a closed Zone are disposed and rejected',
+    () async {
+      final gate = Completer<void>();
+      late Future<void> lateWork;
+      ResourceScope.scope(() {
+        lateWork = () async {
+          await gate.future;
+          PyDouble(1.5);
+        }();
+      });
+      final failure = expectLater(lateWork, throwsStateError);
+      gate.complete();
+      await failure;
+    },
+  );
+
+  test(
+    'withContext cleans temporary references and promotes returned resources',
+    () {
+      ResourceScope.scope(() {
+        final module = PyModule.fromSource('''exited = False
+class Context:
+    def __enter__(self): return 42
+    def __exit__(self, *args):
+        global exited
+        exited = True
+''');
+        final context = module.getAttr('Context').call0();
+        late PyObject temp;
+        final result = context.withContext((value) {
+          temp = PyDouble(1.5);
+          expect(value.asInt(), 42);
+          return PyDouble(2.5).detachToParentScope();
+        });
+        expect(temp.isDisposed, isTrue);
+        expect(result.asDouble(), 2.5);
+        expect(module.getAttrBool('exited'), isTrue);
+      });
+    },
+  );
+
+  test('disposed references cannot be retained or detached', () {
+    final value = PyDouble(1.5)..dispose();
+    expect(value.retain, throwsStateError);
+    expect(value.detachFromScope, throwsStateError);
+    expect(value.detachToParentScope, throwsStateError);
   });
 }
