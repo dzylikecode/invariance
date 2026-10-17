@@ -57,4 +57,5 @@ jobs:
 
       - name: Run tests
         # CPython is embedded in the test process; run test files serially.
-        run: dart test --concurrency=1 --reporter=expanded
+        # Compile from source so the allocation-tracking define reaches tests.
+        run: dart -DTRACK_RESOURCE_ALLOCATIONS=true test --compiler=source --concurrency=1 --reporter=expanded
