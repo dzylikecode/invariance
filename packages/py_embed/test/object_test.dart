@@ -15,6 +15,9 @@ void main() {
     final aObj = PyObject(aRef);
     final bObj = PyObject(bRef);                    expect(aObj, bObj);
                                                     expect(aObj, isNot(same(bObj)));
+    // 为避免影响验证内存泄漏，不追踪它
+    ResourceScope.untrack(aRef);
+    ResourceScope.untrack(bRef);
     // dart format on
   });
 
