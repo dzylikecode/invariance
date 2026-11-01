@@ -166,25 +166,62 @@ ${result.stdout}
   // dart format on
 };
 
-Future<String> findLibraryFile(String libName, String searchDir) async {
+Future<String> findLibraryFile(
+  String libName,
+  String searchDir, {
+  required Kind kind,
+}) => switch (kind) {
+  .static => findStaticLibraryFile(libName, searchDir),
+  .shared => findDynamicLibraryFile(libName, searchDir),
+};
+
+Future<String> findStaticLibraryFile(String libName, String searchDir) async {
+  final libPath = p.join(searchDir, libName);
+  if (await File(libPath).exists()) return libPath;
+  throw FileSystemException(
+    'No matching static library found for $libName. '
+    'Ensure xmake installs the static archive.',
+    libPath,
+  );
+}
+
+Future<String> findDynamicLibraryFile(String libName, String searchDir) async {
   final libPath = p.join(searchDir, libName);
   // 优先找这个文件
   if (await File(libPath).exists()) return libPath;
 
-  // 特例：
-  // - linux: name.so.1.2.3
-  // - mac  : name.1.2.3.dylib
-  // 用 name 来搜索
-  final name = p.basenameWithoutExtension(libName);
-  final files = await Directory(searchDir).list().where((file) {
-    return file is File && p.basename(file.path).startsWith(name);
-  }).toList();
+  // Shared libraries may have versioned filenames.
+  final extension = p.extension(libName);
+  final stem = RegExp.escape(p.basenameWithoutExtension(libName));
+  final version = r'[0-9]+(?:\.[0-9]+)*';
+  final pattern = switch (extension) {
+    '.so' => RegExp('^$stem\\.so\\.$version\$'),
+    '.dylib' => RegExp('^$stem\\.$version\\.dylib\$'),
+    _ => null,
+  };
+  final directory = Directory(searchDir);
+  final files = <FileSystemEntity>[];
+  if (pattern != null && await directory.exists()) {
+    await for (final file in directory.list()) {
+      if (file is File && pattern.hasMatch(p.basename(file.path))) {
+        files.add(file);
+      }
+    }
+  }
 
   if (files.isEmpty) {
-    throw Exception('No library files found in $searchDir for $name');
+    throw FileSystemException(
+      'No matching library found for $libName. '
+      'Ensure xmake installs the requested library type.',
+      libPath,
+    );
   }
-  files.sort(
-    (a, b) => p.basename(a.path).length.compareTo(p.basename(b.path).length),
-  );
+  files.sort((a, b) {
+    final length = p
+        .basename(a.path)
+        .length
+        .compareTo(p.basename(b.path).length);
+    return length != 0 ? length : a.path.compareTo(b.path);
+  });
   return files.first.path;
 }

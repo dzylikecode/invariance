@@ -71,6 +71,7 @@ final linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
     final libFile = await findLibraryFile(
       input.config.code.targetOS.libraryFileName(libHintName, linkMode),
       libDir.toFilePath(),
+      kind: kind,
     );
 
     output.assets.code.add(
