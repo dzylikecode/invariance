@@ -35,11 +35,10 @@ dart run native_toolchain_xmake:install
   > 用官网的 bash 反而会陷入找不到库
 
 
-
-
 ## example
 
 ```dart
+// build.dart
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (input.config.buildCodeAssets) {
@@ -49,6 +48,27 @@ void main(List<String> args) async {
         assetName: 'src/project_xmake.g.dart',
       ).build(input: input, output: output);
     }
+  });
+}
+```
+
+
+```dart
+// link
+void main(List<String> args) async {
+  await link(args, (input, output) async {
+    await XmakeLibrary(
+      target: 'project_xmake',
+      assetName: 'src/project_xmake.g.dart',
+    ).link(
+      input: input,
+      output: output,
+      linkerOptions: .treeshake(
+        symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
+          (e) => recordUseMapping[e.name]!,
+        ),
+      ),
+    );
   });
 }
 ```
@@ -75,8 +95,8 @@ xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
 ## issue
 
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)
-- [ ] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
-- [ ] tree-shaking
+- [x] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
+- [x] tree-shaking
 
 忘记为什么不用 cmake 了。好像是 compile_commands.json 生成的问题？
 
