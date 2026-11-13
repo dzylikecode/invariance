@@ -2,6 +2,7 @@
 
 - update: native_toolchain_c 修复了中文系统环境下调用 vs 输出非 utf-8 编码问题
 - breaking: `LinkModeOption` 改名为 `LinkHookMode`，`linkModeOption` 改为 `linkHook`。`.static`、`.dynamic`、`.byPreference` 分别改为 `.always`、`.never`、`.auto`。
+- 新增随包发布的 Agent Skill，覆盖动态库打包、tree-shaking 和常见排错。
 
 ## 0.0.10
 
