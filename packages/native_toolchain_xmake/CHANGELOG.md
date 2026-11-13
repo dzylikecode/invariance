@@ -1,6 +1,7 @@
 ## 0.1.0
 
 - update: native_toolchain_c 修复了中文系统环境下调用 vs 输出非 utf-8 编码问题
+- breaking: `LinkModeOption` 改名为 `LinkHookMode`，`linkModeOption` 改为 `linkHook`。`.static`、`.dynamic`、`.byPreference` 分别改为 `.always`、`.never`、`.auto`。
 
 ## 0.0.10
 

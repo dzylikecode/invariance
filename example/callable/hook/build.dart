@@ -8,7 +8,7 @@ void main(List<String> args) async {
       await XmakeLibrary(
         target: 'callable',
         assetName: 'src/binding/callable.g.dart',
-        linkModeOption: .dynamic,
+        linkHook: .never,
       ).build(input: input, output: output);
     }
   });

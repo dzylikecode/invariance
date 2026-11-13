@@ -5,10 +5,16 @@ import 'package:logging/logging.dart';
 
 import 'builder.dart';
 
-enum LinkModeOption {
-  static,
-  dynamic,
-  byPreference;
+/// Controls whether xmake's build output goes through the Dart link hook.
+enum LinkHookMode {
+  /// Builds a static archive for the link hook. Requires linking to be enabled.
+  always,
+
+  /// Builds a shared library and bundles it directly with the app.
+  never,
+
+  /// Uses the link hook when the build enables linking.
+  auto,
 }
 
 class XmakeLibrary({
@@ -30,7 +36,7 @@ class XmakeLibrary({
   /// but the library to be used is "raylib".
   final String? libHintName,
   required final String assetName,
-  final LinkModeOption linkModeOption = .byPreference,
+  final LinkHookMode linkHook = .auto,
   Logger? logger,
 }) {
   final logger = logger ?? Logger('XmakeLibrary:$target')
@@ -50,7 +56,7 @@ class XmakeLibrary({
       assetName: assetName,
       projectRoot: input.packageRoot,
       logger: logger,
-      linkModeOption: linkModeOption,
+      linkHook: linkHook,
     );
 
     await builder.run(input: input, output: output);

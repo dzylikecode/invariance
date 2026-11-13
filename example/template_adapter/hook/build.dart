@@ -8,7 +8,7 @@ void main(List<String> args) async {
       await XmakeLibrary(
         target: 'template_adapter',
         assetName: 'src/binding/template_adapter.g.dart',
-        linkModeOption: .dynamic,
+        linkHook: .never,
       ).build(input: input, output: output);
     }
   });

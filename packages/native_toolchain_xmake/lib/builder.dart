@@ -12,7 +12,7 @@ class XmakeBuilder({
   required final Uri projectRoot,
   Uri? installDir,
   required final Logger logger,
-  required final LinkModeOption linkModeOption,
+  required final LinkHookMode linkHook,
 }) {
   final libHintName = libHintName ?? target;
   final installDir = installDir ?? projectRoot.resolveUri(.directory('dist'));
@@ -28,20 +28,16 @@ class XmakeBuilder({
       );
     }
 
-    final linkingEnabled = switch (linkModeOption) {
-      .static => true,
-      .dynamic => false,
-      .byPreference => input.config.linkingEnabled,
+    final useLinkHook = switch (linkHook) {
+      .always => true,
+      .never => false,
+      .auto => input.config.linkingEnabled,
     };
 
-    logger.info("""
-config linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
-final linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
-""");
+    final linkMode = useLinkHook ? StaticLinking() : DynamicLoadingBundled();
+    final Kind kind = useLinkHook ? .static : .shared;
 
-    final linkMode = linkingEnabled ? StaticLinking() : DynamicLoadingBundled();
-
-    final Kind kind = linkingEnabled ? .static : .shared;
+    logger.info('xmake library kind: $kind, use link hook: $useLinkHook');
 
     final xmake = Xmake(
       projectRoot: projectRoot.toFilePath(),
@@ -81,7 +77,7 @@ final linking mode: ${linkingEnabled ? 'static' : 'dynamic'}
         file: .file(libFile),
         linkMode: linkMode,
       ),
-      routing: linkingEnabled
+      routing: useLinkHook
           ? ToLinkHook(input.packageName)
           : const ToAppBundle(),
     );
