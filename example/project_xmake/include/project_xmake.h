@@ -8,7 +8,9 @@
 #endif
 
 #if defined(_WIN32)
-#  if defined(PROJECT_XMAKE_BUILD)
+#  if defined(PROJECT_XMAKE_STATIC)
+#    define PROJECT_XMAKE_EXPORT
+#  elif defined(PROJECT_XMAKE_BUILD)
 #    define PROJECT_XMAKE_EXPORT __declspec(dllexport)
 #  else
 #    define PROJECT_XMAKE_EXPORT __declspec(dllimport)
