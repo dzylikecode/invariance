@@ -74,7 +74,7 @@ target("project_xmake")
     elseif target:is_plat("windows") and target:has_tool("ld", "clangxx") then
       target:add("shflags", "-Wl,/OPT:REF", {force = true})
     elseif target:is_plat("macosx", "iphoneos") then
-      target:add("shflags", "-Wl,-dead_strip", {force = true})
+      target:add("shflags", "-Wl,-dead_strip", "-Wl,-headerpad_max_install_names", {force = true})
       for _, symbol in ipairs(symbols) do
         target:add("shflags", "-Wl,-u,_" .. symbol, {force = true})
       end

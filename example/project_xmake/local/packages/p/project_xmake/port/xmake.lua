@@ -28,4 +28,8 @@ target("project_xmake")
     else
         -- Shared packages expose the complete public C API.
         add_defines("PROJECT_XMAKE_BUILD")
+        if is_plat("macosx", "iphoneos") then
+            -- Dart rewrites install names when bundling the shared library.
+            add_shflags("-Wl,-headerpad_max_install_names", {force = true})
+        end
     end

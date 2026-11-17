@@ -59,6 +59,14 @@ jobs:
         with:
           arch: x64
 
+      - name: Use shorter Windows temporary paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        # MSVC can reject long relative object paths inside nested package builds.
+        run: |
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+
       - name: Show tool versions
         run: |
           dart --version
