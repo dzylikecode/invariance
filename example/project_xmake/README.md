@@ -4,9 +4,18 @@ dart is the first-class citizen in the project.
 
 ## Local native package
 
-原生库由 `local/packages/p/project_xmake/xmake.lua` 描述为本地 xmake 包，
-`native/xmake.lua` 负责编译，复用现有的 `src/impl.cpp` 和
-`include/project_xmake.h`。根工程通过 `add_requires` / `add_packages` 消费该包。
+源码和头文件保留在根目录，包配方及原生构建描述放在本地包内：
+
+```text
+project_xmake/
+├── include/project_xmake.h
+├── src/impl.cpp
+└── local/packages/p/project_xmake/
+    ├── xmake.lua             包配方
+    └── port/xmake.lua        原生构建描述
+```
+
+根工程通过 `add_requires` / `add_packages` 消费该包的 static 形态。
 
 | 包配置 | 产物与行为 |
 | --- | --- |
@@ -23,25 +32,51 @@ Windows 静态构建使用 `PROJECT_XMAKE_STATIC`，避免提前强制 DLL 导�
 其他平台的公共 API 保留默认可见性，以便以后链接为动态库。
 静态包不执行按应用裁剪，也不携带具体的 Dart 使用名单。
 
-从本目录验证两种模式：
+## Link a trimmed shared library
+
+根 `project_xmake` target 使用完整 static 包，真正执行 shared 链接。
+通过命令行传入需要保留的入口：
 
 ```sh
-xmake f -c -y -k static
+xmake f -y --keep_symbols=add
 xmake build project_xmake
-xmake run call
-xmake run words
-xmake install -o dist/static project_xmake
-
-xmake f -c -y -k shared
-xmake build project_xmake
-xmake run call
-xmake run words
-xmake install -o dist/shared project_xmake
+xmake install -o dist/trimmed project_xmake
 ```
 
-根 `project_xmake` target 当前只转交包产物。本阶段只验证原生包的
-static/shared 构建和 C++ 使用；按需裁剪及 Dart 接入留到后续阶段。
-本地源码包开启 `package.install_always`，防止修改源码后复用旧的安装产物。
+此时动态库仅导出 `add`，无其他引用的 `subtract`、`count_words` 的机器码
+也会被 GC 删除。底层静态包仍保留全部三个函数。
+
+保留文本接口，或恢复完整公共 API：
+
+```sh
+xmake f -y --keep_symbols=count_words
+xmake build project_xmake
+
+xmake f -y --keep_symbols=add,subtract,count_words
+xmake build project_xmake
+```
+
+首次未配置 `keep_symbols` 时，默认保留完整公共 API。选项与其他 xmake
+配置一样会保存；更改名单只影响上层 target，不进入底层包配置。
+名单支持逗号分隔、去重和首尾空白；空名单或未知入口会明确报错。
+
+target 负责归档成员提取、生成平台导出表和开启链接器 GC。它没有自己的
+源码，使用 C++ 链接规则复用包的运行库依赖。输出保留普通符号表，便于
+使用 `nm --defined-only` 核实机器码裁剪，而不只是检查导出表。
+
+普通 C/C++ 示例直接使用完整 static 包，可独立运行：
+
+```sh
+xmake run call
+xmake run words
+```
+
+本阶段只接通 xmake 命令行到最终 shared target，Dart hook 尚未接入这个
+新链接流程。底层包仍支持独立的 shared 构建，根 target 始终选择 static。
+本地包通过根 `xmake.lua` 中的 `add_requires("project_xmake 1.0.0", ...)`
+显式指定版本。同版本及相同包配置复用已安装产物；修改源码或包构建描述后，
+手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
+`port/xmake.lua` 中的 `set_version` 是原生工程版本信息，不决定包缓存版本。
 
 ## cross-compile
 
@@ -132,10 +167,11 @@ add_headerfiles("include/(foo/*.h)")
 
 ## 如何处理不同的结构体
 
-## Native tree shaking experiment
+## Earlier Dart tree shaking experiment
 
-这个示例沿用现有流程：xmake 构建静态库，`native_toolchain_c`
-的 `CLinker` 根据 Dart 使用记录完成最终链接与裁剪。没有新增链接后端。
+以下记录此前 xmake 构建静态库、`native_toolchain_c` 的 `CLinker` 根据
+Dart 使用记录完成裁剪的实验。现有 Dart hook 尚未调整到上面的 shared
+target；当前阶段以原生命令验证，Dart 适配及以下脚本留到后续处理。
 
 `add`、`subtract` 和使用 C++ 标准库的 `count_words` 位于同一个源文件中。
 当前 Dart 绑定仍只包含前两个函数；新文本接口的 Dart 接入留待后续阶段。

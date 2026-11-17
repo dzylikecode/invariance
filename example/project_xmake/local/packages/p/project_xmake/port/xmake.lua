@@ -5,12 +5,13 @@ set_languages("c++11")
 add_rules("mode.debug", "mode.release")
 
 local kind = get_config("kind") or "static"
+local sourceRoot = path.absolute("../../../../..", os.scriptdir())
 
 target("project_xmake")
     set_kind(kind)
-    add_files("../src/impl.cpp")
-    add_includedirs("../include", {public = true})
-    add_headerfiles("../include/(project_xmake.h)")
+    add_files(path.join(sourceRoot, "src/impl.cpp"))
+    add_includedirs(path.join(sourceRoot, "include"), {public = true})
+    add_headerfiles(path.join(sourceRoot, "include/(project_xmake.h)"))
 
     if kind == "static" then
         -- Preserve every API, without forcing DLL exports into the archive.

@@ -1,4 +1,3 @@
-// Copyright (c) 2026 dzylikecode. Licensed under the MIT License.
 #include <project_xmake.h>
 #include <limits>
 #include <sstream>

@@ -1,11 +1,7 @@
--- Copyright (c) 2026 dzylikecode. Licensed under the MIT License.
 package("project_xmake")
     set_description("Local C API example with shared and GC-ready static libraries")
     set_license("MIT")
-    set_sourcedir(path.join(os.scriptdir(), "../../../../native"))
-
-    -- Local source edits must rebuild an already installed package as well.
-    set_policy("package.install_always", true)
+    set_sourcedir(path.join(os.scriptdir(), "port"))
 
     on_load(function(package)
         if not package:config("shared") then
