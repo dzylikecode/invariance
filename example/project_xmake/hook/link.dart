@@ -11,10 +11,12 @@ void main(List<String> args) async {
     await xmakeLibrary.link(
       input: input,
       output: output,
-      symbolsToKeep: input.recordedUses?.calls.keys
-          .whereType<Method>()
-          .where((method) => method.library.uri == assetId)
-          .map((method) => recordUseMapping[method.name]!),
+      symbolsToKeep:
+          input.recordedUses?.calls.keys
+              .whereType<Method>()
+              .where((method) => method.library.uri == assetId)
+              .map((method) => recordUseMapping[method.name]!) ??
+          recordUseMapping.values,
     );
   });
 }

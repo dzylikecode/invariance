@@ -1,0 +1,8 @@
+rule("install")
+    on_config(function(target)
+        local name = target:extraconf("rules", "@dart_native/install", "package")
+        assert(type(name) == "string", "dart_native/install requires a package name")
+        local package = assert(target:pkg(name), "Package is not attached to target: " .. name)
+        local directory = package:installdir()
+        target:add("installfiles", path.join(directory, "**"), {rootdir = directory})
+    end)

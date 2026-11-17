@@ -15,7 +15,35 @@ project_xmake/
     └── port/xmake.lua        原生构建描述
 ```
 
-根工程通过 `add_requires` / `add_packages` 消费该包，包形态跟随 `--kind`。
+根工程通过 `add_requires` / `add_packages` 消费该包，build 和 link 共用
+`project_xmake` target，包形态同时取决于 `--kind` 和符号列表：
+
+| 阶段 | `kind` | `keep_symbols` | 原生包 | target 行为 |
+| --- | --- | --- | --- | --- |
+| 启用 linking 的 build | `static` | 无 | 静态包 | phony，安装完整归档 |
+| 直接打包的 build | `shared` | 无 | 动态包 | phony，安装完整动态库 |
+| link | `shared` | 有 | 静态包 | shared，链接并裁剪最终动态库 |
+
+包配置使用 `shared = kind == "shared" and not keepSymbols`，保证最终裁剪
+仍以静态包作为输入。
+
+通用构建配置来自 `dart_native 1.0.0` 规则包。包索引位于仓库根目录的
+`packages/d/dart_native/xmake.lua`，规则源码统一放在
+`packages/native_toolchain_xmake/xmake/rules/`。根工程和包内的
+`port/xmake.lua` 都通过本地仓库路径使用它：
+
+| 规则 | 作用 |
+| --- | --- |
+| `@dart_native/library` | 按 `kind` 配置可裁剪的 static 编译选项或 shared 平台选项 |
+| `@dart_native/install` | 安装指定包的完整目录树 |
+| `@dart_native/link` | 按 `symbols` 链接、控制导出并裁剪 shared |
+
+`set_kind` 和 `add_packages` 仍由 target 声明。`PROJECT_XMAKE_STATIC`、
+`PROJECT_XMAKE_BUILD` 宏仍由本项目管理。
+规则包使用当前 checkout 的源码；修改规则后手动提升规则包配方和
+`add_requires` 中的版本，或强制重装同版本包。
+修改 `library` 编译选项后，还需要提升或强制重装 `project_xmake` 原生包；
+已经编译好的静态库、动态库不会自动采用新选项。
 
 | 包配置 | 产物与行为 |
 | --- | --- |
@@ -38,7 +66,7 @@ Windows 静态构建使用 `PROJECT_XMAKE_STATIC`，避免提前强制 DLL 导�
 通过命令行传入需要保留的入口：
 
 ```sh
-xmake f -y --kind=static --keep_symbols=add
+xmake f -y --kind=shared --keep_symbols='{"add"}'
 xmake build project_xmake
 xmake install -o dist/trimmed project_xmake
 ```
@@ -49,16 +77,19 @@ xmake install -o dist/trimmed project_xmake
 保留文本接口，或恢复完整公共 API：
 
 ```sh
-xmake f -y --kind=static --keep_symbols=count_words
+xmake f -y --kind=shared --keep_symbols='{"count_words"}'
 xmake build project_xmake
 
-xmake f -y --kind=static --keep_symbols=add,subtract,count_words
+xmake f -y --kind=shared --keep_symbols='{"add","subtract","count_words"}'
 xmake build project_xmake
 ```
 
-首次未配置 `keep_symbols` 时，默认保留完整公共 API。选项与其他 xmake
-配置一样会保存；更改名单只影响上层 target，不进入底层包配置。
-名单支持逗号分隔、去重和首尾空白；空名单或未知入口会明确报错。
+`keep_symbols` 没有默认名单；同一 target 仅在 shared 模式且传入该选项时
+执行真实动态链接，否则为 phony target，安装完整包。选项与其他 xmake 配置一样会保存；
+更改名单只影响上层 target，不进入底层包配置。
+参数采用 Lua table literal 字符串，`@dart_native/link` 使用
+`string.deserialize` 还原 table。Dart hook 通过 binding mapping 得到原生
+符号名称。
 
 target 负责归档成员提取、生成平台导出表和开启链接器 GC。它没有自己的
 源码，使用 C++ 链接规则复用包的运行库依赖。输出保留普通符号表，便于
@@ -71,12 +102,12 @@ xmake run call
 xmake run words
 ```
 
-`native_toolchain_xmake` 已接通这个流程：build hook 使用
-`project_xmake_build` 导出完整静态库，link hook 将 `symbolsToKeep` 转成
-`--keep_symbols`，再构建 `project_xmake` shared target。未启用 linking
-时，build hook 仍使用 `project_xmake_build`，通过 `--kind=shared` 安装完整
-动态包。包的 `configs.shared` 跟随 `kind`；link hook 使用 `--kind=static`
-保留静态包输入，再由显式声明为 shared 的 `project_xmake` target 链接输出。
+`native_toolchain_xmake` 已接通这个流程：两个 hook 的 `XmakeLibrary` 都使用
+`target: 'project_xmake'`。启用 linking 时，build hook 以 `--kind=static`
+且不传名单，安装完整静态库。link hook 将 `symbolsToKeep` 序列化为 Lua
+table literal 字符串，使用 `--kind=shared` 和 `--keep_symbols`，让同一
+target 链接裁剪后的动态库。未启用 linking 时，build hook 以
+`--kind=shared` 且不传名单，安装完整动态包。
 本地包通过根 `xmake.lua` 中的 `add_requires("project_xmake 1.0.0", ...)`
 显式指定版本。同版本及相同包配置复用已安装产物；修改源码或包构建描述后，
 手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
@@ -191,8 +222,9 @@ add_headerfiles("include/(foo/*.h)")
 
 Dart link hook 将使用记录映射为原生符号名单，通过
 `XmakeLibrary.link(symbolsToKeep: ...)` 交给 xmake 完成最终链接和裁剪。
-`null` 恢复 xmake 默认名单；空名单跳过整个原生库。每次 link 的动态库
-保存在该 hook 的输出目录中。
+`symbolsToKeep` 必须传入列表；没有使用记录时，Dart hook 显式使用
+`recordUseMapping.values` 保留全部绑定接口。空名单跳过整个原生库。每次
+link 的动态库保存在该 hook 的输出目录中。
 
 `add`、`subtract` 和使用 C++ 标准库的 `count_words` 位于同一个源文件中。
 当前 Dart 绑定仍只包含前两个函数；新文本接口的 Dart 接入留待后续阶段。

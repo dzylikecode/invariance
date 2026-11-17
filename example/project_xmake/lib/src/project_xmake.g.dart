@@ -11,5 +11,9 @@ import 'package:meta/meta.dart' as meta;
 external int add(int a, int b);
 
 @meta.RecordUse()
+@ffi.Native<ffi.Int Function(ffi.Pointer<ffi.Char>)>()
+external int count_words(ffi.Pointer<ffi.Char> text);
+
+@meta.RecordUse()
 @ffi.Native<ffi.Int Function(ffi.Int, ffi.Int)>()
 external int subtract(int a, int b);

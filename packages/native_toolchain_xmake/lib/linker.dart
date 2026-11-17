@@ -17,10 +17,10 @@ class XmakeLinker({
   Future<void> run({
     required LinkInput input,
     required LinkOutputBuilder output,
-    Iterable<String>? symbolsToKeep,
+    required Iterable<String> symbolsToKeep,
   }) async {
-    final symbols = symbolsToKeep?.toList(growable: false);
-    if (symbols != null && symbols.isEmpty) {
+    final symbols = symbolsToKeep.toList(growable: false);
+    if (symbols.isEmpty) {
       logger.info('Skipping linking as no symbols are to be kept.');
       return;
     }
@@ -37,12 +37,12 @@ class XmakeLinker({
     final xmake = Xmake(
       projectRoot: projectRoot.toFilePath(),
       codeConfig: input.config.code,
-      // The link target is explicitly shared; its package inputs stay static.
-      kind: .static,
+      // The symbol list selects static package inputs for this shared output.
+      kind: .shared,
       logger: logger,
     );
 
-    // Reset cached options so a null list restores the project's defaults.
+    // Configure the complete symbol list for this link invocation.
     await xmake.config(clean: true, symbolsToKeep: symbols);
     await xmake.build(target: target);
     final platformInstallDir = (installDir ?? input.outputDirectory)

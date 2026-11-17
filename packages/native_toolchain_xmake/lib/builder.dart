@@ -46,7 +46,8 @@ class XmakeBuilder({
       logger: logger,
     );
 
-    await xmake.config();
+    // Build does not consume a symbol list from an earlier link invocation.
+    await xmake.config(clean: true);
     await xmake.build(target: target);
     final platformInstallDir = installDir
         .resolveUri(.directory(input.config.code.targetOS.name))

@@ -4,8 +4,6 @@ const assetName = 'src/project_xmake.g.dart';
 const assetId = 'package:project_xmake/$assetName';
 
 final xmakeLibrary = XmakeLibrary(
-  target: 'project_xmake_build',
-  linkTarget: 'project_xmake',
-  libHintName: 'project_xmake',
+  target: 'project_xmake',
   assetName: assetName,
 );

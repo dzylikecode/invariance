@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/project_xmake.yml
       - packages/native_toolchain_xmake/**
+      - packages/d/dart_native/**
       - example/project_xmake/**
       - pubspec.yaml
       - pubspec.lock
@@ -15,6 +16,7 @@ on:
     paths:
       - .github/workflows/project_xmake.yml
       - packages/native_toolchain_xmake/**
+      - packages/d/dart_native/**
       - example/project_xmake/**
       - pubspec.yaml
       - pubspec.lock

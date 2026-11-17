@@ -1,3 +1,19 @@
+## Unreleased
+
+- **feature**: add the `dart_native 1.0.0` xmake rule package for native library preparation, package installation, and final export selection with linker GC. Bundle its Lua sources with the Dart package and provide a local repository index.
+- **change**: pass `keep_symbols` as a Lua table literal string and deserialize it in the link rule. Native symbol selection comes from the Dart binding mapping.
+- **breaking**: require `symbolsToKeep` when linking. Resolve missing usage records to the full binding mapping in Dart; xmake no longer supplies a default symbol list.
+- **breaking**: use one target for build and link. Static builds install the archive, shared builds without symbols install the full shared package, and shared links with symbols trim a static package into the final library.
+- **docs**: document the existing Dart build/link routing with the shared rules and distinguish local checkout payloads from remote repository commits.
+
+---
+
+- **功能**：新增 `dart_native 1.0.0` xmake 规则包，负责原生库准备、包安装，以及最终导出选择和 linker GC。Lua 源码随 Dart 包分发，并提供本地仓库索引。
+- **变更**：`keep_symbols` 改为 Lua table literal 字符串，由 link 规则反序列化；原生符号选择来自 Dart binding mapping。
+- **变更**：link 时必须传入 `symbolsToKeep`。没有使用记录时由 Dart 选择完整 binding mapping，xmake 不再提供默认符号列表。
+- **变更**：build/link 共用一个 target。static build 安装归档，无符号列表的 shared build 安装完整动态包，有符号列表的 shared link 将静态包链接为裁剪后的动态库。
+- **文档**：说明共享规则如何接入现有 Dart build/link 路由，并区分本地 checkout 的 payload 与远程仓库 commit。
+
 ## 0.1.0
 
 - **update**: bump `native_toolchain_c` to `^0.19.6` to fix incorrect decoding of UTF-8 output from `vswhere` on systems with a Chinese locale.

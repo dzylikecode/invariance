@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:logging/logging.dart';
 
 import 'android.dart';
+import 'src/lua.dart';
 
 Future<String> getXmakeVersion() async {
   final output = await getXmakeInfo();
@@ -118,7 +119,8 @@ ${result.stdout}
       // dart format on
       '--mode=release',
       '--kind=$kind',
-      if (symbolsToKeep != null) '--keep_symbols=${symbolsToKeep.join(',')}',
+      if (symbolsToKeep != null)
+        '--keep_symbols=${encodeLuaStringList(symbolsToKeep)}',
       '-y',
     ]);
   }

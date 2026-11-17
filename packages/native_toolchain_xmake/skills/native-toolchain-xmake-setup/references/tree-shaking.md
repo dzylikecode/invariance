@@ -4,13 +4,63 @@ Start from the `example_native` C target in the main skill. Use Dart 3.13 or lat
 
 ## Route the archive to the link hook
 
-In `xmake.lua`, provide a build target that installs the package variant selected
-by `--kind` (`configs.shared = get_config("kind") == "shared"`) and a separate
-target with `set_kind("shared")` that accepts `keep_symbols`. The shared target is
-responsible for archive extraction, export control, and linker GC. On Windows,
-compile the archive without forced DLL exports and export the selected symbols
-when linking the shared target. See `example/project_xmake/xmake.lua` for the
-two-target setup and its local package.
+Package the native source target as an xmake package with static and shared
+variants. In that source project, use
+`add_rules("@dart_native/library", {kind = kind})`, where `kind` matches its
+explicit `set_kind(kind)`. The native project manages its API macros: static
+inputs to the final link must avoid forced `dllexport`, `used`, or `retain`
+attributes that keep unused functions alive. API symbols must remain eligible
+for export; a final export list cannot promote symbols compiled with hidden
+visibility.
+
+In the Dart package's `xmake.lua`, one target selects between installation and
+final linking:
+
+| Phase | `kind` | Symbols | Native package | Target behavior |
+| --- | --- | --- | --- | --- |
+| Build with linking enabled | `static` | Absent | Static | Phony, installs the complete archive |
+| Build for direct bundling | `shared` | Absent | Shared | Phony, installs the complete shared package |
+| Link | `shared` | Supplied | Static | Shared, selects exports and runs linker GC |
+
+```lua
+local kind = get_config("kind") or "static"
+option("keep_symbols")
+    set_showmenu(true)
+option_end()
+local keepSymbols = get_config("keep_symbols")
+
+-- Relative to an example/foo/ project in this checkout.
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+-- Register the repository containing the native package's own recipe too.
+add_repositories("local-repo local", {rootdir = os.scriptdir()})
+add_requires("example_native 1.0.0", {
+    system = false,
+    configs = {shared = kind == "shared" and not keepSymbols, pic = true}
+})
+
+target("example_native")
+    add_packages("example_native", "dart_native")
+    if kind == "shared" and keepSymbols then
+        set_kind("shared")
+        add_rules("@dart_native/link", {symbols = keepSymbols})
+    else
+        set_kind("phony")
+        add_rules("@dart_native/install", {package = "example_native"})
+    end
+```
+
+The install rule copies the selected package into the target's install
+directory. The link rule handles archive extraction, platform export lists,
+and linker GC; the target still sets its kind and package dependencies.
+`get_config("keep_symbols")` passes the serialized Lua table literal to the rule,
+which restores the table with `string.deserialize`. The Dart binding mapping
+supplies native symbol names. The option has no default: build configuration
+needs no symbols, while the same target becomes shared for the link phase.
+The native package stays static when symbols are supplied, even though the
+final target is shared. See `example/project_xmake/xmake.lua` and its local
+package for a complete setup. See the main skill for local and remote rule
+version handling.
 
 Share the library configuration between both hooks in `lib/src/xmake_config.dart`:
 
@@ -21,8 +71,7 @@ const assetName = 'src/example_native.g.dart';
 const assetId = 'package:example_native/$assetName';
 
 final xmakeLibrary = XmakeLibrary(
-  target: 'example_native_build',
-  linkTarget: 'example_native',
+  target: 'example_native',
   libHintName: 'example_native',
   assetName: assetName,
   linkHook: .auto,
@@ -36,9 +85,10 @@ flag is true for every build that uses the configuration. When linking is
 disabled or `.never` is selected, the build hook still uses `target`, with
 `--kind=shared`, to install the full shared package. On the link hook path,
 the build hook configures `--kind=static` to install the complete archive.
-`XmakeLibrary.link` also configures `--kind=static` to retain static package
-inputs, passes the selected symbols to the explicitly shared `linkTarget`, and
-emits a `DynamicLoadingBundled` code asset.
+`XmakeLibrary.link` configures `--kind=shared`, passes the selected symbols to
+the same target, and emits a `DynamicLoadingBundled` code asset. The package's
+`configs.shared = kind == "shared" and not keepSymbols` keeps its inputs static
+for this final link.
 
 ## Generate bindings and the symbol mapping
 
@@ -96,7 +146,7 @@ void main(List<String> args) async {
     final symbolsToKeep = methods
         ?.where((method) => method.library.uri == assetId)
         .map((method) => recordUseMapping[method.name]!)
-        .toSet();
+        .toSet() ?? recordUseMapping.values.toSet();
 
     await xmakeLibrary.link(
       input: input,
@@ -109,9 +159,9 @@ void main(List<String> args) async {
 
 The asset check allows the hook to return when the build routed the library directly to the app. The method filter selects top-level functions declared in the generated binding library. If you use a custom asset ID, filter by the actual Dart binding library URI separately from the asset ID.
 
-Pass `null` through when usage records are absent so the link hook restores the
-xmake project's default export list. An empty set means the records contain no
-calls to this binding library, so `XmakeLinker` omits the whole library. If unused
+`symbolsToKeep` is required. When usage records are absent, select all values
+from the Dart binding mapping before calling the linker. An empty set means the
+records contain no calls to this binding library, so `XmakeLinker` omits the whole library. If unused
 functions remain, inspect the xmake target's export control and how the compiler
 groups functions into object files and sections.
 

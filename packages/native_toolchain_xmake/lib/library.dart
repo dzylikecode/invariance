@@ -20,7 +20,6 @@ enum LinkHookMode {
 class XmakeLibrary({
   /// name of xmake target
   required final String target,
-  final String? linkTarget,
 
   /// name of the library to be linked, if null, use [target] as the library name
   ///
@@ -66,18 +65,14 @@ class XmakeLibrary({
 
   /// Links the shared target with [symbolsToKeep] as its `keep_symbols` option.
   ///
-  /// A null list uses the xmake project's default exports. An empty list skips
-  /// linking and emits no code asset.
+  /// An empty list skips linking and emits no code asset.
   Future<void> link({
     required LinkInput input,
     required LinkOutputBuilder output,
-    Iterable<String>? symbolsToKeep,
+    required Iterable<String> symbolsToKeep,
   }) async {
-    if (linkTarget == null) {
-      throw StateError('link target is not specified');
-    }
     final linker = XmakeLinker(
-      target: linkTarget!,
+      target: target,
       libHintName: libHintName,
       assetName: assetName,
       projectRoot: input.packageRoot,

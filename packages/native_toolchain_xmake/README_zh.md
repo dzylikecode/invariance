@@ -79,8 +79,7 @@ void main(List<String> args) async {
     if (input.config.buildCodeAssets) {
       // flutter need to check this flag
       await XmakeLibrary(
-        target: 'project_xmake_build',
-        linkTarget: 'project_xmake',
+        target: 'project_xmake',
         libHintName: 'project_xmake',
         assetName: 'src/project_xmake.g.dart',
       ).build(input: input, output: output);
@@ -94,8 +93,7 @@ void main(List<String> args) async {
 void main(List<String> args) async {
   await link(args, (input, output) async {
     await XmakeLibrary(
-      target: 'project_xmake_build',
-      linkTarget: 'project_xmake',
+      target: 'project_xmake',
       libHintName: 'project_xmake',
       assetName: 'src/project_xmake.g.dart',
     ).link(
@@ -103,7 +101,7 @@ void main(List<String> args) async {
       output: output,
       symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
         (e) => recordUseMapping[e.name]!,
-      ),
+      ) ?? recordUseMapping.values,
     );
   });
 }
@@ -111,12 +109,88 @@ void main(List<String> args) async {
 
 ## xmake 补充知识
 
-`build` 始终调用 `target`：走 link hook 时配置 `--kind=static`，直接打包时
-配置 `--kind=shared`，由 build target 安装对应形态的包。`link` 配置
-`--kind=static` 保持依赖包为静态库，并传入 `keep_symbols`，再调用显式设置了
-`set_kind("shared")` 的 `linkTarget`，输出最终动态库。`symbolsToKeep` 为
-`null` 时使用工程默认导出名单，为空列表时跳过整个库。link 产物默认安装到
-hook 的输出目录下。
+`build` 和 `link` 调用同一个 `target`，按配置选择三个分支：
+
+| 阶段 | `kind` | `keep_symbols` | 原生包 | target 行为 |
+| --- | --- | --- | --- | --- |
+| 启用 linking 的 build | `static` | 无 | 静态包 | phony target 安装完整归档 |
+| 直接打包的 build | `shared` | 无 | 动态包 | phony target 安装完整动态库 |
+| link | `shared` | 有 | 静态包 | shared target 链接并裁剪最终动态库 |
+
+`symbolsToKeep` 必须
+传入列表，为空列表时跳过整个库。没有使用记录时，由 Dart hook 显式传入
+`recordUseMapping.values`，保留全部绑定接口。link 产物默认安装到 hook 的
+输出目录下。
+
+Dart 将 `keep_symbols` 作为 Lua table literal 字符串传递，例如
+`{"add","subtract"}`。link 规则使用 `string.deserialize` 还原 table，
+原生符号名称来自 Dart binding mapping。
+
+### 使用 `dart_native` 共享原生构建规则
+
+当前 checkout 包含 xmake 规则包 `dart_native 1.0.0`。包索引位于
+`packages/d/dart_native/xmake.lua`，Lua 源码随 Dart 包放在
+`packages/native_toolchain_xmake/xmake/rules/`。
+
+本仓库的 `example/foo/` 工程可以这样注册本地索引。每个使用规则的 xmake
+工程都需要声明规则包依赖：
+
+```lua
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+```
+
+三条规则用于原生源码工程，以及两个 hook 共用的单个 target。原生源码工程：
+
+```lua
+local kind = get_config("kind") or "static"
+target("foo")
+    set_kind(kind)
+    add_packages("dart_native")
+    add_rules("@dart_native/library", {kind = kind})
+    add_files("src/*.c")
+```
+
+Dart hooks 使用的工程：
+
+```lua
+local kind = get_config("kind") or "static"
+option("keep_symbols")
+    set_showmenu(true)
+option_end()
+
+local keepSymbols = get_config("keep_symbols")
+add_requires("foo 1.0.0", {
+    system = false,
+    configs = {shared = kind == "shared" and not keepSymbols, pic = true}
+})
+
+target("foo")
+    add_packages("foo", "dart_native")
+    if kind == "shared" and keepSymbols then
+        set_kind("shared")
+        add_rules("@dart_native/link", {symbols = keepSymbols})
+    else
+        set_kind("phony")
+        add_rules("@dart_native/install", {package = "foo"})
+    end
+```
+
+原生包需要提供静态和动态两种形态，仅在 `kind == "shared"` 且没有符号列表
+时选择动态包。`keep_symbols` option 没有默认值；同一个 target 仅在 shared
+模式且有符号列表时执行真实动态链接。library 规则准备
+函数和数据的 section GC，install 规则安装选中的包，link 规则控制最终动态库的
+导出与 GC。C API 宏仍由原生工程管理：交给 link hook 的静态输入应避免强制
+`dllexport` 或保留属性。
+
+两个 hook 的 `XmakeLibrary` 都使用 `target: 'foo'`。
+
+本地 `1.0.0` payload 从当前 checkout 嵌入。远程仓库地址
+`https://github.com/dzylikecode/invariance.git` 只有在所选仓库分支包含这些文件后才能
+提供它。远程 require 锁固定仓库 commit，不能为本地修改提供版本管理。修改本地
+规则源码后，需要提升规则包版本或显式重装，以刷新 xmake 的包缓存。
+修改 library 编译规则后，也需要提升原生包版本或强制重装原生包，让已有归档
+采用新的编译选项。
 
 xmake 使用流程：configure -> build -> install
 
@@ -145,7 +219,7 @@ xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)
 - [x] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
 - [x] [tree-shaking 在 windows 上失败](https://github.com/dart-lang/native/pull/3773)
-- [ ] tree-shaking 没有做到交叉编译，原因是 zig 与 native_toolchain_c 不兼容，然后是裁剪不到位，有的只是 hide 了，需要重新思考裁剪，比如定义 rules 来
+- [ ] tree-shaking 的交叉编译仍需验证，包括 Zig 工具链兼容性。
 
 
 存在的问题：

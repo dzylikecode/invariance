@@ -59,9 +59,15 @@ Future<Uri> copyTestProject({required Uri targetUri}) async {
     toolchainRoot.resolve('pubspec.yaml'),
     toolchainUri.resolve('pubspec.yaml'),
   );
+  for (final name in ['lib', 'xmake']) {
+    await _copyDirectory(
+      Directory.fromUri(toolchainRoot.resolve('$name/')),
+      Directory.fromUri(toolchainUri.resolve('$name/')),
+    );
+  }
   await _copyDirectory(
-    Directory.fromUri(toolchainRoot.resolve('lib/')),
-    Directory.fromUri(toolchainUri.resolve('lib/')),
+    Directory.fromUri(toolchainRoot.resolve('../d/dart_native/')),
+    Directory.fromUri(targetUri.resolve('packages/d/dart_native/')),
   );
 
   // 小 workspace 让示例使用当前工具链源码，同时保留原来的相对目录。
