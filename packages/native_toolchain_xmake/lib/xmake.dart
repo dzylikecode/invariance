@@ -73,7 +73,10 @@ ${result.stdout}
   }
 
   // see https://xmake.io/guide/basic-commands/build-configuration.html
-  Future<void> config() async {
+  Future<void> config({
+    bool clean = false,
+    Iterable<String>? symbolsToKeep,
+  }) async {
     final (os, arch) = _target(
       codeConfig.targetOS,
       codeConfig.targetArchitecture,
@@ -85,6 +88,7 @@ ${result.stdout}
 
     return call([
       'f',
+      if (clean) '-c',
       '-P',
       '.',
       '-v',
@@ -114,6 +118,7 @@ ${result.stdout}
       // dart format on
       '--mode=release',
       '--kind=$kind',
+      if (symbolsToKeep != null) '--keep_symbols=${symbolsToKeep.join(',')}',
       '-y',
     ]);
   }

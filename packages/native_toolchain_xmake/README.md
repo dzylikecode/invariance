@@ -75,7 +75,9 @@ void main(List<String> args) async {
     if (input.config.buildCodeAssets) {
       // Flutter requires this check.
       await XmakeLibrary(
-        target: 'project_xmake',
+        target: 'project_xmake_build',
+        linkTarget: 'project_xmake',
+        libHintName: 'project_xmake',
         assetName: 'src/project_xmake.g.dart',
       ).build(input: input, output: output);
     }
@@ -88,15 +90,15 @@ void main(List<String> args) async {
 void main(List<String> args) async {
   await link(args, (input, output) async {
     await XmakeLibrary(
-      target: 'project_xmake',
+      target: 'project_xmake_build',
+      linkTarget: 'project_xmake',
+      libHintName: 'project_xmake',
       assetName: 'src/project_xmake.g.dart',
     ).link(
       input: input,
       output: output,
-      linkerOptions: .treeshake(
-        symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
-          (e) => recordUseMapping[e.name]!,
-        ),
+      symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
+        (e) => recordUseMapping[e.name]!,
       ),
     );
   });
@@ -104,6 +106,14 @@ void main(List<String> args) async {
 ```
 
 ## xmake notes
+
+`build` always invokes `target`. It configures `--kind=static` for the link hook
+path and `--kind=shared` for direct bundling. The build target must install the
+corresponding package variant. `link` configures `--kind=static` to keep package
+inputs static, passes `keep_symbols`, and invokes `linkTarget`, which must
+explicitly use `set_kind("shared")`. A null `symbolsToKeep` uses the project's
+default exports; an empty list skips the library. Link outputs are installed
+under the hook output directory by default.
 
 The xmake workflow is configure → build → install.
 

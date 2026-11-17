@@ -12,6 +12,10 @@ void main(List<String> args) async {
         input.packageRoot.resolve('xmake.lua'),
         input.packageRoot.resolve('src/impl.cpp'),
         input.packageRoot.resolve('include/project_xmake.h'),
+        input.packageRoot.resolve('local/packages/p/project_xmake/xmake.lua'),
+        input.packageRoot.resolve(
+          'local/packages/p/project_xmake/port/xmake.lua',
+        ),
       ]);
     }
   });

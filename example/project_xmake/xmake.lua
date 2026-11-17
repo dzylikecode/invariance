@@ -4,6 +4,27 @@ add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 
 local publicSymbols = {"add", "subtract", "count_words"}
 
+local function parseKeepSymbols(value)
+  if type(value) ~= "string" then
+    return nil, "keep_symbols must be a comma-separated symbol list"
+  end
+  local symbols = {}
+  for _, symbol in ipairs(value:split(",")) do
+    symbol = symbol:trim()
+    if not table.contains(publicSymbols, symbol) then
+      return nil, "Unknown public symbol in keep_symbols: " .. symbol
+    end
+    if not table.contains(symbols, symbol) then
+      table.insert(symbols, symbol)
+    end
+  end
+  if #symbols == 0 then
+    return nil, "keep_symbols must name at least one public symbol"
+  end
+  table.sort(symbols)
+  return symbols
+end
+
 option("keep_symbols")
   set_default(table.concat(publicSymbols, ","))
   set_showmenu(true)
@@ -14,7 +35,7 @@ add_repositories("local-repo local")
 -- Bump this version when the local package sources or build recipe change.
 add_requires("project_xmake 1.0.0", {
   system = false,
-  configs = {shared = false, pic = true}
+  configs = {shared = get_config("kind") == "shared", pic = true}
 })
 
 target("project_xmake_build")
@@ -38,18 +59,7 @@ target("project_xmake")
   set_strip("none")
 
   on_load(function(target)
-    local value = get_config("keep_symbols")
-    assert(type(value) == "string", "keep_symbols must be a comma-separated symbol list")
-    local symbols = {}
-    for _, symbol in ipairs(value:split(",")) do
-      symbol = symbol:trim()
-      assert(table.contains(publicSymbols, symbol), "Unknown public symbol in keep_symbols: " .. symbol)
-      if not table.contains(symbols, symbol) then
-        table.insert(symbols, symbol)
-      end
-    end
-    assert(#symbols > 0, "keep_symbols must name at least one public symbol")
-    table.sort(symbols)
+    local symbols = assert(parseKeepSymbols(get_config("keep_symbols")))
     target:extraconf_set("rules", "utils.symbols.export_list", "symbols", symbols)
   end)
 

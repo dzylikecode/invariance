@@ -4,7 +4,13 @@ Start from the `example_native` C target in the main skill. Use Dart 3.13 or lat
 
 ## Route the archive to the link hook
 
-In `xmake.lua`, replace `set_kind("shared")` with `set_kind(get_config("kind") or "shared")`. `XmakeLibrary.build` supplies `--kind=static` when it routes the archive to the link hook and `--kind=shared` for direct bundling. Keep the example's `EXAMPLE_NATIVE_SHARED` define for Windows so its symbols can also be exported when the link hook turns the archive into a DLL without a symbol list.
+In `xmake.lua`, provide a build target that installs the package variant selected
+by `--kind` (`configs.shared = get_config("kind") == "shared"`) and a separate
+target with `set_kind("shared")` that accepts `keep_symbols`. The shared target is
+responsible for archive extraction, export control, and linker GC. On Windows,
+compile the archive without forced DLL exports and export the selected symbols
+when linking the shared target. See `example/project_xmake/xmake.lua` for the
+two-target setup and its local package.
 
 Share the library configuration between both hooks in `lib/src/xmake_config.dart`:
 
@@ -15,7 +21,9 @@ const assetName = 'src/example_native.g.dart';
 const assetId = 'package:example_native/$assetName';
 
 final xmakeLibrary = XmakeLibrary(
-  target: 'example_native',
+  target: 'example_native_build',
+  linkTarget: 'example_native',
+  libHintName: 'example_native',
   assetName: assetName,
   linkHook: .auto,
 );
@@ -23,7 +31,14 @@ final xmakeLibrary = XmakeLibrary(
 
 In `hook/build.dart`, import `package:example_native/src/xmake_config.dart` and call `xmakeLibrary.build(input: input, output: output)` inside the existing `input.config.buildCodeAssets` check.
 
-`.auto` follows the build's `linkingEnabled` flag. Use `.always` only when that flag is true for every build that uses the configuration. `.never` bundles xmake's shared library directly. On the link hook path, the static archive is the input to `XmakeLibrary.link`. The final link mode follows the link input's code asset preference.
+`.auto` follows the build's `linkingEnabled` flag. Use `.always` only when that
+flag is true for every build that uses the configuration. When linking is
+disabled or `.never` is selected, the build hook still uses `target`, with
+`--kind=shared`, to install the full shared package. On the link hook path,
+the build hook configures `--kind=static` to install the complete archive.
+`XmakeLibrary.link` also configures `--kind=static` to retain static package
+inputs, passes the selected symbols to the explicitly shared `linkTarget`, and
+emits a `DynamicLoadingBundled` code asset.
 
 ## Generate bindings and the symbol mapping
 
@@ -79,14 +94,14 @@ void main(List<String> args) async {
 
     final methods = input.recordedUses?.calls.keys.whereType<Method>();
     final symbolsToKeep = methods
-        ?.where((method) => method.parent == const Library(assetId))
+        ?.where((method) => method.library.uri == assetId)
         .map((method) => recordUseMapping[method.name]!)
         .toSet();
 
     await xmakeLibrary.link(
       input: input,
       output: output,
-      linkerOptions: .treeshake(symbolsToKeep: symbolsToKeep),
+      symbolsToKeep: symbolsToKeep,
     );
   });
 }
@@ -94,6 +109,10 @@ void main(List<String> args) async {
 
 The asset check allows the hook to return when the build routed the library directly to the app. The method filter selects top-level functions declared in the generated binding library. If you use a custom asset ID, filter by the actual Dart binding library URI separately from the asset ID.
 
-Pass `null` through when usage records are absent so the link hook preserves all symbols. An empty set means the records contain no calls to this binding library, so `CLinker` omits the whole library. If unused functions remain, inspect how the compiler groups them into object files and sections. On Windows, an archive member pulled in for one symbol can also retain other symbols declared with `__declspec(dllexport)` in that member.
+Pass `null` through when usage records are absent so the link hook restores the
+xmake project's default export list. An empty set means the records contain no
+calls to this binding library, so `XmakeLinker` omits the whole library. If unused
+functions remain, inspect the xmake target's export control and how the compiler
+groups functions into object files and sections.
 
 Run `dart build cli bin/main.dart` to exercise the link hook and recorded uses with the example's CLI entry point.

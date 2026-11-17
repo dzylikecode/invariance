@@ -15,7 +15,7 @@ project_xmake/
     └── port/xmake.lua        原生构建描述
 ```
 
-根工程通过 `add_requires` / `add_packages` 消费该包的 static 形态。
+根工程通过 `add_requires` / `add_packages` 消费该包，包形态跟随 `--kind`。
 
 | 包配置 | 产物与行为 |
 | --- | --- |
@@ -38,7 +38,7 @@ Windows 静态构建使用 `PROJECT_XMAKE_STATIC`，避免提前强制 DLL 导�
 通过命令行传入需要保留的入口：
 
 ```sh
-xmake f -y --keep_symbols=add
+xmake f -y --kind=static --keep_symbols=add
 xmake build project_xmake
 xmake install -o dist/trimmed project_xmake
 ```
@@ -49,10 +49,10 @@ xmake install -o dist/trimmed project_xmake
 保留文本接口，或恢复完整公共 API：
 
 ```sh
-xmake f -y --keep_symbols=count_words
+xmake f -y --kind=static --keep_symbols=count_words
 xmake build project_xmake
 
-xmake f -y --keep_symbols=add,subtract,count_words
+xmake f -y --kind=static --keep_symbols=add,subtract,count_words
 xmake build project_xmake
 ```
 
@@ -71,8 +71,12 @@ xmake run call
 xmake run words
 ```
 
-本阶段只接通 xmake 命令行到最终 shared target，Dart hook 尚未接入这个
-新链接流程。底层包仍支持独立的 shared 构建，根 target 始终选择 static。
+`native_toolchain_xmake` 已接通这个流程：build hook 使用
+`project_xmake_build` 导出完整静态库，link hook 将 `symbolsToKeep` 转成
+`--keep_symbols`，再构建 `project_xmake` shared target。未启用 linking
+时，build hook 仍使用 `project_xmake_build`，通过 `--kind=shared` 安装完整
+动态包。包的 `configs.shared` 跟随 `kind`；link hook 使用 `--kind=static`
+保留静态包输入，再由显式声明为 shared 的 `project_xmake` target 链接输出。
 本地包通过根 `xmake.lua` 中的 `add_requires("project_xmake 1.0.0", ...)`
 显式指定版本。同版本及相同包配置复用已安装产物；修改源码或包构建描述后，
 手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
@@ -167,11 +171,12 @@ add_headerfiles("include/(foo/*.h)")
 
 ## 如何处理不同的结构体
 
-## Earlier Dart tree shaking experiment
+## Dart tree shaking
 
-以下记录此前 xmake 构建静态库、`native_toolchain_c` 的 `CLinker` 根据
-Dart 使用记录完成裁剪的实验。现有 Dart hook 尚未调整到上面的 shared
-target；当前阶段以原生命令验证，Dart 适配及以下脚本留到后续处理。
+Dart link hook 将使用记录映射为原生符号名单，通过
+`XmakeLibrary.link(symbolsToKeep: ...)` 交给 xmake 完成最终链接和裁剪。
+`null` 恢复 xmake 默认名单；空名单跳过整个原生库。每次 link 的动态库
+保存在该 hook 的输出目录中。
 
 `add`、`subtract` 和使用 C++ 标准库的 `count_words` 位于同一个源文件中。
 当前 Dart 绑定仍只包含前两个函数；新文本接口的 Dart 接入留待后续阶段。
@@ -192,25 +197,11 @@ dart run tool/verify_native_assets.dart
 | 只调用 `add` | 返回 `8`，仅导出 `add`，普通符号表中也不存在 `subtract` |
 | 调用两个函数 | 两个函数都能运行并导出 |
 | 只使用 Dart 常量 | 整个原生库不进入 bundle |
-| 缺少使用记录 | 保守保留两个公开函数 |
+| 缺少使用记录 | 保守保留全部三个公共函数 |
 
-静态输入仍包含两个函数；脚本同时检查输入归档与输出库，避免把
+静态输入仍包含全部三个函数；脚本同时检查输入归档与输出库，避免把
 隐藏符号或删除调试信息误判成代码裁剪。需要 `xmake` 和 GNU `nm`。
 验证产物写入忽略的 `.dart_tool/native_assets_check/`。
 
-### ARM64 工具链实验
-
-`xmake.lua` 为 Linux ARM64 显式选择 GNU 交叉工具链，与此目标下
-`CLinker` 使用的 GNU C++ ABI 保持一致。需要安装
-`aarch64-linux-gnu-gcc`、`g++` 和 binutils。这个选择只作用于示例，
-没有修改 `native_toolchain_xmake` 的默认工具链策略。
-
-```sh
-dart build cli --target=example/call.dart \
-  --target-os=linux --target-arch=arm64 \
-  --output=.dart_tool/treeshake_arm64
-```
-
-构建出的原生库应只导出 `add`，且通过 `-z defs` 的符号解析检查。
-交叉构建后仍需在 ARM64 或配置了目标系统库的 QEMU 中验证加载。
-交叉构建 CLI 的启动器架构也应单独检查。
+当前验证范围为 Linux 本机。其他平台及交叉编译需要使用支持当前导出
+规则的工具链，单独验证构建、裁剪和加载。

@@ -11,17 +11,10 @@ void main(List<String> args) async {
     await xmakeLibrary.link(
       input: input,
       output: output,
-      linkerOptions: .treeshake(
-        flags: switch (input.config.code.targetOS) {
-          OS.linux => ['-z,defs', '-lstdc++'],
-          OS.macOS || OS.iOS => ['-lc++'],
-          _ => [],
-        },
-        symbolsToKeep: input.recordedUses?.calls.keys
-            .whereType<Method>()
-            .where((method) => method.library.uri == assetId)
-            .map((method) => recordUseMapping[method.name]!),
-      ),
+      symbolsToKeep: input.recordedUses?.calls.keys
+          .whereType<Method>()
+          .where((method) => method.library.uri == assetId)
+          .map((method) => recordUseMapping[method.name]!),
     );
   });
 }

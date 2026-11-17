@@ -103,9 +103,13 @@ Future<void> main() async {
   );
   _require(
     !usedDefinitions.any(
-      (symbol) => symbol == 'subtract' || symbol.startsWith('subtract.'),
+      (symbol) =>
+          symbol == 'subtract' ||
+          symbol.startsWith('subtract.') ||
+          symbol == 'count_words' ||
+          symbol.startsWith('count_words.'),
     ),
-    'subtract is still present in the used library; hiding it is not pruning.',
+    'Unused functions remain in the used library; hiding them is not pruning.',
   );
 
   final all = await buildBundle('example/all.dart', 'all');
@@ -129,7 +133,7 @@ Future<void> main() async {
   await runBundle(unused);
 
   // Reuse an actual link input, including its archive and target configuration.
-  // Removing usage records must conservatively preserve both native functions.
+  // Removing usage records must conservatively preserve every public function.
   final hooksRoot = Directory(
     p.join(workspaceRoot, '.dart_tool/hooks_runner/project_xmake'),
   );
@@ -139,8 +143,8 @@ Future<void> main() async {
   final archive = encoding['file']! as String;
   final archiveDefinitions = await symbols(archive);
   _require(
-    archiveDefinitions.containsAll({'add', 'subtract'}),
-    'The original archive must contain both functions: $archive.',
+    archiveDefinitions.containsAll({'add', 'subtract', 'count_words'}),
+    'The original archive must contain all public functions: $archive.',
   );
 
   final fallbackDirectory = Directory(
@@ -186,8 +190,8 @@ Future<void> main() async {
     dynamicOnly: true,
   );
   _require(
-    fallbackSymbols.containsAll({'add', 'subtract'}),
-    'Missing usage records must retain both functions: $fallbackSymbols.',
+    _sameSymbols(fallbackSymbols, {'add', 'subtract', 'count_words'}),
+    'Missing usage records must retain all public functions: $fallbackSymbols.',
   );
 
   stdout.writeln('Native asset checks passed. Artifacts: ${runDirectory.path}');

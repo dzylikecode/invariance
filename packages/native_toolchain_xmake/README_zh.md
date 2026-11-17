@@ -79,7 +79,9 @@ void main(List<String> args) async {
     if (input.config.buildCodeAssets) {
       // flutter need to check this flag
       await XmakeLibrary(
-        target: 'project_xmake',
+        target: 'project_xmake_build',
+        linkTarget: 'project_xmake',
+        libHintName: 'project_xmake',
         assetName: 'src/project_xmake.g.dart',
       ).build(input: input, output: output);
     }
@@ -92,15 +94,15 @@ void main(List<String> args) async {
 void main(List<String> args) async {
   await link(args, (input, output) async {
     await XmakeLibrary(
-      target: 'project_xmake',
+      target: 'project_xmake_build',
+      linkTarget: 'project_xmake',
+      libHintName: 'project_xmake',
       assetName: 'src/project_xmake.g.dart',
     ).link(
       input: input,
       output: output,
-      linkerOptions: .treeshake(
-        symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
-          (e) => recordUseMapping[e.name]!,
-        ),
+      symbolsToKeep: input.recordedUses?.calls.keys.cast<Method>().map(
+        (e) => recordUseMapping[e.name]!,
       ),
     );
   });
@@ -108,6 +110,13 @@ void main(List<String> args) async {
 ```
 
 ## xmake 补充知识
+
+`build` 始终调用 `target`：走 link hook 时配置 `--kind=static`，直接打包时
+配置 `--kind=shared`，由 build target 安装对应形态的包。`link` 配置
+`--kind=static` 保持依赖包为静态库，并传入 `keep_symbols`，再调用显式设置了
+`set_kind("shared")` 的 `linkTarget`，输出最终动态库。`symbolsToKeep` 为
+`null` 时使用工程默认导出名单，为空列表时跳过整个库。link 产物默认安装到
+hook 的输出目录下。
 
 xmake 使用流程：configure -> build -> install
 

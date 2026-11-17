@@ -1,4 +1,7 @@
 {
+    __meta__ = {
+        version = "1.0"
+    },
     ["linux|x86_64"] = {
         ["project_xmake 1.0.0#5347e6c8"] = {
             repo = {
@@ -6,8 +9,5 @@
             },
             version = "1.0.0"
         }
-    },
-    __meta__ = {
-        version = "1.0"
     }
 }

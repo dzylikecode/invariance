@@ -1,9 +1,9 @@
 import 'package:hooks/hooks.dart';
-import 'package:native_toolchain_c/native_toolchain_c.dart';
 import 'package:code_assets/code_assets.dart';
 import 'package:logging/logging.dart';
 
 import 'builder.dart';
+import 'linker.dart';
 
 /// Controls whether xmake's build output goes through the Dart link hook.
 enum LinkHookMode {
@@ -20,6 +20,7 @@ enum LinkHookMode {
 class XmakeLibrary({
   /// name of xmake target
   required final String target,
+  final String? linkTarget,
 
   /// name of the library to be linked, if null, use [target] as the library name
   ///
@@ -55,6 +56,7 @@ class XmakeLibrary({
       libHintName: libHintName,
       assetName: assetName,
       projectRoot: input.packageRoot,
+      installDir: installDir,
       logger: logger,
       linkHook: linkHook,
     );
@@ -62,23 +64,30 @@ class XmakeLibrary({
     await builder.run(input: input, output: output);
   }
 
+  /// Links the shared target with [symbolsToKeep] as its `keep_symbols` option.
+  ///
+  /// A null list uses the xmake project's default exports. An empty list skips
+  /// linking and emits no code asset.
   Future<void> link({
     required LinkInput input,
     required LinkOutputBuilder output,
-    LinkerOptions? linkerOptions,
+    Iterable<String>? symbolsToKeep,
   }) async {
-    final linker = CLinker.library(
-      name: target,
-      packageName: input.packageName,
+    if (linkTarget == null) {
+      throw StateError('link target is not specified');
+    }
+    final linker = XmakeLinker(
+      target: linkTarget!,
+      libHintName: libHintName,
       assetName: assetName,
+      projectRoot: input.packageRoot,
+      logger: logger,
     );
-    final assets = input.assets.code.where((a) => a.id.endsWith(assetName));
 
     await linker.run(
       input: input,
       output: output,
-      linkerOptions: linkerOptions,
-      sources: assets.map((a) => a.file!.toFilePath()).toList(),
+      symbolsToKeep: symbolsToKeep,
     );
   }
 }
