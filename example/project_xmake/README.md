@@ -82,6 +82,19 @@ xmake run words
 手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
 `port/xmake.lua` 中的 `set_version` 是原生工程版本信息，不决定包缓存版本。
 
+## Tests
+
+在本目录运行 `dart test`：
+
+- `test/feature_test.dart` 验证接口功能。
+- `test/link_test.dart` 在独立临时 workspace 中执行 `dart build cli`，验证
+  `unused` 不打包原生库，`call` 输出 `8` 且仅保留 `add` 接口。
+  Linux 还通过 `nm` 检查未使用函数的代码已被裁剪。
+
+临时工程使用当前 `native_toolchain_xmake` 源码，不复制已有构建产物。
+测试失败时显示构建日志；设置 `KEEP_TEMPORARY_DIRECTORIES=1` 可保留临时
+工程以便排查。只运行构建测试时，执行 `dart test test/link_test.dart`。
+
 ## cross-compile
 
 ```bash
@@ -187,21 +200,15 @@ Linux 编译启用
 从本目录运行：
 
 ```sh
-dart run tool/verify_native_assets.dart
+dart test test/link_test.dart
 ```
 
-脚本在 Linux 本机验证：
+构建测试验证：
 
 | 场景 | 预期结果 |
 | --- | --- |
-| 只调用 `add` | 返回 `8`，仅导出 `add`，普通符号表中也不存在 `subtract` |
-| 调用两个函数 | 两个函数都能运行并导出 |
+| 只调用 `add` | 返回 `8`，可查找 `add`，无法查找 `subtract`、`count_words` |
 | 只使用 Dart 常量 | 整个原生库不进入 bundle |
-| 缺少使用记录 | 保守保留全部三个公共函数 |
 
-静态输入仍包含全部三个函数；脚本同时检查输入归档与输出库，避免把
-隐藏符号或删除调试信息误判成代码裁剪。需要 `xmake` 和 GNU `nm`。
-验证产物写入忽略的 `.dart_tool/native_assets_check/`。
-
-当前验证范围为 Linux 本机。其他平台及交叉编译需要使用支持当前导出
-规则的工具链，单独验证构建、裁剪和加载。
+Linux 额外使用 GNU `nm` 检查精确导出名单和普通符号表，确认未使用
+函数的代码已被裁剪。临时工程、失败日志和清理方式见 Tests 一节。
