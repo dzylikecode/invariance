@@ -1,0 +1,18 @@
+set_project("embed_text")
+set_version("1.0.0")
+set_languages("c23")
+add_rules("mode.debug", "mode.release")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
+
+target("embed_text")
+    set_kind("shared")
+    add_includedirs("include", {public = true})
+    add_headerfiles("include")
+    add_files("src/embed_text.c")
+
+target("embed_text_demo")
+    set_kind("binary")
+    add_defines("EMBED_TEXT_STATIC")
+    add_includedirs("src")
+    add_files("example/main.c")
+    add_deps("embed_text")

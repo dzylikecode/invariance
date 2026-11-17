@@ -2,6 +2,47 @@
 
 dart is the first-class citizen in the project.
 
+## Local native package
+
+原生库由 `local/packages/p/project_xmake/xmake.lua` 描述为本地 xmake 包，
+`native/xmake.lua` 负责编译，复用现有的 `src/impl.cpp` 和
+`include/project_xmake.h`。根工程通过 `add_requires` / `add_packages` 消费该包。
+
+| 包配置 | 产物与行为 |
+| --- | --- |
+| `shared = true` | 动态库，导出完整公共 API：`add`、`subtract`、`count_words` |
+| `shared = false` | 静态库，保留完整 API；准备函数/数据分节和 PIC，供下游链接时 GC |
+
+`count_words` 使用 C++ 标准库的 `std::istringstream` 和 `std::string`，
+统计以空白分隔的单词数，对外仍提供 C ABI。空串或纯空白返回 `0`，
+空指针或内部错误返回 `-1`。`add`、`subtract` 保持普通整数计算。
+原生 `example/words.c` 用纯 C 调用文本接口，输出 `Words: 6`，展示
+C 调用者如何通过包依赖链接 C++ 实现。
+
+Windows 静态构建使用 `PROJECT_XMAKE_STATIC`，避免提前强制 DLL 导出；
+其他平台的公共 API 保留默认可见性，以便以后链接为动态库。
+静态包不执行按应用裁剪，也不携带具体的 Dart 使用名单。
+
+从本目录验证两种模式：
+
+```sh
+xmake f -c -y -k static
+xmake build project_xmake
+xmake run call
+xmake run words
+xmake install -o dist/static project_xmake
+
+xmake f -c -y -k shared
+xmake build project_xmake
+xmake run call
+xmake run words
+xmake install -o dist/shared project_xmake
+```
+
+根 `project_xmake` target 当前只转交包产物。本阶段只验证原生包的
+static/shared 构建和 C++ 使用；按需裁剪及 Dart 接入留到后续阶段。
+本地源码包开启 `package.install_always`，防止修改源码后复用旧的安装产物。
+
 ## cross-compile
 
 ```bash
@@ -96,8 +137,9 @@ add_headerfiles("include/(foo/*.h)")
 这个示例沿用现有流程：xmake 构建静态库，`native_toolchain_c`
 的 `CLinker` 根据 Dart 使用记录完成最终链接与裁剪。没有新增链接后端。
 
-`add` 和 `subtract` 位于同一个 C++ 源文件中。Linux 上的 `add` 特意调用
-`std::string`，让测试覆盖 C++ 运行库链接。Linux 编译启用
+`add`、`subtract` 和使用 C++ 标准库的 `count_words` 位于同一个源文件中。
+当前 Dart 绑定仍只包含前两个函数；新文本接口的 Dart 接入留待后续阶段。
+Linux 编译启用
 `-ffunction-sections -fdata-sections`，使链接器能够删除单个函数。
 仅限制导出符号会隐藏 `subtract`，不一定删除它的代码。
 

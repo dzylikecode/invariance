@@ -2,39 +2,47 @@ set_policy("package.requires_lock", true)
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 
--- kind: static, shared, headeronly
 local kind = get_config("kind") or "static"
 
+add_repositories("local-repo local")
+add_requires("project_xmake", {
+  system = false,
+  configs = {shared = kind == "shared", pic = true}
+})
+
+-- The package owns compilation. This target installs its finished library.
 target("project_xmake")
-  set_kind(kind)
-  if is_plat("linux", "android") then
-    -- A whitelist alone hides symbols; separate sections allow code removal.
-    add_cxflags("-fPIC", "-ffunction-sections", "-fdata-sections")
-  elseif is_plat("windows") then
-    add_cxflags("/Gy", "/Gw", {tools = {"cl", "clang_cl"}})
-    add_cxflags("-ffunction-sections", "-fdata-sections",
-      {tools = {"gcc", "gxx", "clang", "clangxx", "zig_cc"}})
-  end
-  if is_plat("linux") then
-    add_defines("PROJECT_XMAKE_CPP_RUNTIME_PROBE")
-  end
-  if kind == "static" then
-    -- The final link selects exports; dllexport would retain unused functions.
-    add_defines("PROJECT_XMAKE_STATIC", {public = true})
-  elseif kind == "shared" then
-    add_defines("PROJECT_XMAKE_BUILD")
-  end
-  add_includedirs("include", {public = true}) -- visible to other targets
-  add_headerfiles("include/*.h") -- export for installations
-  add_files("src/*.cpp")
+  set_kind("phony")
+  add_packages("project_xmake")
+  on_install(function(target)
+    local pkg = target:pkg("project_xmake")
+    local directory = kind == "shared" and target:is_plat("windows", "mingw") and "bin" or "lib"
+    local pattern
+    if kind == "static" then
+      pattern = target:is_plat("windows") and "lib/project_xmake.lib" or "lib/libproject_xmake.a"
+    elseif target:is_plat("windows", "mingw") then
+      pattern = "bin/*.dll"
+    elseif target:is_plat("macosx", "iphoneos") then
+      pattern = "lib/*.dylib"
+    else
+      pattern = "lib/*.so*"
+    end
+    local libraries = os.files(path.join(pkg:installdir(), pattern))
+    assert(#libraries > 0, "project_xmake package contains no matching library: " .. pattern)
+    os.mkdir(path.join(target:installdir(), directory))
+    for _, library in ipairs(libraries) do
+      os.vcp(library, path.join(target:installdir(), directory))
+    end
+    os.vcp(path.join(pkg:installdir(), "include"), target:installdir())
+  end)
 
 ---------------------------------------------------------
 --- Examples
 ---------------------------------------------------------
-for _, file in ipairs(os.files("example/*.cpp")) do
+for _, file in ipairs(table.join(os.files("example/*.c"), os.files("example/*.cpp"))) do
     local name = path.basename(file)
     target(name)
       set_kind("binary")
       add_files(file)
-      add_deps("project_xmake")
+      add_packages("project_xmake")
 end

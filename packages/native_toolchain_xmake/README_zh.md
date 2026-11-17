@@ -136,6 +136,8 @@ xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)
 - [x] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
 - [x] [tree-shaking 在 windows 上失败](https://github.com/dart-lang/native/pull/3773)
+- [ ] tree-shaking 没有做到交叉编译，原因是 zig 与 native_toolchain_c 不兼容，然后是裁剪不到位，有的只是 hide 了，需要重新思考裁剪，比如定义 rules 来
+
 
 存在的问题：
 
