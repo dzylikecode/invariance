@@ -95,6 +95,9 @@ xmake run words
 测试失败时显示构建日志；设置 `KEEP_TEMPORARY_DIRECTORIES=1` 可保留临时
 工程以便排查。只运行构建测试时，执行 `dart test test/link_test.dart`。
 
+[GitHub Actions](../../.github/workflows/project_xmake.yml) 在 Linux、macOS、
+Windows 上运行这套测试和工具链单元测试，支持相关 PR、主分支变更及手动触发。
+
 ## cross-compile
 
 ```bash
