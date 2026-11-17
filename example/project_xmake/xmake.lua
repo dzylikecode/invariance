@@ -1,4 +1,5 @@
-set_policy("package.requires_lock", true)
+-- Local repository locks contain checkout-specific absolute paths.
+set_policy("package.requires_lock", false)
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 

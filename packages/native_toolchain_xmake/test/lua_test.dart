@@ -12,10 +12,12 @@ void main() {
       final script = File(p.join(directory.path, 'roundtrip.lua'));
       await script.writeAsString('''
 function main(value)
+    import("core.base.base64")
     import("core.base.json")
     local values = assert(value:deserialize())
     assert(type(values) == "table")
-    print(json.encode({count = #values, values = values}))
+    local result = json.encode({count = #values, values = values})
+    print(assert(base64.encode(result)))
 end
 ''');
 
@@ -49,8 +51,11 @@ end
               'xmake Lua failed for $encoded:\n'
               '${result.stdout}\n${result.stderr}',
         );
-        final decoded =
-            jsonDecode(result.stdout as String) as Map<String, Object?>;
+        // stdout 只传 ASCII，避免 Windows 输出编码改变 JSON 中的 Unicode 字节。
+        final jsonOutput = utf8.decode(
+          base64.decode((result.stdout as String).trim()),
+        );
+        final decoded = jsonDecode(jsonOutput) as Map<String, Object?>;
         expect(decoded['count'], values.length, reason: encoded);
         // Lua 空表在 JSON 中可能是对象，空列表只比较 Lua 端的元素数。
         if (values.isNotEmpty) {

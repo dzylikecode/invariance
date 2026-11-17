@@ -46,7 +46,7 @@ Future<Uri> copyTestProject({required Uri targetUri}) async {
   final toolchainUri = targetUri.resolve('packages/native_toolchain_xmake/');
 
   // 只复制源码；local 包的 port 目录内也可能存在旧的构建配置。
-  for (final name in ['pubspec.yaml', 'xmake.lua', 'xmake-requires.lock']) {
+  for (final name in ['pubspec.yaml', 'xmake.lua']) {
     await _copyFile(packageRoot.resolve(name), packageUri.resolve(name));
   }
   for (final name in ['example', 'hook', 'include', 'lib', 'local', 'src']) {

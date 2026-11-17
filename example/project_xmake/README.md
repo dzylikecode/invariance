@@ -112,6 +112,9 @@ target 链接裁剪后的动态库。未启用 linking 时，build hook 以
 显式指定版本。同版本及相同包配置复用已安装产物；修改源码或包构建描述后，
 手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
 `port/xmake.lua` 中的 `set_version` 是原生工程版本信息，不决定包缓存版本。
+本示例只使用本地仓库，因此关闭 `package.requires_lock`，也不提交
+`xmake-requires.lock`；该锁文件会记录当前 checkout 的绝对路径，无法在
+其他机器或临时测试目录中复用。
 
 ## Tests
 
