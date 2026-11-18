@@ -24,6 +24,7 @@ final linking:
 
 ```lua
 local outputKind = get_config("kind") or "static"
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 option("keep_symbols")
     set_showmenu(true)
 option_end()

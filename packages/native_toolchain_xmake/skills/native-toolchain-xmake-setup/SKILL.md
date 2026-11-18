@@ -88,6 +88,7 @@ This minimal example uses package `example_native` and exports one C function. A
 
 ```lua
 local kind = get_config("kind") or "shared"
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 
@@ -96,8 +97,10 @@ target("example_native")
     add_packages("dart_native")
     add_rules("@dart_native/library", {kind = kind})
     add_includedirs("include")
-    if kind == "shared" then
-        add_defines("EXAMPLE_NATIVE_SHARED")
+    if kind == "static" then
+        add_defines("EXAMPLE_NATIVE_STATIC", {public = true})
+    else
+        add_defines("EXAMPLE_NATIVE_BUILD")
     end
     add_files("src/example_native.c")
 ```
@@ -107,24 +110,64 @@ choose the target kind or manage the project's API macros. Keep `set_kind` and
 the rule's `kind` argument consistent. For the direct shared path, the native
 project still defines which symbols are exported.
 
+For C/C++ editor support, recommend the project-level
+`plugin.compile_commands.autoupdate` rule shown above. After builds, it updates
+`build/compile_commands.json` as needed so clangd can use this xmake project's
+include directories, preprocessor defines, and compiler flags. See the
+[Xmake rule documentation](https://xmake.io/api/description/builtin-rules.html).
+If clangd does not discover the database, point it at the native project's
+`build/` directory with `--compile-commands-dir=<path-to-build>` or the existing
+editor configuration; see [clangd's guide](https://clangd.llvm.org/installation.html).
+
+When a separate native package owns compilation, check that the database has
+entries for the sources being edited. An outer target that only installs or
+links the package does not describe the package's source compilation commands.
+
 ### `include/example_native.h`
 
+For package-owned C ABI headers, prefer `#pragma once` and separate macros for
+C linkage and symbol visibility. Put the manually indented preprocessor region
+between `// clang-format off` and `// clang-format on`. Compose the two macros
+into a project-prefixed API macro on each public function, rather than wrapping
+the declarations in an `extern "C"` block. Preserve an existing project convention
+when adapting its header.
+
 ```c
-#ifndef EXAMPLE_NATIVE_H
-#define EXAMPLE_NATIVE_H
+#pragma once
 
 #include <stdint.h>
 
-#if defined(_WIN32) && defined(EXAMPLE_NATIVE_SHARED)
-#define EXAMPLE_NATIVE_API __declspec(dllexport)
+// clang-format off
+#ifdef __cplusplus
+#  define EXAMPLE_NATIVE_EXTERN_C extern "C"
 #else
-#define EXAMPLE_NATIVE_API
+#  define EXAMPLE_NATIVE_EXTERN_C extern
 #endif
+
+#if defined(_WIN32)
+#  if defined(EXAMPLE_NATIVE_STATIC)
+#    define EXAMPLE_NATIVE_EXPORT
+#  elif defined(EXAMPLE_NATIVE_BUILD)
+#    define EXAMPLE_NATIVE_EXPORT __declspec(dllexport)
+#  else
+#    define EXAMPLE_NATIVE_EXPORT __declspec(dllimport)
+#  endif
+#else
+#  define EXAMPLE_NATIVE_EXPORT __attribute__((visibility("default")))
+#endif
+// clang-format on
+
+#define EXAMPLE_NATIVE_API EXAMPLE_NATIVE_EXTERN_C EXAMPLE_NATIVE_EXPORT
 
 EXAMPLE_NATIVE_API int32_t native_add(int32_t a, int32_t b);
-
-#endif
 ```
+
+Match the header's macro names in xmake: define `EXAMPLE_NATIVE_BUILD` only
+while building the shared library, and propagate `EXAMPLE_NATIVE_STATIC` to
+static-library consumers. Keep these API macros in the header; the xmake rules
+prepare compilation and linking without defining the project's public API.
+For an installed xmake package, also expose the static define through the
+package recipe's `defines` metadata.
 
 ### `src/example_native.c`
 
