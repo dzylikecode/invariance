@@ -149,32 +149,35 @@ target("foo")
 In the project consumed by the Dart hooks:
 
 ```lua
-local kind = get_config("kind") or "static"
+local outputKind = get_config("kind") or "static"
 option("keep_symbols")
     set_showmenu(true)
 option_end()
 
-local keepSymbols = get_config("keep_symbols")
+local symbols = get_config("keep_symbols")
+local linking = outputKind == "shared" and symbols
+local packageKind = linking and "static" or outputKind
 add_requires("foo 1.0.0", {
     system = false,
-    configs = {shared = kind == "shared" and not keepSymbols, pic = true}
+    configs = {shared = packageKind == "shared", pic = true}
 })
 
 target("foo")
     add_packages("foo", "dart_native")
-    if kind == "shared" and keepSymbols then
+    if linking then
         set_kind("shared")
-        add_rules("@dart_native/link", {symbols = keepSymbols})
+        add_rules("@dart_native/link", {symbols = symbols})
     else
         set_kind("phony")
         add_rules("@dart_native/install", {package = "foo"})
     end
 ```
 
-The native package must provide both static and shared variants. Select its
-shared variant only for `kind == "shared"` without a symbol list. `keep_symbols`
-has no default; the same target becomes a real shared target only for a shared
-link with symbols. The library rule
+`outputKind` is the final library type. `linking` selects whether to link and
+trim it, and `packageKind` is the input package type. The native package must provide
+both static and shared variants; the trimmed link selects its static variant.
+`keep_symbols` has no default; the same target becomes a real shared target only
+for a shared link with symbols. The library rule
 prepares functions and data for section GC, the install rule installs the
 selected package, and the link rule controls the final shared library's exports
 and GC. C API macros remain the native project's responsibility: avoid forced
@@ -235,7 +238,7 @@ For coding agents:
 - [x] [Hooks lose environment variables](https://github.com/dart-lang/native/issues/3304)
 - [x] [Cross-compilation issue](https://github.com/dart-lang/sdk/issues/63953)
 - [x] [Tree shaking fails on Windows](https://github.com/dart-lang/native/pull/3773)
-- [ ] Cross-compiling with tree shaking still needs validation, including Zig toolchain compatibility.
+- [x] Cross-compiling with tree shaking still needs validation, including Zig toolchain compatibility.
 
 ### Known issue
 

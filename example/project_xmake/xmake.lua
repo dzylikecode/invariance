@@ -3,13 +3,14 @@ set_policy("package.requires_lock", false)
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 
-option("keep_symbols")
-  set_showmenu(true)
-  set_description("Lua table of native symbols supplied by Dart")
-option_end()
+option("keep_symbols", {
+    description = "Lua table of native symbols supplied by Dart"
+})
 
-local kind = get_config("kind") or "static"
+local outputKind = get_config("kind") or "static"
 local symbols = get_config("keep_symbols")
+local linking = outputKind == "shared" and symbols
+local packageKind = linking and "static" or outputKind
 
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
 add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
@@ -17,12 +18,12 @@ add_requires("dart_native 1.0.0", {system = false, configs = {local_source = tru
 -- Bump this version when the local package sources or build recipe change.
 add_requires("project_xmake 1.0.0", {
   system = false,
-  configs = {shared = kind == "shared" and not symbols, pic = true}
+  configs = {shared = packageKind == "shared", pic = true}
 })
 
 target("project_xmake")
   add_packages("project_xmake", "dart_native")
-  if kind == "shared" and symbols then
+  if linking then
     set_kind("shared")
     add_rules("@dart_native/link", {symbols = symbols})
     -- Keep the regular symbol table so code removal can be inspected with nm.

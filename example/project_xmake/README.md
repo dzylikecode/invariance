@@ -24,8 +24,9 @@ project_xmake/
 | 直接打包的 build | `shared` | 无 | 动态包 | phony，安装完整动态库 |
 | link | `shared` | 有 | 静态包 | shared，链接并裁剪最终动态库 |
 
-包配置使用 `shared = kind == "shared" and not keepSymbols`，保证最终裁剪
-仍以静态包作为输入。
+`outputKind` 表示最终产物形态，`linking` 选择是否执行裁剪链接，
+`packageKind` 表示输入包形态。包配置使用 `shared = packageKind == "shared"`，
+保证最终裁剪仍以静态包作为输入。
 
 通用构建配置来自 `dart_native 1.0.0` 规则包。包索引位于仓库根目录的
 `packages/d/dart_native/xmake.lua`，规则源码统一放在

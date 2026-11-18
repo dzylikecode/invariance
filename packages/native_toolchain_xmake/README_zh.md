@@ -5,7 +5,7 @@
 为什么不用 cmake?
 
 - 好像是 compile_commands.json 生成的问题？
-- 我更喜欢 dart run hello_world 这样的模式；类似的，xmake run hello_world
+-  dart run hello_world 这样的模式；类似的，xmake run hello_world
 
 ## 环境依赖
 
@@ -150,30 +150,33 @@ target("foo")
 Dart hooks 使用的工程：
 
 ```lua
-local kind = get_config("kind") or "static"
+local outputKind = get_config("kind") or "static"
 option("keep_symbols")
     set_showmenu(true)
 option_end()
 
-local keepSymbols = get_config("keep_symbols")
+local symbols = get_config("keep_symbols")
+local linking = outputKind == "shared" and symbols
+local packageKind = linking and "static" or outputKind
 add_requires("foo 1.0.0", {
     system = false,
-    configs = {shared = kind == "shared" and not keepSymbols, pic = true}
+    configs = {shared = packageKind == "shared", pic = true}
 })
 
 target("foo")
     add_packages("foo", "dart_native")
-    if kind == "shared" and keepSymbols then
+    if linking then
         set_kind("shared")
-        add_rules("@dart_native/link", {symbols = keepSymbols})
+        add_rules("@dart_native/link", {symbols = symbols})
     else
         set_kind("phony")
         add_rules("@dart_native/install", {package = "foo"})
     end
 ```
 
-原生包需要提供静态和动态两种形态，仅在 `kind == "shared"` 且没有符号列表
-时选择动态包。`keep_symbols` option 没有默认值；同一个 target 仅在 shared
+`outputKind` 表示最终产物形态，`linking` 选择是否执行裁剪链接，
+`packageKind` 表示输入包形态。原生包需要提供静态和动态两种形态，裁剪链接
+选择静态包。`keep_symbols` option 没有默认值；同一个 target 仅在 shared
 模式且有符号列表时执行真实动态链接。library 规则准备
 函数和数据的 section GC，install 规则安装选中的包，link 规则控制最终动态库的
 导出与 GC。C API 宏仍由原生工程管理：交给 link hook 的静态输入应避免强制
@@ -231,7 +234,7 @@ xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)
 - [x] [交叉编译问题](https://github.com/dart-lang/sdk/issues/63953)
 - [x] [tree-shaking 在 windows 上失败](https://github.com/dart-lang/native/pull/3773)
-- [ ] tree-shaking 的交叉编译仍需验证，包括 Zig 工具链兼容性。
+- [x] tree-shaking 的交叉编译仍需验证，包括 Zig 工具链兼容性。
 
 
 存在的问题：

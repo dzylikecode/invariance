@@ -23,11 +23,13 @@ final linking:
 | Link | `shared` | Supplied | Static | Shared, selects exports and runs linker GC |
 
 ```lua
-local kind = get_config("kind") or "static"
+local outputKind = get_config("kind") or "static"
 option("keep_symbols")
     set_showmenu(true)
 option_end()
-local keepSymbols = get_config("keep_symbols")
+local symbols = get_config("keep_symbols")
+local linking = outputKind == "shared" and symbols
+local packageKind = linking and "static" or outputKind
 
 -- The package version selects a fixed remote rule source commit.
 add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
@@ -36,22 +38,23 @@ add_requires("dart_native 1.0.0", {system = false})
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
 add_requires("example_native 1.0.0", {
     system = false,
-    configs = {shared = kind == "shared" and not keepSymbols, pic = true}
+    configs = {shared = packageKind == "shared", pic = true}
 })
 
 target("example_native")
     add_packages("example_native", "dart_native")
-    if kind == "shared" and keepSymbols then
+    if linking then
         set_kind("shared")
-        add_rules("@dart_native/link", {symbols = keepSymbols})
+        add_rules("@dart_native/link", {symbols = symbols})
     else
         set_kind("phony")
         add_rules("@dart_native/install", {package = "example_native"})
     end
 ```
 
-The install rule copies the selected package into the target's install
-directory. The link rule handles archive extraction, platform export lists,
+`outputKind` is the final library type. `linking` selects whether to link and
+trim it, and `packageKind` is the input package type. The install rule copies the
+selected package into the target's install directory. The link rule handles archive extraction, platform export lists,
 and linker GC; the target still sets its kind and package dependencies.
 `get_config("keep_symbols")` passes the serialized Lua table literal to the rule,
 which restores the table with `string.deserialize`. The Dart binding mapping
@@ -89,7 +92,7 @@ disabled or `.never` is selected, the build hook still uses `target`, with
 the build hook configures `--kind=static` to install the complete archive.
 `XmakeLibrary.link` configures `--kind=shared`, passes the selected symbols to
 the same target, and emits a `DynamicLoadingBundled` code asset. The package's
-`configs.shared = kind == "shared" and not keepSymbols` keeps its inputs static
+`configs.shared = packageKind == "shared"` keeps its inputs static
 for this final link.
 
 ## Generate bindings and the symbol mapping

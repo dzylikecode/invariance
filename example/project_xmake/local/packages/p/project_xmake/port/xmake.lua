@@ -1,4 +1,3 @@
--- Copyright (c) 2026 dzylikecode. Licensed under the MIT License.
 set_project("project_xmake")
 set_version("1.0.0")
 set_languages("c++11")
