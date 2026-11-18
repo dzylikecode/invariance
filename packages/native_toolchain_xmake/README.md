@@ -106,7 +106,7 @@ void main(List<String> args) async {
 ## xmake
 
 - [xmake and Dart hooks](../../example/project_xmake/)
-- [Embed resource files](../../example/embed_text/)
+- [Embed resource files](../../example/embed/)
 
 ## Development
 

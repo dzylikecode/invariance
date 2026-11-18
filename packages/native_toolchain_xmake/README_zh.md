@@ -110,7 +110,7 @@ void main(List<String> args) async {
 ## xmake
 
 - [xmake 与 dart hook](../../example/project_xmake/)
-- [嵌入资源文件](../../example/embed_text/)
+- [嵌入资源文件](../../example/embed/)
 
 ## 开发
 

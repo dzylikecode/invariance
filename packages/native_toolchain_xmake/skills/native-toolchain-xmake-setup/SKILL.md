@@ -40,7 +40,7 @@ custom option, selecting `packages/native_toolchain_xmake/xmake/`. From an
 `add_repositories("dart-native ../..", {rootdir = os.scriptdir()})`; adapt that
 path for other layouts. Local edits require a development version bump or
 explicit package reinstallation to refresh the cache. `project_xmake` and
-`embed_text` use this local mode; `template_adapter` exercises the default remote
+`embed` use this local mode; `template_adapter` exercises the default remote
 source through the current checkout's index.
 When the library compilation rule changes, also bump or reinstall the native
 package so its existing archives are rebuilt with the new compiler options.

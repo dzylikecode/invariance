@@ -8,7 +8,7 @@ on:
       - packages/native_toolchain_xmake/**
       - packages/d/dart_native/**
       - example/project_xmake/**
-      - example/embed_text/**
+      - example/embed/**
       - example/template_adapter/**
       - test/**
       - pubspec.yaml
@@ -21,7 +21,7 @@ on:
       - packages/native_toolchain_xmake/**
       - packages/d/dart_native/**
       - example/project_xmake/**
-      - example/embed_text/**
+      - example/embed/**
       - example/template_adapter/**
       - test/**
       - pubspec.yaml
@@ -101,7 +101,7 @@ jobs:
       - name: Test remote rule package with template adapter
         run: dart test test/template_adapter --concurrency=1 --reporter=expanded
 
-      - name: Test embedded text functionality and CLI linking
+      - name: Test embedded resources and CLI linking
         if: runner.os == 'Linux'
         # Ubuntu 26.04 includes GCC 15, which supports C23 #embed.
         env:
@@ -110,4 +110,4 @@ jobs:
         run: |
           "$CC" --version
           "$CXX" --version
-          dart test test/embed_text --concurrency=1 --reporter=expanded
+          dart test test/embed --concurrency=1 --reporter=expanded

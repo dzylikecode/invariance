@@ -1,0 +1,24 @@
+set_project("embed")
+set_version("1.0.0")
+set_languages("c23")
+add_rules("mode.debug", "mode.release")
+
+local kind = get_config("kind") or "static"
+local sourceRoot = path.absolute("../../../../..", os.scriptdir())
+
+add_repositories("dart-native " .. path.join(sourceRoot, "../.."))
+add_requires("dart_native 1.0.0", {system = false, configs = {local_source = true}})
+
+target("embed")
+    set_kind(kind)
+    add_packages("dart_native")
+    add_rules("@dart_native/library", {kind = kind})
+    add_files(path.join(sourceRoot, "src/*.c"))
+    add_includedirs(path.join(sourceRoot, "include"), {public = true})
+    add_headerfiles(path.join(sourceRoot, "include/(*.h)"))
+
+    if kind == "static" then
+        add_defines("EMBED_STATIC", {public = true})
+    else
+        add_defines("EMBED_BUILDING")
+    end

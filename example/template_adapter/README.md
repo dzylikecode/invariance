@@ -93,7 +93,7 @@ With the default `local_source = false`, the recipe downloads rules from commit
 This tests the current recipe against a fixed remote source without requiring
 the recipe changes to be pushed first. Published version-to-commit mappings
 stay unchanged; new rule revisions require a new version. The `project_xmake`
-and `embed_text` examples explicitly enable the custom `local_source` option
+and `embed` examples explicitly enable the custom `local_source` option
 for checkout-based rule development.
 
 The first uncached build needs network access to fetch the Git source. From the
