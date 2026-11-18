@@ -128,15 +128,11 @@ Dart 将 `keep_symbols` 作为 Lua table literal 字符串传递，例如
 
 ### 使用 `dart_native` 共享原生构建规则
 
-当前 checkout 包含 xmake 规则包 `dart_native 1.0.0`。包索引位于
-`packages/d/dart_native/xmake.lua`，Lua 源码随 Dart 包放在
-`packages/native_toolchain_xmake/xmake/rules/`。
-
-本仓库的 `example/foo/` 工程可以这样注册本地索引。每个使用规则的 xmake
-工程都需要声明规则包依赖：
+xmake 规则包 `dart_native 1.0.0` 默认从固定 Git commit 下载规则源码。
+每个使用规则的 xmake 工程都需要注册仓库并声明版本依赖：
 
 ```lua
-add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 ```
 
@@ -185,10 +181,26 @@ target("foo")
 
 两个 hook 的 `XmakeLibrary` 都使用 `target: 'foo'`。
 
-本地 `1.0.0` payload 从当前 checkout 嵌入。远程仓库地址
-`https://github.com/dzylikecode/invariance.git` 只有在所选仓库分支包含这些文件后才能
-提供它。远程 require 锁固定仓库 commit，不能为本地修改提供版本管理。修改本地
-规则源码后，需要提升规则包版本或显式重装，以刷新 xmake 的包缓存。
+公共配方 `packages/d/dart_native/xmake.lua` 将 `1.0.0` 映射到 invariance
+Git 仓库的 `c241d2c9efcf6fbd1ab5d47614cb8614fec14fc2` commit。
+调用方只写版本，由配方指定源码 commit。已发布版本的映射保持不变，更换源码
+commit 时应发布新版本。
+
+在当前 checkout 开发规则时，可使用自定义包选项 `local_source`，显式选择
+`packages/native_toolchain_xmake/xmake/` 中的源码：
+
+```lua
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {
+    system = false,
+    configs = {local_source = true}
+})
+```
+
+以上相对路径适用于 `example/foo/`，其他布局需要调整。消费工程与原生源码
+工程都需要显式开启该选项。`project_xmake` 和 `embed_text` 示例使用本地模式；
+`template_adapter` 使用当前索引及默认的远程源码。修改本地源码后，需手动提升
+开发版本或显式重装规则包，以刷新缓存。
 修改 library 编译规则后，也需要提升原生包版本或强制重装原生包，让已有归档
 采用新的编译选项。
 

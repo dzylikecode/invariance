@@ -75,9 +75,36 @@ code asset, so no `.so` path is hard-coded.
 ```sh
 dart run tool/ffigen.dart
 dart run example/main.dart
-dart test
 dart analyze
 ```
+
+## Remote rule source
+
+This example uses the public `dart_native 1.0.0` package recipe from the current
+checkout:
+
+```lua
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+```
+
+With the default `local_source = false`, the recipe downloads rules from commit
+`c241d2c9efcf6fbd1ab5d47614cb8614fec14fc2` of the invariance Git repository.
+This tests the current recipe against a fixed remote source without requiring
+the recipe changes to be pushed first. Published version-to-commit mappings
+stay unchanged; new rule revisions require a new version. The `project_xmake`
+and `embed_text` examples explicitly enable the custom `local_source` option
+for checkout-based rule development.
+
+The first uncached build needs network access to fetch the Git source. From the
+repository root, run the remote-package integration tests with:
+
+```sh
+dart test test/template_adapter --concurrency=1
+```
+
+[GitHub Actions](../../.github/workflows/project_xmake.yml) runs them on Linux,
+macOS, and Windows.
 
 ## Layout
 

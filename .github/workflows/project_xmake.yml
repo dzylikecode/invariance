@@ -9,6 +9,7 @@ on:
       - packages/d/dart_native/**
       - example/project_xmake/**
       - example/embed_text/**
+      - example/template_adapter/**
       - test/**
       - pubspec.yaml
       - pubspec.lock
@@ -21,6 +22,7 @@ on:
       - packages/d/dart_native/**
       - example/project_xmake/**
       - example/embed_text/**
+      - example/template_adapter/**
       - test/**
       - pubspec.yaml
       - pubspec.lock
@@ -38,7 +40,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     strategy:
       fail-fast: false
@@ -95,6 +97,9 @@ jobs:
 
       - name: Test native functionality and CLI linking
         run: dart test test/project_xmake --concurrency=1 --reporter=expanded
+
+      - name: Test remote rule package with template adapter
+        run: dart test test/template_adapter --concurrency=1 --reporter=expanded
 
       - name: Test embedded text functionality and CLI linking
         if: runner.os == 'Linux'

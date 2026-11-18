@@ -7,7 +7,7 @@ local kind = get_config("kind") or "static"
 local sourceRoot = path.absolute("../../../../..", os.scriptdir())
 
 add_repositories("dart-native " .. path.join(sourceRoot, "../.."))
-add_requires("dart_native 1.0.0", {system = false})
+add_requires("dart_native 1.0.0", {system = false, configs = {local_source = true}})
 
 target("embed_text")
     set_kind(kind)

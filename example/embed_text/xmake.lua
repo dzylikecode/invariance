@@ -16,7 +16,7 @@ local symbols = get_config("keep_symbols")
 
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
 add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
-add_requires("dart_native 1.0.0", {system = false})
+add_requires("dart_native 1.0.0", {system = false, configs = {local_source = true}})
 -- Bump this version when native sources, resources, or the build recipe change.
 add_requires("embed_text 1.0.0", {
     system = false,

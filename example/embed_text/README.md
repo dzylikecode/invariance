@@ -41,7 +41,13 @@ embed_text/
 └── lib/src/xmake.dart
 ```
 
-根工程使用单个 `embed_text` target，并引用仓库中的 `dart_native` 规则包：
+根工程使用单个 `embed_text` target，并引用仓库中的 `dart_native` 规则包。
+
+根工程和 `local/packages/e/embed_text/port/xmake.lua` 都显式设置
+`configs = {local_source = true}`，从当前 checkout 读取规则源码。
+`local_source` 是公共配方的自定义选项；默认模式会按 `dart_native 1.0.0`
+下载固定 Git commit 的规则源码。修改本地规则后需要手动提升开发版本或重装
+规则包；已发布版本到远程 commit 的映射保持不变。
 
 | 配置 | 包输入与 target 行为 |
 | --- | --- |

@@ -25,19 +25,23 @@ Work in the Dart package that owns `xmake.lua`, the hooks, and the FFI bindings.
 
 ## Locate the shared xmake rules
 
-This checkout provides `dart_native 1.0.0`: the repository index is
-`packages/d/dart_native/xmake.lua`, and the rule sources ship in
-`packages/native_toolchain_xmake/xmake/rules/`. From an `example/foo/` project,
-register the index with
-`add_repositories("dart-native ../..", {rootdir = os.scriptdir()})`, then require
-`dart_native 1.0.0` with `system = false`. Adapt the repository path for other
-layouts. Each target using a rule also needs `add_packages("dart_native")`.
+Register `https://github.com/dzylikecode/invariance.git` with `add_repositories`,
+then require `dart_native 1.0.0` with `system = false`. The public index is
+`packages/d/dart_native/xmake.lua`; by default its version selects a fixed Git
+source commit. Callers need only the version. Keep published version-to-commit
+mappings immutable; another source commit requires a new version. Each target
+using a rule also needs `add_packages("dart_native")`.
 
-The `1.0.0` rule payload is embedded from the current checkout. The remote
-`https://github.com/dzylikecode/invariance.git` repository can supply it only
-after the selected repository branch contains the index and sources. Remote require locks pin
-a repository commit; local source edits require a rule version bump or explicit
-package reinstallation to refresh the cache.
+For local rule development, register the checkout instead and explicitly use
+`configs = {local_source = true}` when requiring the package in both the
+consuming project and the native source project. `local_source` is this recipe's
+custom option, selecting `packages/native_toolchain_xmake/xmake/`. From an
+`example/foo/` project, the local registration is
+`add_repositories("dart-native ../..", {rootdir = os.scriptdir()})`; adapt that
+path for other layouts. Local edits require a development version bump or
+explicit package reinstallation to refresh the cache. `project_xmake` and
+`embed_text` use this local mode; `template_adapter` exercises the default remote
+source through the current checkout's index.
 When the library compilation rule changes, also bump or reinstall the native
 package so its existing archives are rebuilt with the new compiler options.
 
@@ -49,7 +53,7 @@ This minimal example uses package `example_native` and exports one C function. A
 
 ```lua
 local kind = get_config("kind") or "shared"
-add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 
 target("example_native")

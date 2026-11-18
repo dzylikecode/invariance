@@ -30,7 +30,8 @@ project_xmake/
 通用构建配置来自 `dart_native 1.0.0` 规则包。包索引位于仓库根目录的
 `packages/d/dart_native/xmake.lua`，规则源码统一放在
 `packages/native_toolchain_xmake/xmake/rules/`。根工程和包内的
-`port/xmake.lua` 都通过本地仓库路径使用它：
+`port/xmake.lua` 都通过本地仓库路径及自定义包选项
+`configs = {local_source = true}` 使用当前 checkout 的规则源码：
 
 | 规则 | 作用 |
 | --- | --- |
@@ -40,8 +41,11 @@ project_xmake/
 
 `set_kind` 和 `add_packages` 仍由 target 声明。`PROJECT_XMAKE_STATIC`、
 `PROJECT_XMAKE_BUILD` 宏仍由本项目管理。
-规则包使用当前 checkout 的源码；修改规则后手动提升规则包配方和
-`add_requires` 中的版本，或强制重装同版本包。
+`dart_native` 默认按版本下载固定 Git commit；本例在根工程与 `port/xmake.lua`
+中显式开启 `local_source`，用于开发本地规则。修改规则后手动提升开发版本，
+或强制重装同版本的本地规则包。已发布版本到远程 commit 的映射保持不变，
+更换远程源码时发布新版本。`template_adapter` 示例使用当前公共索引及默认远程
+源码，覆盖另一条加载路径。
 修改 `library` 编译选项后，还需要提升或强制重装 `project_xmake` 原生包；
 已经编译好的静态库、动态库不会自动采用新选项。
 

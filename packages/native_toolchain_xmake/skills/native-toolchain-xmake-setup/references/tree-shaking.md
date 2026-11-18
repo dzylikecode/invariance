@@ -29,8 +29,8 @@ option("keep_symbols")
 option_end()
 local keepSymbols = get_config("keep_symbols")
 
--- Relative to an example/foo/ project in this checkout.
-add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+-- The package version selects a fixed remote rule source commit.
+add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 -- Register the repository containing the native package's own recipe too.
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
@@ -59,8 +59,10 @@ supplies native symbol names. The option has no default: build configuration
 needs no symbols, while the same target becomes shared for the link phase.
 The native package stays static when symbols are supplied, even though the
 final target is shared. See `example/project_xmake/xmake.lua` and its local
-package for a complete setup. See the main skill for local and remote rule
-version handling.
+package for a complete setup. That example explicitly sets
+`configs = {local_source = true}` in both its root and native source projects.
+The snippet above uses the default remote rules. See the main skill for source
+selection and immutable rule version handling.
 
 Share the library configuration between both hooks in `lib/src/xmake_config.dart`:
 
