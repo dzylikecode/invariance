@@ -1,4 +1,4 @@
-name: project_xmake tests
+name: xmake tests
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
       - packages/native_toolchain_xmake/**
       - packages/d/dart_native/**
       - example/project_xmake/**
+      - example/embed_text/**
+      - test/**
       - pubspec.yaml
       - pubspec.lock
   pull_request:
@@ -18,6 +20,8 @@ on:
       - packages/native_toolchain_xmake/**
       - packages/d/dart_native/**
       - example/project_xmake/**
+      - example/embed_text/**
+      - test/**
       - pubspec.yaml
       - pubspec.lock
   workflow_dispatch:
@@ -39,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-latest, windows-latest]
 
     env:
       DASH__SUPPRESS_ANALYTICS: "true"
@@ -76,12 +80,11 @@ jobs:
 
       - name: Install Dart dependencies
         shell: bash
-        # Resolve the two packages under test without the other Flutter examples.
+        # Test fixtures resolve example dependencies in their temporary workspaces.
         run: |
           cat > pubspec_overrides.yaml <<'YAML'
           workspace:
             - packages/native_toolchain_xmake
-            - example/project_xmake
           YAML
           dart pub get
 
@@ -91,5 +94,15 @@ jobs:
         run: dart test --concurrency=1 --reporter=expanded
 
       - name: Test native functionality and CLI linking
-        working-directory: example/project_xmake
-        run: dart test --concurrency=1 --reporter=expanded
+        run: dart test test/project_xmake --concurrency=1 --reporter=expanded
+
+      - name: Test embedded text functionality and CLI linking
+        if: runner.os == 'Linux'
+        # Ubuntu 26.04 includes GCC 15, which supports C23 #embed.
+        env:
+          CC: gcc-15
+          CXX: g++-15
+        run: |
+          "$CC" --version
+          "$CXX" --version
+          dart test test/embed_text --concurrency=1 --reporter=expanded

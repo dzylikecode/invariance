@@ -3,10 +3,10 @@
 
 #include <stddef.h>
 
+#if defined(_WIN32)
 #if defined(EMBED_TEXT_STATIC)
 #define EMBED_TEXT_API
-#elif defined(_WIN32)
-#if defined(EMBED_TEXT_BUILDING)
+#elif defined(EMBED_TEXT_BUILDING)
 #define EMBED_TEXT_API __declspec(dllexport)
 #else
 #define EMBED_TEXT_API __declspec(dllimport)

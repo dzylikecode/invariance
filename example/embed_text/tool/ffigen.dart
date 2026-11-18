@@ -4,7 +4,7 @@ import 'package:ffigen/ffigen.dart';
 
 Future<void> main() async {
   final packageRoot = Platform.script.resolve('../');
-  final header = packageRoot.resolve('src/embed_text.h');
+  final header = packageRoot.resolve('include/embed_text.h');
   await FfiGenerator(
     output: Output(
       dart: DartOutput(

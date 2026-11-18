@@ -118,16 +118,22 @@ target 链接裁剪后的动态库。未启用 linking 时，build hook 以
 
 ## Tests
 
-在本目录运行 `dart test`：
+测试集中在仓库根目录，从仓库根目录运行：
 
-- `test/feature_test.dart` 验证接口功能。
-- `test/link_test.dart` 在独立临时 workspace 中执行 `dart build cli`，验证
+```sh
+dart test test/project_xmake --concurrency=1
+```
+
+- `test/project_xmake/feature_test.dart` 验证接口功能。
+- `test/project_xmake/link_test.dart` 在独立临时 workspace 中执行 `dart build cli`，验证
   `unused` 不打包原生库，`call` 输出 `8` 且仅保留 `add` 接口。
   Linux 还通过 `nm` 检查未使用函数的代码已被裁剪。
 
 临时工程使用当前 `native_toolchain_xmake` 源码，不复制已有构建产物。
+测试通过根目录的 `test/helpers.dart` 共用临时工程准备流程。
 测试失败时显示构建日志；设置 `KEEP_TEMPORARY_DIRECTORIES=1` 可保留临时
-工程以便排查。只运行构建测试时，执行 `dart test test/link_test.dart`。
+工程以便排查。只运行构建测试时，执行
+`dart test test/project_xmake/link_test.dart`。
 
 [GitHub Actions](../../.github/workflows/project_xmake.yml) 在 Linux、macOS、
 Windows 上运行这套测试和工具链单元测试，支持相关 PR、主分支变更及手动触发。
@@ -235,10 +241,10 @@ Linux 编译启用
 `-ffunction-sections -fdata-sections`，使链接器能够删除单个函数。
 仅限制导出符号会隐藏 `subtract`，不一定删除它的代码。
 
-从本目录运行：
+从仓库根目录运行：
 
 ```sh
-dart test test/link_test.dart
+dart test test/project_xmake/link_test.dart
 ```
 
 构建测试验证：
