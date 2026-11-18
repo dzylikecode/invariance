@@ -10,10 +10,19 @@ dart is the first-class citizen in the project.
 project_xmake/
 ├── include/project_xmake.h
 ├── src/impl.cpp
+├── lib/src/native/
+│   ├── project_xmake.g.dart
+│   ├── project_xmake.record_use_mapping.g.dart
+│   └── xmake.dart
 └── local/packages/p/project_xmake/
     ├── xmake.lua             包配方
     └── port/xmake.lua        原生构建描述
 ```
+
+`project_xmake.g.dart` 保存生成的 FFI 绑定，
+`project_xmake.record_use_mapping.g.dart` 保存 Dart 调用名到原生符号的映射；
+这两个文件由 `tool/ffigen.dart` 生成。`xmake.dart` 集中定义 build/link hook
+共用的 target、assetName 和 assetId。
 
 根工程通过 `add_requires` / `add_packages` 消费该包，build 和 link 共用
 `project_xmake` target，包形态同时取决于 `--kind` 和符号列表：

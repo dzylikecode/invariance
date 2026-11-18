@@ -8,10 +8,10 @@ Future<void> main() async {
   final generator = FfiGenerator(
     output: Output(
       dart: DartOutput(
-        path: packageRoot.resolve('lib/src/project_xmake.g.dart'),
+        path: packageRoot.resolve('lib/src/native/project_xmake.g.dart'),
       ),
       recordUseMapping: packageRoot.resolve(
-        'lib/src/project_xmake.record_use_mapping.g.dart',
+        'lib/src/native/project_xmake.record_use_mapping.g.dart',
       ),
     ),
 

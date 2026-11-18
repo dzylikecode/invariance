@@ -2,8 +2,8 @@
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 import 'package:record_use/record_use.dart';
-import 'package:project_xmake/src/xmake.dart';
-import 'package:project_xmake/src/project_xmake.record_use_mapping.g.dart';
+import 'package:project_xmake/src/native/xmake.dart';
+import 'package:project_xmake/src/native/project_xmake.record_use_mapping.g.dart';
 
 void main(List<String> args) async {
   await link(args, (input, output) async {

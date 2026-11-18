@@ -81,7 +81,7 @@ void main(List<String> args) async {
       await XmakeLibrary(
         target: 'project_xmake',
         libHintName: 'project_xmake',
-        assetName: 'src/project_xmake.g.dart',
+        assetName: 'src/native/project_xmake.g.dart',
       ).build(input: input, output: output);
     }
   });
@@ -95,7 +95,7 @@ void main(List<String> args) async {
     await XmakeLibrary(
       target: 'project_xmake',
       libHintName: 'project_xmake',
-      assetName: 'src/project_xmake.g.dart',
+      assetName: 'src/native/project_xmake.g.dart',
     ).link(
       input: input,
       output: output,
