@@ -1,0 +1,108 @@
+name: xmake tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/project_xmake.yml
+      - packages/native_toolchain_xmake/**
+      - packages/d/dart_native/**
+      - example/project_xmake/**
+      - example/embed_text/**
+      - test/**
+      - pubspec.yaml
+      - pubspec.lock
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - .github/workflows/project_xmake.yml
+      - packages/native_toolchain_xmake/**
+      - packages/d/dart_native/**
+      - example/project_xmake/**
+      - example/embed_text/**
+      - test/**
+      - pubspec.yaml
+      - pubspec.lock
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-26.04, macos-latest, windows-latest]
+
+    env:
+      DASH__SUPPRESS_ANALYTICS: "true"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.14.0"
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "3.1.1"
+
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Use shorter Windows temporary paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        # MSVC can reject long relative object paths inside nested package builds.
+        run: |
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+
+      - name: Show tool versions
+        run: |
+          dart --version
+          xmake --version
+
+      - name: Install Dart dependencies
+        shell: bash
+        # Test fixtures resolve example dependencies in their temporary workspaces.
+        run: |
+          cat > pubspec_overrides.yaml <<'YAML'
+          workspace:
+            - packages/native_toolchain_xmake
+          YAML
+          dart pub get
+
+      # Keep the runner's default shell so Git Bash's link cannot shadow MSVC.
+      - name: Test xmake toolchain
+        working-directory: packages/native_toolchain_xmake
+        run: dart test --concurrency=1 --reporter=expanded
+
+      - name: Test native functionality and CLI linking
+        run: dart test test/project_xmake --concurrency=1 --reporter=expanded
+
+      - name: Test embedded text functionality and CLI linking
+        if: runner.os == 'Linux'
+        # Ubuntu 26.04 includes GCC 15, which supports C23 #embed.
+        env:
+          CC: gcc-15
+          CXX: g++-15
+        run: |
+          "$CC" --version
+          "$CXX" --version
+          dart test test/embed_text --concurrency=1 --reporter=expanded
