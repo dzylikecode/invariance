@@ -18,7 +18,7 @@ add_requires("dart_native 1.0.0", {system = false, configs = {local_source = tru
 -- Bump this version when the local package sources or build recipe change.
 add_requires("project_xmake 1.0.0", {
   system = false,
-  configs = {shared = packageKind == "shared", pic = true}
+  configs = {shared = packageKind == "shared"}
 })
 
 target("project_xmake")

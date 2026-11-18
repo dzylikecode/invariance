@@ -21,7 +21,7 @@ add_requires("dart_native 1.0.0", {system = false, configs = {local_source = tru
 -- Bump this version when native sources, resources, or the build recipe change.
 add_requires("embed_text 1.0.0", {
     system = false,
-    configs = {shared = packageKind == "shared", pic = true}
+    configs = {shared = packageKind == "shared"}
 })
 
 target("embed_text")

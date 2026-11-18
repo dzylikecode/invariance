@@ -5,7 +5,7 @@
 为什么不用 cmake?
 
 - 好像是 compile_commands.json 生成的问题？
--  dart run hello_world 这样的模式；类似的，xmake run hello_world
+- 偏好 dart run hello_world 这样的模式；类似的有 xmake run hello_world
 
 ## 环境依赖
 
@@ -107,121 +107,10 @@ void main(List<String> args) async {
 }
 ```
 
-## xmake 补充知识
+## xmake
 
-`build` 和 `link` 调用同一个 `target`，按配置选择三个分支：
-
-| 阶段 | `kind` | `keep_symbols` | 原生包 | target 行为 |
-| --- | --- | --- | --- | --- |
-| 启用 linking 的 build | `static` | 无 | 静态包 | phony target 安装完整归档 |
-| 直接打包的 build | `shared` | 无 | 动态包 | phony target 安装完整动态库 |
-| link | `shared` | 有 | 静态包 | shared target 链接并裁剪最终动态库 |
-
-`symbolsToKeep` 必须
-传入列表，为空列表时跳过整个库。没有使用记录时，由 Dart hook 显式传入
-`recordUseMapping.values`，保留全部绑定接口。link 产物默认安装到 hook 的
-输出目录下。
-
-Dart 将 `keep_symbols` 作为 Lua table literal 字符串传递，例如
-`{"add","subtract"}`。link 规则使用 `string.deserialize` 还原 table，
-原生符号名称来自 Dart binding mapping。
-
-### 使用 `dart_native` 共享原生构建规则
-
-xmake 规则包 `dart_native 1.0.0` 默认从固定 Git commit 下载规则源码。
-每个使用规则的 xmake 工程都需要注册仓库并声明版本依赖：
-
-```lua
-add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
-add_requires("dart_native 1.0.0", {system = false})
-```
-
-三条规则用于原生源码工程，以及两个 hook 共用的单个 target。原生源码工程：
-
-```lua
-local kind = get_config("kind") or "static"
-target("foo")
-    set_kind(kind)
-    add_packages("dart_native")
-    add_rules("@dart_native/library", {kind = kind})
-    add_files("src/*.c")
-```
-
-Dart hooks 使用的工程：
-
-```lua
-local outputKind = get_config("kind") or "static"
-option("keep_symbols")
-    set_showmenu(true)
-option_end()
-
-local symbols = get_config("keep_symbols")
-local linking = outputKind == "shared" and symbols
-local packageKind = linking and "static" or outputKind
-add_requires("foo 1.0.0", {
-    system = false,
-    configs = {shared = packageKind == "shared", pic = true}
-})
-
-target("foo")
-    add_packages("foo", "dart_native")
-    if linking then
-        set_kind("shared")
-        add_rules("@dart_native/link", {symbols = symbols})
-    else
-        set_kind("phony")
-        add_rules("@dart_native/install", {package = "foo"})
-    end
-```
-
-`outputKind` 表示最终产物形态，`linking` 选择是否执行裁剪链接，
-`packageKind` 表示输入包形态。原生包需要提供静态和动态两种形态，裁剪链接
-选择静态包。`keep_symbols` option 没有默认值；同一个 target 仅在 shared
-模式且有符号列表时执行真实动态链接。library 规则准备
-函数和数据的 section GC，install 规则安装选中的包，link 规则控制最终动态库的
-导出与 GC。C API 宏仍由原生工程管理：交给 link hook 的静态输入应避免强制
-`dllexport` 或保留属性。
-
-两个 hook 的 `XmakeLibrary` 都使用 `target: 'foo'`。
-
-公共配方 `packages/d/dart_native/xmake.lua` 将 `1.0.0` 映射到 invariance
-Git 仓库的 `c241d2c9efcf6fbd1ab5d47614cb8614fec14fc2` commit。
-调用方只写版本，由配方指定源码 commit。已发布版本的映射保持不变，更换源码
-commit 时应发布新版本。
-
-在当前 checkout 开发规则时，可使用自定义包选项 `local_source`，显式选择
-`packages/native_toolchain_xmake/xmake/` 中的源码：
-
-```lua
-add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
-add_requires("dart_native 1.0.0", {
-    system = false,
-    configs = {local_source = true}
-})
-```
-
-以上相对路径适用于 `example/foo/`，其他布局需要调整。消费工程与原生源码
-工程都需要显式开启该选项。`project_xmake` 和 `embed_text` 示例使用本地模式；
-`template_adapter` 使用当前索引及默认的远程源码。修改本地源码后，需手动提升
-开发版本或显式重装规则包，以刷新缓存。
-修改 library 编译规则后，也需要提升原生包版本或强制重装原生包，让已有归档
-采用新的编译选项。
-
-xmake 使用流程：configure -> build -> install
-
-### config
-
-android
-
-```bash
-xmake f --plat=android --arch=x86_64 --toolchain=ndk --ndk="C:/Users/<you>/AppData/Local/Android/Sdk/ndk/<version>" --mode=release --kind=shared -y
-```
-
-windows:
-
-```bash
-xmake f --plat=windows --arch=x64 --mode=release --kind=shared -y
-```
+- [xmake 与 dart hook](../../example/project_xmake/)
+- [嵌入资源文件](../../example/embed_text/)
 
 ## 开发
 
