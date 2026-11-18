@@ -20,8 +20,12 @@
 extern "C" {
 #endif
 
-EMBED_API const uint8_t *file1_data(void);
-EMBED_API size_t file1_size(void);
+// The library owns the read-only bytes; use the matching size function for length.
+EMBED_API const uint8_t *asset_file1_txt_data(void);
+EMBED_API size_t asset_file1_txt_size(void);
+
+EMBED_API const uint8_t *asset_fold1_file1_txt_data(void);
+EMBED_API size_t asset_fold1_file1_txt_size(void);
 
 #ifdef __cplusplus
 }

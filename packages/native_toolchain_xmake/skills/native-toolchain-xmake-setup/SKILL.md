@@ -16,12 +16,47 @@ Work in the Dart package that owns `xmake.lua`, the hooks, and the FFI bindings.
 - Use `linkHook: .never` to build and bundle a shared library directly. Start here for a package that only needs FFI bindings and a bundled library.
 - Use `linkHook: .auto` (the default) with a `hook/link.dart` when the package supports tree shaking. When the build enables linking, xmake produces a static archive for the link hook. Otherwise it produces a shared library for direct bundling. Use `.always` only when the build is known to enable linking. Follow [the tree-shaking setup](references/tree-shaking.md) to connect Dart usage records to native symbols.
 
+## Organize native Dart files
+
+For a new integration, prefer the following layout. Preserve an existing layout
+or the user's chosen structure; adapt imports, generator outputs, and asset IDs
+together rather than moving files just to match this recommendation.
+
+```text
+lib/
+├── <package>.dart
+└── src/native/
+    ├── <name>.g.dart
+    ├── <name>.record_use_mapping.g.dart
+    └── xmake.dart
+hook/
+├── build.dart
+└── link.dart
+tool/ffigen.dart
+include/
+src/
+assets/
+local/
+xmake.lua
+```
+
+In this layout, keep package-owned native Dart implementation, generated FFI bindings, the
+usage-to-symbol mapping, and shared xmake configuration under `lib/src/native/`.
+Keep the public API in `lib/<package>.dart`, using a facade or exports as needed.
+Make `hook/*.dart` thin entrypoints that share `xmakeLibrary`, `assetName`, and
+`assetId` from `lib/src/native/xmake.dart`. Keep `tool/ffigen.dart` as the generator
+entrypoint and write its Dart outputs to `lib/src/native/`.
+
+Leave native headers, sources, resources, package recipes, and the root build
+description in `include/`, `src/`, `assets/`, `local/`, and `xmake.lua` respectively,
+where those inputs exist. `third_party` can remain for actual vendored code.
+
 ## Match the target and asset names
 
 - `target` is the target declared in `xmake.lua`. Set `libHintName` to the library's base name without the platform prefix or extension if xmake installs it under a different name.
 - For package-based tree shaking, use the same `target` for both hooks. It installs the selected native package on the build path and links the final shared library on the link path. See [the tree-shaking setup](references/tree-shaking.md) for the three configuration branches.
 - Linking requires `symbolsToKeep`. Select native symbols through the Dart binding mapping; when usage records are absent, pass `recordUseMapping.values`. An empty list omits the library. `keep_symbols` carries a Lua table literal string such as `{"native_add"}`, which the link rule restores with `string.deserialize`. Give the option no default. The target performs a real shared link only when `kind == "shared"` and symbols are supplied; otherwise it is phony and installs the package.
-- `assetName` is the part after `package:<package_name>/` in the FFI asset ID. For `lib/src/example_native.g.dart` in package `example_native`, use `assetName: 'src/example_native.g.dart'`. The default `@Native` asset ID is the binding library's URI. If the binding sets `@DefaultAsset` or an explicit `assetId`, match that ID instead.
+- `assetName` is the part after `package:<package_name>/` in the FFI asset ID. For `lib/src/native/example_native.g.dart` in package `example_native`, use `assetName: 'src/native/example_native.g.dart'`. The default `@Native` asset ID is the binding library's URI. If the binding sets `@DefaultAsset` or an explicit `assetId`, match that ID instead.
 
 ## Locate the shared xmake rules
 
@@ -101,29 +136,41 @@ int32_t native_add(int32_t a, int32_t b) {
 }
 ```
 
+### `lib/src/native/xmake.dart`
+
+```dart
+import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
+
+const assetName = 'src/native/example_native.g.dart';
+const assetId = 'package:example_native/$assetName';
+
+final xmakeLibrary = XmakeLibrary(
+  target: 'example_native',
+  assetName: assetName,
+  linkHook: .never,
+);
+```
+
 ### `hook/build.dart`
 
 ```dart
 import 'package:code_assets/code_assets.dart';
+import 'package:example_native/src/native/xmake.dart';
 import 'package:hooks/hooks.dart';
-import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (input.config.buildCodeAssets) {
-      await XmakeLibrary(
-        target: 'example_native',
-        assetName: 'src/example_native.g.dart',
-        linkHook: .never,
-      ).build(input: input, output: output);
+      await xmakeLibrary.build(input: input, output: output);
     }
   });
 }
 ```
 
-### `lib/src/example_native.g.dart`
+### `lib/src/native/example_native.g.dart`
 
-This binding can also be generated with ffigen.
+This binding can also be generated with ffigen. Keep the generator entrypoint at
+`tool/ffigen.dart` and direct its output to this path.
 
 ```dart
 import 'dart:ffi';
@@ -132,10 +179,16 @@ import 'dart:ffi';
 external int native_add(int a, int b);
 ```
 
+### `lib/example_native.dart`
+
+```dart
+export 'src/native/example_native.g.dart';
+```
+
 ### `bin/main.dart`
 
 ```dart
-import 'package:example_native/src/example_native.g.dart';
+import 'package:example_native/example_native.dart';
 
 void main() {
   print(native_add(2, 3));

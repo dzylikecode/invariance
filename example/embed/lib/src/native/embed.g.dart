@@ -9,8 +9,16 @@ import 'package:meta/meta.dart' as meta;
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Uint8> Function()>(isLeaf: true)
-external ffi.Pointer<ffi.Uint8> file1_data();
+external ffi.Pointer<ffi.Uint8> asset_file1_txt_data();
 
 @meta.RecordUse()
 @ffi.Native<ffi.Size Function()>(isLeaf: true)
-external int file1_size();
+external int asset_file1_txt_size();
+
+@meta.RecordUse()
+@ffi.Native<ffi.Pointer<ffi.Uint8> Function()>(isLeaf: true)
+external ffi.Pointer<ffi.Uint8> asset_fold1_file1_txt_data();
+
+@meta.RecordUse()
+@ffi.Native<ffi.Size Function()>(isLeaf: true)
+external int asset_fold1_file1_txt_size();

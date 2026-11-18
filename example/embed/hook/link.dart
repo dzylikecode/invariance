@@ -1,6 +1,6 @@
 import 'package:code_assets/code_assets.dart';
-import 'package:embed/src/third_party/embed.record_use_mapping.g.dart';
-import 'package:embed/src/xmake.dart';
+import 'package:embed/src/native/embed.record_use_mapping.g.dart';
+import 'package:embed/src/native/xmake.dart';
 import 'package:hooks/hooks.dart';
 import 'package:record_use/record_use.dart';
 

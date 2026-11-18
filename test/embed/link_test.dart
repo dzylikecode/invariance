@@ -46,8 +46,8 @@ void main() {
 
       final library = DynamicLibrary.open(libraryUri.toFilePath());
       try {
-        final hasSize = library.providesSymbol('file1_size');               expect(hasSize, isTrue);
-        final hasData = library.providesSymbol('file1_data');               expect(hasData, isFalse);
+        final hasSize = library.providesSymbol('asset_file1_txt_size');     expect(hasSize, isTrue);
+        final hasData = library.providesSymbol('asset_file1_txt_data');     expect(hasData, isFalse);
       } finally {
         // Windows 清理临时目录前先释放句柄。
         library.close();
@@ -55,15 +55,15 @@ void main() {
 
       if (Platform.isLinux) {
         final exports = await readDefinedSymbols(libraryUri, dynamicOnly: true);
-        expect(exports, equals({'file1_size'}));
+        expect(exports, equals({'asset_file1_txt_size'}));
 
         // 普通表和原始资源字节都检查，区分隐藏导出与实际删除代码、数据。
-        final definitions = await readDefinedSymbols(libraryUri);           expect(definitions, contains('file1_size'));
+        final definitions = await readDefinedSymbols(libraryUri);           expect(definitions, contains('asset_file1_txt_size'));
         expect(
           definitions.where((symbol) =>
-              symbol == 'file1_data' ||
-              symbol.startsWith('file1_data.') ||
-              symbol == 'file1_txt' || symbol.startsWith('file1_txt.')),
+              symbol == 'asset_file1_txt_data' ||
+              symbol.startsWith('asset_file1_txt_data.') ||
+              symbol == 'asset_file1_txt' || symbol.startsWith('asset_file1_txt.')),
           isEmpty,
         );
         if (resource.isNotEmpty) {
@@ -72,6 +72,66 @@ void main() {
             latin1.decode(resource),
           );                                                                expect(retainsResource, isFalse);
         }
+      }
+      // dart format on
+    });
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
+  // 仅通过公共资源 API 读取根资源，嵌套资源的函数和二进制数据都应被 GC。
+  test('Reading one asset drops the unused nested asset', () async {
+    await inTestProject('embed', (packageUri) async {
+      final expected = await File.fromUri(
+        packageUri.resolve('assets/file1.txt'),
+      ).readAsString();
+      final unusedResource = [
+        0x00,
+        0xff,
+        ...utf8.encode('unused_nested_asset_87bd1e02_5c49_43be'),
+        0x80,
+        0x00,
+      ];
+      await File.fromUri(packageUri.resolve('assets/fold1/file1.txt'))
+          .writeAsBytes(unusedResource);
+      final bundleUri = await buildCli(
+        packageUri: packageUri,
+        target: 'example/main.dart',
+      );
+
+      // dart format off
+      final output = await runBundle(bundleUri);                           expect(output, equals(expected));
+      final filename = libraryFileName('embed');
+      final libraryUri = bundleUri.resolve('lib/$filename');
+      final libraryExists = File.fromUri(libraryUri).existsSync();          expect(libraryExists, isTrue);
+
+      final library = DynamicLibrary.open(libraryUri.toFilePath());
+      try {
+        final hasData = library.providesSymbol('asset_file1_txt_data');     expect(hasData, isTrue);
+        final hasSize = library.providesSymbol('asset_file1_txt_size');     expect(hasSize, isTrue);
+        final hasNestedData = library.providesSymbol('asset_fold1_file1_txt_data'); expect(hasNestedData, isFalse);
+        final hasNestedSize = library.providesSymbol('asset_fold1_file1_txt_size'); expect(hasNestedSize, isFalse);
+      } finally {
+        library.close();
+      }
+
+      if (Platform.isLinux) {
+        final exports = await readDefinedSymbols(libraryUri, dynamicOnly: true);
+        expect(exports, equals({'asset_file1_txt_data', 'asset_file1_txt_size'}));
+
+        final definitions = await readDefinedSymbols(libraryUri);
+        expect(
+          definitions.where((symbol) =>
+              symbol == 'asset_fold1_file1_txt_data' ||
+              symbol.startsWith('asset_fold1_file1_txt_data.') ||
+              symbol == 'asset_fold1_file1_txt_size' ||
+              symbol.startsWith('asset_fold1_file1_txt_size.') ||
+              symbol == 'asset_fold1_file1_txt' ||
+              symbol.startsWith('asset_fold1_file1_txt.')),
+          isEmpty,
+        );
+        final bytes = await File.fromUri(libraryUri).readAsBytes();
+        final retainsUnusedResource = latin1.decode(bytes).contains(
+          latin1.decode(unusedResource),
+        );                                                                expect(retainsUnusedResource, isFalse);
       }
       // dart format on
     });

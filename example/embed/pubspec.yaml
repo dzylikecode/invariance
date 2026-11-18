@@ -1,5 +1,5 @@
 name: embed
-description: Embed a UTF-8 text resource with C23 and expose it to Dart via xmake.
+description: Embed resource bytes with C23 and expose them to Dart via xmake.
 version: 1.0.0
 publish_to: none
 

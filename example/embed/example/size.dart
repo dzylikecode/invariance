@@ -1,5 +1,5 @@
-import 'package:embed/src/third_party/embed.g.dart';
+import 'package:embed/src/native/embed.g.dart';
 
 void main() {
-  print(file1_size());
+  print(asset_file1_txt_size());
 }

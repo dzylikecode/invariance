@@ -1,5 +1,5 @@
 import 'package:code_assets/code_assets.dart';
-import 'package:embed/src/xmake.dart';
+import 'package:embed/src/native/xmake.dart';
 import 'package:hooks/hooks.dart';
 
 void main(List<String> args) async {
@@ -13,6 +13,7 @@ void main(List<String> args) async {
         input.packageRoot.resolve('include/embed.h'),
         input.packageRoot.resolve('src/embed.c'),
         input.packageRoot.resolve('assets/file1.txt'),
+        input.packageRoot.resolve('assets/fold1/file1.txt'),
         input.packageRoot.resolve('local/packages/e/embed/xmake.lua'),
         input.packageRoot.resolve('local/packages/e/embed/port/xmake.lua'),
       ]);

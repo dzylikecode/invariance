@@ -67,12 +67,12 @@ package for a complete setup. That example explicitly sets
 The snippet above uses the default remote rules. See the main skill for source
 selection and immutable rule version handling.
 
-Share the library configuration between both hooks in `lib/src/xmake_config.dart`:
+Share the library configuration between both hooks in `lib/src/native/xmake.dart`:
 
 ```dart
 import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
 
-const assetName = 'src/example_native.g.dart';
+const assetName = 'src/native/example_native.g.dart';
 const assetId = 'package:example_native/$assetName';
 
 final xmakeLibrary = XmakeLibrary(
@@ -83,7 +83,7 @@ final xmakeLibrary = XmakeLibrary(
 );
 ```
 
-In `hook/build.dart`, import `package:example_native/src/xmake_config.dart` and call `xmakeLibrary.build(input: input, output: output)` inside the existing `input.config.buildCodeAssets` check.
+In `hook/build.dart`, import `package:example_native/src/native/xmake.dart` and call `xmakeLibrary.build(input: input, output: output)` inside the existing `input.config.buildCodeAssets` check.
 
 `.auto` follows the build's `linkingEnabled` flag. Use `.always` only when that
 flag is true for every build that uses the configuration. When linking is
@@ -110,9 +110,9 @@ Future<void> main() async {
   await FfiGenerator(
     input: Input(entryPoints: [header], include: (uri) => uri == header),
     output: Output(
-      dart: DartOutput(path: root.resolve('lib/src/example_native.g.dart')),
+      dart: DartOutput(path: root.resolve('lib/src/native/example_native.g.dart')),
       recordUseMapping: root.resolve(
-        'lib/src/example_native.record_use_mapping.g.dart',
+        'lib/src/native/example_native.record_use_mapping.g.dart',
       ),
     ),
     visitors: [
@@ -135,8 +135,8 @@ Create `hook/link.dart`:
 
 ```dart
 import 'package:code_assets/code_assets.dart';
-import 'package:example_native/src/example_native.record_use_mapping.g.dart';
-import 'package:example_native/src/xmake_config.dart';
+import 'package:example_native/src/native/example_native.record_use_mapping.g.dart';
+import 'package:example_native/src/native/xmake.dart';
 import 'package:hooks/hooks.dart';
 import 'package:record_use/record_use.dart';
 

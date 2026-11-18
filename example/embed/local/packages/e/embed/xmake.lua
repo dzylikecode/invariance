@@ -1,5 +1,5 @@
 package("embed")
-    set_description("C23 embedded text with shared and GC-ready static libraries")
+    set_description("C23 embedded resources with shared and GC-ready static libraries")
     set_license("MIT")
     set_sourcedir(path.join(os.scriptdir(), "port"))
 
@@ -14,6 +14,10 @@ package("embed")
     end)
 
     on_test(function(package)
-        assert(package:has_cfuncs("file1_data", {includes = "embed.h"}))
-        assert(package:has_cfuncs("file1_size", {includes = "embed.h"}))
+        for _, name in ipairs({
+            "asset_file1_txt_data", "asset_file1_txt_size",
+            "asset_fold1_file1_txt_data", "asset_fold1_file1_txt_size"
+        }) do
+            assert(package:has_cfuncs(name, {includes = "embed.h"}))
+        end
     end)

@@ -6,6 +6,8 @@
 
 /// Mapping from Dart function name to native symbol name.
 const recordUseMapping = {
-  'file1_data': 'file1_data',
-  'file1_size': 'file1_size',
+  'asset_file1_txt_data': 'asset_file1_txt_data',
+  'asset_file1_txt_size': 'asset_file1_txt_size',
+  'asset_fold1_file1_txt_data': 'asset_fold1_file1_txt_data',
+  'asset_fold1_file1_txt_size': 'asset_fold1_file1_txt_size',
 };
