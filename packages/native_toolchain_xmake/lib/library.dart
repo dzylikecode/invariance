@@ -1,5 +1,4 @@
 import 'package:hooks/hooks.dart';
-import 'package:code_assets/code_assets.dart';
 import 'package:logging/logging.dart';
 
 import 'builder.dart';

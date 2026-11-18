@@ -1,4 +1,3 @@
--- Copyright (c) 2026 dzylikecode. Licensed under the MIT License.
 package("dart_native")
     set_kind("binary")
     set_description("Xmake rules for building and linking Dart native libraries")
