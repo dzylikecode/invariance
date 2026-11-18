@@ -88,9 +88,9 @@ target("example_native")
     set_kind(kind)
     add_packages("dart_native")
     add_rules("@dart_native/library", {kind = kind})
-    add_files("src/example_native.c")
+    add_files("src/**.c")
     add_includedirs("include", {public = true})
-    add_headerfiles("include/(example_native.h)")
+    add_headerfiles("include/(**.h)")
     if kind == "static" then
         add_defines("EXAMPLE_NATIVE_STATIC", {public = true})
     else
@@ -113,9 +113,9 @@ above, but resolve its inputs against the package root:
 ```lua
 local sourceRoot = path.absolute("../../../../..", os.scriptdir())
 -- Inside the compilation target:
-add_files(path.join(sourceRoot, "src/example_native.c"))
+add_files(path.join(sourceRoot, "src/**.c"))
 add_includedirs(path.join(sourceRoot, "include"), {public = true})
-add_headerfiles(path.join(sourceRoot, "include/(example_native.h)"))
+add_headerfiles(path.join(sourceRoot, "include/(**.h)"))
 ```
 
 The adjacent `local/packages/e/example_native/xmake.lua` recipe delegates to that
