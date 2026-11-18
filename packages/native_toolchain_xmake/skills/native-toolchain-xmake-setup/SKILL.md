@@ -19,7 +19,27 @@ Work in the Dart package that owns `xmake.lua`, the hooks, and the FFI bindings.
 ## Match the target and asset names
 
 - `target` is the target declared in `xmake.lua`. Set `libHintName` to the library's base name without the platform prefix or extension if xmake installs it under a different name.
+- For package-based tree shaking, use the same `target` for both hooks. It installs the selected native package on the build path and links the final shared library on the link path. See [the tree-shaking setup](references/tree-shaking.md) for the three configuration branches.
+- Linking requires `symbolsToKeep`. Select native symbols through the Dart binding mapping; when usage records are absent, pass `recordUseMapping.values`. An empty list omits the library. `keep_symbols` carries a Lua table literal string such as `{"native_add"}`, which the link rule restores with `string.deserialize`. Give the option no default. The target performs a real shared link only when `kind == "shared"` and symbols are supplied; otherwise it is phony and installs the package.
 - `assetName` is the part after `package:<package_name>/` in the FFI asset ID. For `lib/src/example_native.g.dart` in package `example_native`, use `assetName: 'src/example_native.g.dart'`. The default `@Native` asset ID is the binding library's URI. If the binding sets `@DefaultAsset` or an explicit `assetId`, match that ID instead.
+
+## Locate the shared xmake rules
+
+This checkout provides `dart_native 1.0.0`: the repository index is
+`packages/d/dart_native/xmake.lua`, and the rule sources ship in
+`packages/native_toolchain_xmake/xmake/rules/`. From an `example/foo/` project,
+register the index with
+`add_repositories("dart-native ../..", {rootdir = os.scriptdir()})`, then require
+`dart_native 1.0.0` with `system = false`. Adapt the repository path for other
+layouts. Each target using a rule also needs `add_packages("dart_native")`.
+
+The `1.0.0` rule payload is embedded from the current checkout. The remote
+`https://github.com/dzylikecode/invariance.git` repository can supply it only
+after the selected repository branch contains the index and sources. Remote require locks pin
+a repository commit; local source edits require a rule version bump or explicit
+package reinstallation to refresh the cache.
+When the library compilation rule changes, also bump or reinstall the native
+package so its existing archives are rebuilt with the new compiler options.
 
 ## Bundle a shared library
 
@@ -28,12 +48,25 @@ This minimal example uses package `example_native` and exports one C function. A
 ### `xmake.lua`
 
 ```lua
+local kind = get_config("kind") or "shared"
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+
 target("example_native")
-    set_kind("shared")
+    set_kind(kind)
+    add_packages("dart_native")
+    add_rules("@dart_native/library", {kind = kind})
     add_includedirs("include")
-    add_defines("EXAMPLE_NATIVE_SHARED")
+    if kind == "shared" then
+        add_defines("EXAMPLE_NATIVE_SHARED")
+    end
     add_files("src/example_native.c")
 ```
+
+The rule prepares code and data sections for final linker GC. It does not
+choose the target kind or manage the project's API macros. Keep `set_kind` and
+the rule's `kind` argument consistent. For the direct shared path, the native
+project still defines which symbols are exported.
 
 ### `include/example_native.h`
 

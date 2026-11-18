@@ -21,3 +21,4 @@ api
 .DS_Store
 temp
 .build
+.config

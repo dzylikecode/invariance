@@ -4,4 +4,8 @@
 // ignore_for_file: type=lint
 
 /// Mapping from Dart function name to native symbol name.
-const recordUseMapping = {'add': 'add', 'subtract': 'subtract'};
+const recordUseMapping = {
+  'add': 'add',
+  'count_words': 'count_words',
+  'subtract': 'subtract',
+};

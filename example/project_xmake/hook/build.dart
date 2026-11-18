@@ -1,4 +1,3 @@
-// Copyright (c) 2026 dzylikecode. Licensed under the MIT License.
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 import 'package:project_xmake/src/xmake.dart';
@@ -12,6 +11,10 @@ void main(List<String> args) async {
         input.packageRoot.resolve('xmake.lua'),
         input.packageRoot.resolve('src/impl.cpp'),
         input.packageRoot.resolve('include/project_xmake.h'),
+        input.packageRoot.resolve('local/packages/p/project_xmake/xmake.lua'),
+        input.packageRoot.resolve(
+          'local/packages/p/project_xmake/port/xmake.lua',
+        ),
       ]);
     }
   });

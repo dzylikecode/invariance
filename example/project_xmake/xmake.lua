@@ -1,40 +1,45 @@
-set_policy("package.requires_lock", true)
+-- Local repository locks contain checkout-specific absolute paths.
+set_policy("package.requires_lock", false)
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 
--- kind: static, shared, headeronly
+option("keep_symbols")
+  set_showmenu(true)
+  set_description("Lua table of native symbols supplied by Dart")
+option_end()
+
 local kind = get_config("kind") or "static"
+local symbols = get_config("keep_symbols")
+
+add_repositories("local-repo local", {rootdir = os.scriptdir()})
+add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+-- Bump this version when the local package sources or build recipe change.
+add_requires("project_xmake 1.0.0", {
+  system = false,
+  configs = {shared = kind == "shared" and not symbols, pic = true}
+})
 
 target("project_xmake")
-  set_kind(kind)
-  if is_plat("linux", "android") then
-    -- A whitelist alone hides symbols; separate sections allow code removal.
-    add_cxflags("-fPIC", "-ffunction-sections", "-fdata-sections")
-  elseif is_plat("windows") then
-    add_cxflags("/Gy", "/Gw", {tools = {"cl", "clang_cl"}})
-    add_cxflags("-ffunction-sections", "-fdata-sections",
-      {tools = {"gcc", "gxx", "clang", "clangxx", "zig_cc"}})
+  add_packages("project_xmake", "dart_native")
+  if kind == "shared" and symbols then
+    set_kind("shared")
+    add_rules("@dart_native/link", {symbols = symbols})
+    -- Keep the regular symbol table so code removal can be inspected with nm.
+    set_strip("none")
+  else
+    set_kind("phony")
+    add_rules("@dart_native/install", {package = "project_xmake"})
   end
-  if is_plat("linux") then
-    add_defines("PROJECT_XMAKE_CPP_RUNTIME_PROBE")
-  end
-  if kind == "static" then
-    -- The final link selects exports; dllexport would retain unused functions.
-    add_defines("PROJECT_XMAKE_STATIC", {public = true})
-  elseif kind == "shared" then
-    add_defines("PROJECT_XMAKE_BUILD")
-  end
-  add_includedirs("include", {public = true}) -- visible to other targets
-  add_headerfiles("include/*.h") -- export for installations
-  add_files("src/*.cpp")
+target_end()
 
 ---------------------------------------------------------
 --- Examples
 ---------------------------------------------------------
-for _, file in ipairs(os.files("example/*.cpp")) do
+for _, file in ipairs(table.join(os.files("example/*.c"), os.files("example/*.cpp"))) do
     local name = path.basename(file)
     target(name)
       set_kind("binary")
       add_files(file)
-      add_deps("project_xmake")
+      add_packages("project_xmake")
 end

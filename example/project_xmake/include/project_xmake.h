@@ -24,3 +24,6 @@
 
 PROJECT_XMAKE_API int add(int a, int b);
 PROJECT_XMAKE_API int subtract(int a, int b);
+
+// Count whitespace-separated words. Return -1 for null input or failure.
+PROJECT_XMAKE_API int count_words(const char* text);

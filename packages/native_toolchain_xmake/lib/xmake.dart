@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:logging/logging.dart';
 
 import 'android.dart';
+import 'src/lua.dart';
 
 Future<String> getXmakeVersion() async {
   final output = await getXmakeInfo();
@@ -73,7 +74,10 @@ ${result.stdout}
   }
 
   // see https://xmake.io/guide/basic-commands/build-configuration.html
-  Future<void> config() async {
+  Future<void> config({
+    bool clean = false,
+    Iterable<String>? symbolsToKeep,
+  }) async {
     final (os, arch) = _target(
       codeConfig.targetOS,
       codeConfig.targetArchitecture,
@@ -85,6 +89,7 @@ ${result.stdout}
 
     return call([
       'f',
+      if (clean) '-c',
       '-P',
       '.',
       '-v',
@@ -114,6 +119,8 @@ ${result.stdout}
       // dart format on
       '--mode=release',
       '--kind=$kind',
+      if (symbolsToKeep != null)
+        '--keep_symbols=${encodeLuaStringList(symbolsToKeep)}',
       '-y',
     ]);
   }
