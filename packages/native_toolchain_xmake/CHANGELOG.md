@@ -1,18 +1,14 @@
-## Unreleased
+## 0.2.0
 
-- **feature**: add the `dart_native 1.0.0` xmake rule package for native library preparation, package installation, and final export selection with linker GC. Default to version-pinned Git sources; the custom `local_source` option selects the checkout's rule sources.
-- **change**: pass `keep_symbols` as a Lua table literal string and deserialize it in the link rule. Native symbol selection comes from the Dart binding mapping.
-- **breaking**: require `symbolsToKeep` when linking. Resolve missing usage records to the full binding mapping in Dart; xmake no longer supplies a default symbol list.
-- **breaking**: use one target for build and link. Static builds install the archive, shared builds without symbols install the full shared package, and shared links with symbols trim a static package into the final library.
-- **docs**: document shared-rule routing, immutable version-to-commit mappings, and explicit local development. Cover the remote source path with the template adapter example in CI.
+- **feature**: add the `dart_native 1.0.0` xmake rule package for native library preparation, package installation, final export selection, and linker GC.
+- **change**: use xmake for tree shaking during linking, remove `native_toolchain_c`, and require `symbolsToKeep` when linking.
+- **update**: restructure the skill and rename it to `dart-xmake`.
 
 ---
 
-- **功能**：新增 `dart_native 1.0.0` xmake 规则包，负责原生库准备、包安装，以及最终导出选择和 linker GC。默认使用版本固定的 Git 源码，自定义 `local_source` 选项显式选择 checkout 中的规则源码。
-- **变更**：`keep_symbols` 改为 Lua table literal 字符串，由 link 规则反序列化；原生符号选择来自 Dart binding mapping。
-- **变更**：link 时必须传入 `symbolsToKeep`。没有使用记录时由 Dart 选择完整 binding mapping，xmake 不再提供默认符号列表。
-- **变更**：build/link 共用一个 target。static build 安装归档，无符号列表的 shared build 安装完整动态包，有符号列表的 shared link 将静态包链接为裁剪后的动态库。
-- **文档**：说明共享规则路由、不可变的版本到 commit 映射，以及显式本地开发方式；CI 通过 template adapter 示例覆盖远程源码路径。
+- **功能**：新增 `dart_native 1.0.0` xmake 规则包，负责原生库准备、包安装，以及最终导出选择和 linker GC。
+- **变更**：由 xmake 来完成 link 时候的裁剪，移除 native_toolchain_c， link 时必须传入 `symbolsToKeep`
+- **更新**：skills 重构，命名为 dart-xmake
 
 ## 0.1.0
 
