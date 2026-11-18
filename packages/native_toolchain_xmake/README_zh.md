@@ -66,6 +66,9 @@ dart run native_toolchain_xmake:install
 
 ## Agent skill
 
+随包提供的 [dart-xmake 技能](skills/dart-xmake/SKILL.md) 涵盖原生工程准备、
+Dart build hook 和原生代码裁剪。
+
 ```bash
 dart run skills@ get -p native_toolchain_xmake
 ```

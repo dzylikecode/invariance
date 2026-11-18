@@ -62,6 +62,9 @@ This package uses Zig by default for cross-compilation. See the [Zig installatio
 
 ## Agent skill
 
+The bundled [dart-xmake skill](skills/dart-xmake/SKILL.md) covers native project
+setup, Dart build hooks, and native tree shaking.
+
 ```bash
 dart run skills@ get -p native_toolchain_xmake
 ```
