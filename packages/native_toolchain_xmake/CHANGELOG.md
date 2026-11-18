@@ -1,3 +1,11 @@
+## 0.2.1
+
+- **update**: refine the `dart-xmake` skill and recommend installing the Dart and Xmake skills as its foundation.
+
+---
+
+- **更新**：更新 skills，建议安装 dart 和 xmake 的知识
+
 ## 0.2.0
 
 - **feature**: add the `dart_native 1.0.0` xmake rule package for native library preparation, package installation, final export selection, and linker GC.

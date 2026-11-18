@@ -1,18 +1,30 @@
 ---
 name: dart-xmake
 description: >-
-  Build and package C/C++ libraries for Dart and Flutter with
-  native_toolchain_xmake. Use when connecting xmake targets to build/link
-  hooks, generating matching FFI assets, organizing native integration files,
-  or tree-shaking native code from Dart usage records.
+  Integrate C/C++ libraries into Dart and Flutter with native_toolchain_xmake,
+  building on general Dart and Xmake skills. Use when connecting xmake targets
+  to build/link hooks, generating matching FFI assets, organizing native
+  integration files, or tree-shaking native code from Dart usage records.
 ---
 
 # Dart native libraries with xmake
 
-Work in the Dart package that owns the native integration. Reuse its existing
-targets and conventions when possible. These examples use
-`native_toolchain_xmake` 0.1.0 and the ffigen 22 Dart API; check resolved versions
-before adapting another integration.
+This skill builds on general Dart and Xmake knowledge. We recommend installing:
+
+- [Dart skills](https://github.com/dart-lang/skills), also bundled in the
+  [Dart and Flutter plugin](https://github.com/flutter/agent-plugins), for Dart
+  workflows, FFI generation, hooks, analysis, and testing.
+- [Xmake skills](https://github.com/xmake-io/xmake-skills) for targets, options,
+  packages, rules, toolchains, and troubleshooting.
+
+Use those skills for general workflows. This skill covers their integration:
+`native_toolchain_xmake`, the `dart_native` rules, FFI asset registration, and
+native tree shaking. Apply the integration and layout choices here when adapting
+general FFI guidance; compilation and linking use `native_toolchain_xmake`.
+
+Work in the Dart package that owns the native integration and reuse its existing
+targets. The examples use the ffigen 22 Dart API; check resolved versions before
+adapting the generator.
 
 ## Choose the build flow
 
@@ -28,10 +40,9 @@ the hook must explicitly emit the shared library that belongs in the bundle.
 
 ## Follow the integration order
 
-1. **Prepare the native project.** Check `xmake --version` in the environment
-   that invokes Dart or Flutter. Read [native-project.md](references/native-project.md)
-   for the C ABI header, compilation rules, static/shared packages, clangd, and
-   package cache behavior.
+1. **Prepare the native project.** Read
+   [native-project.md](references/native-project.md) for the C ABI conventions,
+   `dart_native` rules, package layout, and interaction with Dart hook caching.
 2. **Connect Dart.** Read [build-hook.md](references/build-hook.md) for the
    recommended file layout, ffigen, the shared `XmakeLibrary` configuration, and
    `hook/build.dart`. Validate direct bundling with a small Dart caller.

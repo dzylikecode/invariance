@@ -1,20 +1,17 @@
 # Generate bindings and bundle a shared library
 
 Start with the `example_native` xmake target and `native_add` C API from
-[native-project.md](native-project.md). Check that `xmake --version` runs in the
-environment that launches Dart or Flutter. This reference uses
-`native_toolchain_xmake` 0.1.0 or later and the ffigen 22 Dart configuration API.
+[native-project.md](native-project.md). Apply the general Dart asset workflow
+with `native_toolchain_xmake` 0.2.0 or later as its backend. The generator below
+uses the ffigen 22 visitor API.
 
 Keep `native_toolchain_xmake`, `hooks`, `code_assets`, and `meta` under regular
-`dependencies`. The generated bindings import `meta` for usage annotations even
-when bundling directly. Add `ffigen: ^22.0.0` under `dev_dependencies` and make
-libclang available to the generator.
+`dependencies`; generated usage annotations need `meta` even when bundling
+directly. Add `ffigen: ^22.0.0` under `dev_dependencies`.
 
-## Organize the package
+## Use the package layout
 
-For a new integration, prefer this layout. Preserve an existing layout or the
-user's chosen structure; adapt imports, generator outputs, and asset IDs
-together rather than moving files just to match this recommendation.
+For new integrations, prefer this layout:
 
 ```text
 example_native/
@@ -24,7 +21,9 @@ example_native/
 │       ├── example_native.g.dart
 │       ├── example_native.record_use_mapping.g.dart
 │       └── xmake.dart
-├── hook/build.dart
+├── hook/
+│   ├── build.dart
+│   └── link.dart               # When native tree shaking is enabled
 ├── tool/ffigen.dart
 ├── bin/main.dart
 ├── include/example_native.h
@@ -34,25 +33,18 @@ example_native/
 └── xmake.lua
 ```
 
-Keep package-owned native Dart implementation, generated bindings, the symbol
-mapping, and shared xmake configuration in `lib/src/native/`. Keep the public API
-in `lib/<package>.dart`. Make `hook/*.dart` thin entrypoints that share the
-`XmakeLibrary` configuration; keep `tool/ffigen.dart` as the generator
-entrypoint. Leave native headers, sources, resources, package recipes, and the
-root build description in their existing locations.
+Keep generated bindings, their symbol mapping, and shared xmake configuration
+in `lib/src/native/`, with thin `hook/*.dart` entrypoints and the public API in
+`lib/example_native.dart`. Adapt an existing layout by changing imports,
+generator outputs, and asset IDs together.
 
-## Configure the library
+## Match the FFI asset
 
-- `target` names the target in `xmake.lua`.
-- `libHintName` overrides the installed library's base name when it differs from
-  `target`. Omit the platform prefix and extension, such as `lib` and `.so`.
-- `assetName` is the part after `package:<package_name>/` in the FFI asset ID.
-  For this binding, use `src/native/example_native.g.dart`.
-- The resulting code asset ID is
-  `package:example_native/src/native/example_native.g.dart`. The default
-  generated `@Native` asset ID is the binding library's URI. Exporting its
-  declarations through the public barrel does not change that URI. If the
-  binding sets `@DefaultAsset` or an explicit `assetId`, match that ID instead.
+`assetName: 'src/native/example_native.g.dart'` produces the code asset ID
+`package:example_native/src/native/example_native.g.dart`. It must match the
+generated `@Native` asset ID, which defaults to the binding library's URI.
+Exporting declarations through the public barrel does not change that URI. If
+the binding uses `@DefaultAsset` or an explicit `assetId`, match that ID instead.
 
 ## Generate bindings and the symbol mapping
 
@@ -86,10 +78,9 @@ Future<void> main() async {
 }
 ```
 
-Let ffigen generate the `@Native` declarations and usage mapping rather than
-maintaining manual declarations alongside them. Regenerate both outputs together
-when the header or Dart binding names change. `node.recordUse = true` prepares the
-bindings for the optional link-hook flow without changing direct bundling.
+Regenerate the bindings and mapping together when the header or Dart binding
+names change. `node.recordUse = true` enables the optional link-hook flow while
+also supporting direct bundling.
 
 ## Share the build configuration
 
@@ -105,8 +96,9 @@ final xmakeLibrary = XmakeLibrary(
 );
 ```
 
-`.never` builds a shared library and bundles it directly. The xmake target must
-install that library under the expected base name.
+`.never` builds and bundles the complete shared library directly. The target
+must install the library; if its base name differs from `target`, set
+`libHintName` without the platform prefix or extension.
 
 Create `hook/build.dart`:
 
@@ -130,10 +122,10 @@ void main(List<String> args) async {
 }
 ```
 
-Track the inputs used by this build, including resources and local package
-recipes or port scripts where present. These dependencies make Dart rerun the
-hook when inputs change. Native package cache invalidation still follows the
-version and reinstall rules in [native-project.md](native-project.md).
+Add resources, local package recipes, and port scripts to `output.dependencies`
+when the build uses them. This reruns the Dart hook on changes; it does not
+invalidate xmake's installed-package cache. Apply the version/reinstall rules
+in [native-project.md](native-project.md).
 
 ## Expose and run the API
 
@@ -156,7 +148,6 @@ void main() {
 Run from the package root:
 
 ```sh
-dart pub get
 dart run tool/ffigen.dart
 dart run bin/main.dart
 dart analyze

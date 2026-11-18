@@ -3,7 +3,7 @@
 Start with the generated bindings, shared `xmake.dart`, and build hook in
 [build-hook.md](build-hook.md). Use Dart 3.13 or later and a build that enables
 linking and supplies usage records, such as `dart build cli`. Add `record_use`
-as a regular dependency. The bindings already use `meta.RecordUse` and generate
+as a regular dependency; the generator already supplies usage annotations and
 their symbol mapping.
 
 ## Select installation or final linking in xmake
@@ -19,7 +19,6 @@ one target for both hooks:
 | Link | `shared` | Supplied | Static | Shared, selects exports and runs GC |
 
 ```lua
-add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
 option("keep_symbols", {
     description = "Lua table of native symbols supplied by Dart"
 })
@@ -31,7 +30,6 @@ local packageKind = linking and "static" or outputKind
 
 add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
--- This repository contains the project's native library recipe.
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
 add_requires("example_native 1.0.0", {
     system = false,
@@ -51,23 +49,17 @@ target("example_native")
 
 Give `keep_symbols` no default. Dart sends a Lua table literal string such as
 `{"native_add"}`; the link rule restores it with `string.deserialize`. The
-shared output uses static package inputs when symbols are supplied. The install
-rule copies the selected package into the target's install directory; the link
-rule handles archive extraction, export lists, and linker GC. The library rule
-already prepares PIC where required, so no extra package `pic` config is needed
-for this source project.
-
-Use the same published `dart_native` version in the consuming project and the
-native package's source project, as described in
-[native-project.md](native-project.md).
+final shared output must consume the static package archive when symbols are
+supplied. The rules handle installation, archive extraction, exports, and linker
+GC. Keep the same `dart_native` version as the native source project in
+[native-project.md](native-project.md); its library rule already prepares PIC.
 
 ## Connect the recorded uses
 
-Change `linkHook` to `.auto` in `lib/src/native/xmake.dart`. Keep the same target,
-asset name, and asset ID for both hooks. The build hook will emit a complete
-static archive with `ToLinkHook` when linking is enabled; otherwise it bundles
-the complete shared library directly. Use `.always` only when every build of
-the integration enables linking.
+Change `linkHook` to `.auto` in `lib/src/native/xmake.dart`, keeping both hooks on
+the shared target and asset configuration. With linking enabled, the build hook
+routes a complete static archive through `ToLinkHook`; otherwise it bundles the
+complete shared library directly. `.always` requires linking in every build.
 
 Create `hook/link.dart`:
 
@@ -111,14 +103,13 @@ The filter uses the generated binding library's URI. If the FFI bindings specify
 a different explicit asset ID, filter by their actual Dart library URI while
 using the explicit ID for the asset check and shared configuration.
 
-`symbolsToKeep` is required; its two boundary cases have different meanings:
+`symbolsToKeep` is required, with distinct boundary cases:
 
 - `recordedUses == null`: no analysis information is available. Preserve every
   native symbol in `recordUseMapping.values`.
 - An empty selection: the records contain no uses of this binding library.
-  `XmakeLinker` returns before invoking xmake and emits no `CodeAsset`, so there
-  is no native library in the bundle. The build-stage archive may still exist
-  in the build directory or cache.
+  `XmakeLinker` skips xmake and emits no `CodeAsset`. The build-stage archive may
+  still exist in the build directory or cache, but no native library is bundled.
 
 Nonempty selections run the shared link and emit a `DynamicLoadingBundled`
 asset routed to `ToAppBundle`. Call generated FFI functions directly from

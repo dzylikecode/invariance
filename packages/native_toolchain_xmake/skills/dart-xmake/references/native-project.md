@@ -1,10 +1,10 @@
 # Prepare the native project
 
-Keep an existing usable xmake target. The example below compiles one C API
-directly; the package variant later in this document lets other xmake projects
-consume the same library and supports the archive-to-shared link flow.
+Extend the existing native compilation target with the Dart integration below.
+Use a reusable native package when other xmake projects consume the library or
+the Dart link hook needs an archive-to-shared link flow.
 
-## Use the published rules
+## Attach the published library rule
 
 The `dart_native` rule package provides `library`, `install`, and `link` rules.
 For normal use, register the public repository and require its version:
@@ -14,8 +14,30 @@ add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 ```
 
-The version selects a fixed Git source commit. Attach `dart_native` with
-`add_packages` to each target that uses its rules.
+The version selects a fixed Git source commit. Use the same rule package version
+in the consuming project and the native package's source project. Add this wiring
+to the existing compilation target, retaining its sources and other settings:
+
+```lua
+-- Project scope; use the same kind for the target and rule.
+local kind = get_config("kind") or "shared"
+
+-- Inside the existing compilation target:
+set_kind(kind)
+add_packages("dart_native")
+add_rules("@dart_native/library", {kind = kind})
+if kind == "static" then
+    add_defines("EXAMPLE_NATIVE_STATIC", {public = true})
+else
+    add_defines("EXAMPLE_NATIVE_BUILD")
+end
+```
+
+The rule requires `static` or `shared` and asserts that its `kind` matches the
+target. For static inputs it enables function/data sections on supported
+platforms and PIC on Linux, Android, BSD, and `cross`, preparing archives for
+later shared linking and GC. On Apple shared builds it reserves install-name
+header space for Dart bundling. Keep API macro ownership in the project.
 
 ## Define a C ABI
 
@@ -56,59 +78,17 @@ indented preprocessor region between clang-format off/on markers.
 EXAMPLE_NATIVE_API int32_t native_add(int32_t a, int32_t b);
 ```
 
-`src/example_native.c`:
-
-```c
-#include "example_native.h"
-
-int32_t native_add(int32_t a, int32_t b) {
-  return a + b;
-}
-```
-
 The linkage macro avoids an outer `extern "C"` block. Define the build macro
 only while building the shared library, and publish the static macro to static
 consumers. Adapt the prefix and macro names to the project.
 
-## Compile static or shared
-
-`xmake.lua`:
-
-```lua
-set_project("example_native")
-set_languages("c11")
-add_rules("mode.debug", "mode.release")
-add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
-
-local kind = get_config("kind") or "shared"
-add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
-add_requires("dart_native 1.0.0", {system = false})
-
-target("example_native")
-    set_kind(kind)
-    add_packages("dart_native")
-    add_rules("@dart_native/library", {kind = kind})
-    add_files("src/**.c")
-    add_includedirs("include", {public = true})
-    add_headerfiles("include/(**.h)")
-    if kind == "static" then
-        add_defines("EXAMPLE_NATIVE_STATIC", {public = true})
-    else
-        add_defines("EXAMPLE_NATIVE_BUILD")
-    end
-```
-
-The rule's `kind` must match `set_kind`. Static compilation prepares code/data
-sections and platform relocation requirements for later GC. Shared compilation
-prepares the library for bundling, including install-name header space on Apple
-platforms. Keep API macro ownership in the project, outside the rule.
-
 ## Put compilation in a reusable package
 
-For package-owned compilation, keep `include/`, `src/`, and resources at the
-package root. Put the source project at
-`local/packages/e/example_native/port/xmake.lua`. Reuse the compilation target
-above, but resolve its inputs against the package root:
+For package-owned compilation, keep `include/`, `src/`, and `assets/` at the Dart
+package root. Keep only the source project's `xmake.lua` in
+`local/packages/e/example_native/port/`; do not move sources or resources into
+that directory. Apply the library-rule wiring above there, and resolve inputs
+against the package root:
 
 ```lua
 local sourceRoot = path.absolute("../../../../..", os.scriptdir())
@@ -118,8 +98,9 @@ add_includedirs(path.join(sourceRoot, "include"), {public = true})
 add_headerfiles(path.join(sourceRoot, "include/(**.h)"))
 ```
 
-The adjacent `local/packages/e/example_native/xmake.lua` recipe delegates to that
-source project and publishes the static macro in package metadata:
+In the adjacent `local/packages/e/example_native/xmake.lua` recipe, delegate to
+the source project through `package.tools.xmake` and publish the static macro in
+package metadata:
 
 ```lua
 package("example_native")
@@ -147,27 +128,26 @@ Native functions must remain available for that final export selection. Avoid
 forced DLL exports or `used`/`retain` attributes in static inputs, and do not
 compile desired API symbols with hidden visibility.
 
-## Give clangd the compile commands
+## Generate compile commands from the compilation project
 
-Recommend the project-level `plugin.compile_commands.autoupdate` rule shown
-above. After builds, it updates `build/compile_commands.json` as needed, with
-the project's include directories, preprocessor defines, and compiler flags.
-See the [Xmake rule documentation](https://xmake.io/api/description/builtin-rules.html).
+Recommend this project-level rule in the project that owns native compilation:
 
-If clangd does not discover that database, point it at the native project's
-`build/` directory with `--compile-commands-dir=<path-to-build>` or its existing
-editor configuration. See [clangd's guide](https://clangd.llvm.org/installation.html).
+```lua
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
+```
+
 Check that the database has entries for the files being edited: an outer target
-that only installs or links a package does not describe its source compilation.
-Package installation skips automatic database updates. For package-owned
-sources, build the source project directly and point clangd at that project's
-`build/` directory.
+that is phony or only installs/links a package does not describe its source
+compilation. Package installation skips automatic database updates. For
+package-owned sources, build the inner source project directly and point clangd
+at that project's `build/` directory using its existing editor configuration.
 
 ## Refresh native inputs deliberately
 
-xmake caches installed packages by version and configuration. After changing
-native sources, resources, recipes, or compiler preparation rules, bump the
-native package version in `add_requires` or explicitly reinstall it. A Dart hook
-rerun alone does not rebuild an unchanged package version. Rule package changes
-may require refreshing both the rule package and the compiled native package.
-Track native inputs in the build hook as well; see [build-hook.md](build-hook.md).
+xmake caches installed packages by version and configuration. Keep native
+package version bumps manual: after changing native sources, resources, recipes,
+or compiler preparation rules, bump the version in `add_requires` or explicitly
+reinstall the package. A Dart hook rerun alone does not rebuild an unchanged
+package version. Rule package changes may require refreshing both the rule
+package and the compiled native package. Track native inputs in the build hook
+as well; see [build-hook.md](build-hook.md).
