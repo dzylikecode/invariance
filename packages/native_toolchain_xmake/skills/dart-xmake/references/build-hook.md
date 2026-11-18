@@ -36,22 +36,22 @@ example_native/
 
 Keep package-owned native Dart implementation, generated bindings, the symbol
 mapping, and shared xmake configuration in `lib/src/native/`. Keep the public API
-in `lib/<package>.dart`. Make `hook/*.dart` thin entrypoints that share
-`xmakeLibrary`, `assetName`, and `assetId`; keep `tool/ffigen.dart` as the generator
+in `lib/<package>.dart`. Make `hook/*.dart` thin entrypoints that share the
+`XmakeLibrary` configuration; keep `tool/ffigen.dart` as the generator
 entrypoint. Leave native headers, sources, resources, package recipes, and the
-root build description in their existing locations. Use `third_party` for
-actual vendored code where appropriate.
+root build description in their existing locations.
 
-## Match the names
+## Configure the library
 
 - `target` names the target in `xmake.lua`.
 - `libHintName` overrides the installed library's base name when it differs from
   `target`. Omit the platform prefix and extension, such as `lib` and `.so`.
 - `assetName` is the part after `package:<package_name>/` in the FFI asset ID.
   For this binding, use `src/native/example_native.g.dart`.
-- `assetId` is `package:example_native/src/native/example_native.g.dart`. The
-  default generated `@Native` asset ID is the binding library's URI. Exporting
-  its declarations through the public barrel does not change that URI. If the
+- The resulting code asset ID is
+  `package:example_native/src/native/example_native.g.dart`. The default
+  generated `@Native` asset ID is the binding library's URI. Exporting its
+  declarations through the public barrel does not change that URI. If the
   binding sets `@DefaultAsset` or an explicit `assetId`, match that ID instead.
 
 ## Generate bindings and the symbol mapping
@@ -77,7 +77,7 @@ Future<void> main() async {
     visitors: [
       Visitor(
         func: (node) {
-          node.isIncluded = {'native_add'}.contains(node.originalName);
+          node.isIncluded = true;
           node.recordUse = true;
         },
       ),
@@ -86,10 +86,9 @@ Future<void> main() async {
 }
 ```
 
-Use an explicit function whitelist for the intended Dart API. Let ffigen
-generate the `@Native` declarations and usage mapping rather than maintaining
-manual declarations alongside them. Regenerate both outputs together when the
-header or Dart binding names change. `node.recordUse = true` prepares the
+Let ffigen generate the `@Native` declarations and usage mapping rather than
+maintaining manual declarations alongside them. Regenerate both outputs together
+when the header or Dart binding names change. `node.recordUse = true` prepares the
 bindings for the optional link-hook flow without changing direct bundling.
 
 ## Share the build configuration
@@ -99,12 +98,9 @@ Create `lib/src/native/xmake.dart`:
 ```dart
 import 'package:native_toolchain_xmake/native_toolchain_xmake.dart';
 
-const assetName = 'src/native/example_native.g.dart';
-const assetId = 'package:example_native/$assetName';
-
 final xmakeLibrary = XmakeLibrary(
   target: 'example_native',
-  assetName: assetName,
+  assetName: 'src/native/example_native.g.dart',
   linkHook: .never,
 );
 ```

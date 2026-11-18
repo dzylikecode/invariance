@@ -45,12 +45,9 @@ start with the stage that failed rather than rebuilding the whole integration.
 
 ## Preserve the contracts
 
-- Keep the generated binding URI and code asset ID consistent. For
-  `lib/src/native/example_native.g.dart`, the default FFI asset ID is
-  `package:example_native/src/native/example_native.g.dart` and `assetName` is
-  `src/native/example_native.g.dart`. An explicit FFI asset ID overrides this
-  default. Keep `assetName`, `assetId`, and `xmakeLibrary` together in
-  `lib/src/native/xmake.dart`.
+- Keep the code asset registration consistent with the binding library's URI
+  or explicit FFI asset ID. Pass strings directly where needed; separate
+  `assetName` and `assetId` variables are not required.
 - `target` names an xmake target, not a library filename. Set `libHintName` only
   when the installed library's base name differs; omit platform prefixes and
   extensions. On the package-based link path, both hooks use the same target.
@@ -75,9 +72,7 @@ dart build cli --target=bin/main.dart --output=build/cli
 
 Check both an unused case and a case that calls one API. The unused case should
 omit the native library; the used case should run and retain only its required
-entrypoints and dependencies. When proving GC, inspect the regular symbol table
-or resource bytes as well as exported symbols; hidden exports alone do not
-prove code removal.
+entrypoints and dependencies.
 
 For a failed build, inspect the hook log's configure/build/install command.
 For a missing library, compare the selected kind, installed filename, and

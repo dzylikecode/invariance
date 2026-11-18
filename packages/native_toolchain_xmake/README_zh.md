@@ -121,6 +121,14 @@ void main(List<String> args) async {
 
 - 记得同步不同语言的 README.md
 
+### 本仓库的规则开发
+
+`project_xmake`、`embed` 示例及其测试副本使用
+`configs = {local_source = true}`，从当前 checkout 读取规则。示例工程和
+原生包源码工程都保留这个配置。这是本仓库的开发配置，普通用户只需要指定
+已发布的 `dart_native` 版本。`template_adapter` 保持默认的远程源码模式，
+用于测试已发布版本到 Git commit 的映射。
+
 ## issue
 
 - [x] [hooks 丢失环境变量](https://github.com/dart-lang/native/issues/3304)

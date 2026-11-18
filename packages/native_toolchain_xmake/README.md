@@ -117,6 +117,15 @@ For coding agents:
 
 - Keep the English and Chinese READMEs in sync.
 
+### Rule development in this repository
+
+The `project_xmake` and `embed` examples and their test fixtures use
+`configs = {local_source = true}` to read rules from the current checkout.
+Keep this setting in both the example project and its native package's source
+project. This is repository development configuration; users only need the
+published `dart_native` version. `template_adapter` keeps the default remote
+source to test the published version-to-commit mapping.
+
 ## Issues
 
 - [x] [Hooks lose environment variables](https://github.com/dart-lang/native/issues/3304)

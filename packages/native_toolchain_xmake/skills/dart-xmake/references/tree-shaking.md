@@ -31,6 +31,7 @@ local packageKind = linking and "static" or outputKind
 
 add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
+-- This repository contains the project's native library recipe.
 add_repositories("local-repo local", {rootdir = os.scriptdir()})
 add_requires("example_native 1.0.0", {
     system = false,
@@ -56,10 +57,9 @@ rule handles archive extraction, export lists, and linker GC. The library rule
 already prepares PIC where required, so no extra package `pic` config is needed
 for this source project.
 
-Choose remote or local rules consistently in both projects, as described in
-[native-project.md](native-project.md). In this repository, `project_xmake` and
-`embed` use local rules; `template_adapter` exercises the remote source through
-the public index.
+Use the same published `dart_native` version in the consuming project and the
+native package's source project, as described in
+[native-project.md](native-project.md).
 
 ## Connect the recorded uses
 
@@ -81,13 +81,21 @@ import 'package:record_use/record_use.dart';
 void main(List<String> args) async {
   await link(args, (input, output) async {
     if (!input.config.buildCodeAssets ||
-        !input.assets.code.any((asset) => asset.id == assetId)) {
+        !input.assets.code.any(
+          (asset) =>
+              asset.id ==
+              'package:example_native/src/native/example_native.g.dart',
+        )) {
       return;
     }
 
     final symbols = input.recordedUses?.calls.keys
         .whereType<Method>()
-        .where((method) => method.library.uri == assetId)
+        .where(
+          (method) =>
+              method.library.uri ==
+              'package:example_native/src/native/example_native.g.dart',
+        )
         .map((method) => recordUseMapping[method.name]!);
 
     await xmakeLibrary.link(
@@ -119,7 +127,7 @@ reachable Dart code so their uses are recorded. When wrapping resources in
 storing native function tear-offs directly in constant fields can miss usage
 records in Dart 3.14. Explicitly keep symbols looked up by runtime strings.
 
-## Verify removal, not just hidden exports
+## Verify the bundle
 
 Build and run an unused caller and a caller that uses one entrypoint:
 
@@ -128,8 +136,5 @@ dart build cli --target=bin/main.dart --output=build/cli
 ```
 
 Check that the unused bundle contains no library, and that the used bundle runs
-with the expected exports. Inspect the regular symbol table or distinctive
-resource bytes to prove unused code/data was removed. For that inspection, keep
-the link target's regular symbol table with `set_strip("none")`; platform symbol
-tools and flags differ. Use an actual build test when validating wrappers, since
-recorded uses depend on compiler reachability analysis.
+with the expected exports. Use an actual build test when validating wrappers,
+since recorded uses depend on compiler reachability analysis.

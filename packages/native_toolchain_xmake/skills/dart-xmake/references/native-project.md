@@ -4,7 +4,7 @@ Keep an existing usable xmake target. The example below compiles one C API
 directly; the package variant later in this document lets other xmake projects
 consume the same library and supports the archive-to-shared link flow.
 
-## Choose the rule source
+## Use the published rules
 
 The `dart_native` rule package provides `library`, `install`, and `link` rules.
 For normal use, register the public repository and require its version:
@@ -14,17 +14,8 @@ add_repositories("dart-native https://github.com/dzylikecode/invariance.git")
 add_requires("dart_native 1.0.0", {system = false})
 ```
 
-The public recipe at `packages/d/dart_native/xmake.lua` maps a version to a fixed
-Git source commit. Callers need only the version. Keep published mappings
-immutable; use a new version for another commit. Attach `dart_native` with
+The version selects a fixed Git source commit. Attach `dart_native` with
 `add_packages` to each target that uses its rules.
-
-For local rule development in an invariance checkout, use
-`add_repositories("dart-native ../..", {rootdir = os.scriptdir()})` from
-`example/<name>/`, and require the package with
-`configs = {local_source = true}`. Apply that choice in both the consuming
-project and the native package's source project. This recipe option selects
-`packages/native_toolchain_xmake/xmake/`; adapt paths for other layouts.
 
 ## Define a C ABI
 
