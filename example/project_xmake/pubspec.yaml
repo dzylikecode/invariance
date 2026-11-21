@@ -14,5 +14,5 @@ dependencies:
 
 dev_dependencies:
   cli_util: ^0.4.2
-  ffigen: ^22.0.0
+  ffigen: ^23.0.0
   lints: ^6.0.0
