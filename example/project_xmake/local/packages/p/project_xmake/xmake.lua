@@ -1,7 +1,7 @@
 package("project_xmake")
     set_description("Local C API example with shared and GC-ready static libraries")
     set_license("MIT")
-    set_sourcedir(path.join(os.scriptdir(), "port"))
+    set_sourcedir(path.join(os.scriptdir(), "../../../../backend/cpp"))
 
     on_load(function(package)
         if not package:config("shared") then
@@ -16,7 +16,7 @@ package("project_xmake")
     end)
 
     on_install(function(package)
-        import("package.tools.xmake").install(package)
+        import("package.tools.xmake").install(package, {}, {target = "project_xmake"})
     end)
 
     on_test(function(package)

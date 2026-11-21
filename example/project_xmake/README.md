@@ -4,20 +4,29 @@ dart is the first-class citizen in the project.
 
 ## Local native package
 
-源码和头文件保留在根目录，包配方及原生构建描述放在本地包内：
+原生 C++ 工程独立放在 `backend/cpp/`，包含自己的构建入口、源码、头文件和示例。
+本地包配方负责将它包装为 Xmake package，根构建入口负责 Dart 的安装和裁剪：
 
 ```text
 project_xmake/
-├── include/project_xmake.h
-├── src/impl.cpp
+├── backend/cpp/
+│   ├── xmake.lua
+│   ├── include/project_xmake.h
+│   ├── src/impl.cpp
+│   └── example/
+│       ├── call.cpp
+│       └── words.c
 ├── lib/src/native/
 │   ├── project_xmake.g.dart
 │   ├── project_xmake.record_use_mapping.g.dart
 │   └── xmake.dart
-└── local/packages/p/project_xmake/
-    ├── xmake.lua             包配方
-    └── port/xmake.lua        原生构建描述
+├── local/packages/p/project_xmake/xmake.lua
+└── xmake.lua
 ```
+
+包配方以 `backend/cpp/` 为源码目录，只构建和安装 `project_xmake` target，
+不构建或安装原生示例。原生工程目前通过仓库相对路径使用本地 rules；
+单独复制到仓库外使用时，需要调整 rules 的来源。
 
 `project_xmake.g.dart` 保存生成的 FFI 绑定，
 `project_xmake.record_use_mapping.g.dart` 保存 Dart 调用名到原生符号的映射；
@@ -39,8 +48,8 @@ project_xmake/
 
 通用构建配置来自 `dart_native 1.0.0` 规则包。包索引位于仓库根目录的
 `packages/d/dart_native/xmake.lua`，规则源码统一放在
-`packages/native_toolchain_xmake/xmake/rules/`。根工程和包内的
-`port/xmake.lua` 都通过本地仓库路径及自定义包选项
+`packages/native_toolchain_xmake/xmake/rules/`。根工程和原生工程的
+`backend/cpp/xmake.lua` 都通过本地仓库路径及自定义包选项
 `configs = {local_source = true}` 使用当前 checkout 的规则源码：
 
 | 规则 | 作用 |
@@ -51,7 +60,7 @@ project_xmake/
 
 `set_kind` 和 `add_packages` 仍由 target 声明。`PROJECT_XMAKE_STATIC`、
 `PROJECT_XMAKE_BUILD` 宏仍由本项目管理。
-`dart_native` 默认按版本下载固定 Git commit；本例在根工程与 `port/xmake.lua`
+`dart_native` 默认按版本下载固定 Git commit；本例在根工程与 `backend/cpp/xmake.lua`
 中显式开启 `local_source`，用于开发本地规则。修改规则后手动提升开发版本，
 或强制重装同版本的本地规则包。已发布版本到远程 commit 的映射保持不变，
 更换远程源码时发布新版本。`template_adapter` 示例使用当前公共索引及默认远程
@@ -67,7 +76,7 @@ project_xmake/
 `count_words` 使用 C++ 标准库的 `std::istringstream` 和 `std::string`，
 统计以空白分隔的单词数，对外仍提供 C ABI。空串或纯空白返回 `0`，
 空指针或内部错误返回 `-1`。`add`、`subtract` 保持普通整数计算。
-原生 `example/words.c` 用纯 C 调用文本接口，输出 `Words: 6`，展示
+原生 `backend/cpp/example/words.c` 用纯 C 调用文本接口，输出 `Words: 6`，展示
 C 调用者如何通过包依赖链接 C++ 实现。
 
 Windows 静态构建使用 `PROJECT_XMAKE_STATIC`，避免提前强制 DLL 导出；
@@ -109,11 +118,25 @@ target 负责归档成员提取、生成平台导出表和开启链接器 GC。�
 源码，使用 C++ 链接规则复用包的运行库依赖。输出保留普通符号表，便于
 使用 `nm --defined-only` 核实机器码裁剪，而不只是检查导出表。
 
-普通 C/C++ 示例直接使用完整 static 包，可独立运行：
+根目录的 C/C++ 示例通过 `add_packages` 使用完整 static 包，验证包消费者的
+头文件、宏和 C++ 运行库依赖：
 
 ```sh
+xmake f -y --kind=static
+xmake build call
+xmake build words
 xmake run call
 xmake run words
+```
+
+也可以进入原生工程独立构建运行相同示例；这里通过 `add_deps` 直接引用库 target：
+
+```sh
+cd backend/cpp
+xmake f -P . -y --kind=static
+xmake build -P .
+xmake run -P . call
+xmake run -P . words
 ```
 
 `native_toolchain_xmake` 已接通这个流程：两个 hook 的 `XmakeLibrary` 都使用
@@ -125,7 +148,7 @@ target 链接裁剪后的动态库。未启用 linking 时，build hook 以
 本地包通过根 `xmake.lua` 中的 `add_requires("project_xmake 1.0.0", ...)`
 显式指定版本。同版本及相同包配置复用已安装产物；修改源码或包构建描述后，
 手动提升此版本，再执行 `xmake f -y`。切换 `keep_symbols` 不改变包版本。
-`port/xmake.lua` 中的 `set_version` 是原生工程版本信息，不决定包缓存版本。
+`backend/cpp/xmake.lua` 中的 `set_version` 是原生工程版本信息，不决定包缓存版本。
 本示例只使用本地仓库，因此关闭 `package.requires_lock`，也不提交
 `xmake-requires.lock`；该锁文件会记录当前 checkout 的绝对路径，无法在
 其他机器或临时测试目录中复用。
@@ -250,7 +273,7 @@ Dart link hook 将使用记录映射为原生符号名单，通过
 link 的动态库保存在该 hook 的输出目录中。
 
 `add`、`subtract` 和使用 C++ 标准库的 `count_words` 位于同一个源文件中。
-当前 Dart 绑定仍只包含前两个函数；新文本接口的 Dart 接入留待后续阶段。
+Dart 绑定包含这三个接口，并生成对应的使用记录映射。
 Linux 编译启用
 `-ffunction-sections -fdata-sections`，使链接器能够删除单个函数。
 仅限制导出符号会隐藏 `subtract`，不一定删除它的代码。

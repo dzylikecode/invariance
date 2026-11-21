@@ -10,6 +10,9 @@ void main(List<String> args) async {
         assetName: 'src/binding/template_adapter.g.dart',
         linkHook: .never,
       ).build(input: input, output: output);
+      output.dependencies.addAll([
+        input.packageRoot.resolve('xmake.lua'),
+      ]);
     }
   });
 }

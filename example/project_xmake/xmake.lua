@@ -35,9 +35,9 @@ target("project_xmake")
 target_end()
 
 ---------------------------------------------------------
---- Examples
+--- Package consumer examples
 ---------------------------------------------------------
-for _, file in ipairs(table.join(os.files("example/*.c"), os.files("example/*.cpp"))) do
+for _, file in ipairs(table.join(os.files("backend/cpp/example/*.c"), os.files("backend/cpp/example/*.cpp"))) do
     local name = path.basename(file)
     target(name)
       set_kind("binary")

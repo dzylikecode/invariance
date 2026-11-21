@@ -16,7 +16,7 @@ Future<void> main() async {
     ),
 
     input: Input(
-      entryPoints: [packageRoot.resolve('include/project_xmake.h')],
+      entryPoints: [packageRoot.resolve('backend/cpp/include/project_xmake.h')],
       include: (header) => header.path.contains('project_xmake'),
     ),
 

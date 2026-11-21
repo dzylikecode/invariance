@@ -26,16 +26,20 @@ example_native/
 │   └── link.dart               # When native tree shaking is enabled
 ├── tool/ffigen.dart
 ├── bin/main.dart
-├── include/example_native.h
-├── src/example_native.c
-├── assets/                     # When the native build uses resources
+├── backend/cpp/
+│   ├── xmake.lua                # Standalone native project
+│   ├── include/example_native.h
+│   ├── src/example_native.cpp
+│   └── example/                 # Native callers
 ├── local/                      # When it uses local xmake packages
 └── xmake.lua
 ```
 
 Keep generated bindings, their symbol mapping, and shared xmake configuration
 in `lib/src/native/`, with thin `hook/*.dart` entrypoints and the public API in
-`lib/example_native.dart`. Adapt an existing layout by changing imports,
+`lib/example_native.dart`. Keep native sources and their own build script in
+`backend/cpp/`; use `backend/c/` for C projects. The root `xmake.lua` connects
+that source project to Dart. Adapt an existing layout by changing imports,
 generator outputs, and asset IDs together.
 
 ## Match the FFI asset
@@ -57,7 +61,7 @@ import 'package:ffigen/ffigen.dart';
 
 Future<void> main() async {
   final root = Platform.script.resolve('../');
-  final header = root.resolve('include/example_native.h');
+  final header = root.resolve('backend/cpp/include/example_native.h');
   await FfiGenerator(
     input: Input(entryPoints: [header], include: (uri) => uri == header),
     output: Output(
@@ -112,20 +116,18 @@ void main(List<String> args) async {
     if (input.config.buildCodeAssets) {
       await xmakeLibrary.build(input: input, output: output);
 
-      output.dependencies.addAll([
-        input.packageRoot.resolve('xmake.lua'),
-        input.packageRoot.resolve('include/example_native.h'),
-        input.packageRoot.resolve('src/example_native.c'),
-      ]);
+      output.dependencies.add(input.packageRoot.resolve('xmake.lua'));
     }
   });
 }
 ```
 
-Add resources, local package recipes, and port scripts to `output.dependencies`
-when the build uses them. This reruns the Dart hook on changes; it does not
-invalidate xmake's installed-package cache. Apply the version/reinstall rules
-in [native-project.md](native-project.md).
+Track only the root `xmake.lua` as the explicit native build dependency. Native
+source changes alone do not rerun the Dart hook. For package-based builds,
+update the native package version or configuration in the root `xmake.lua`;
+for direct builds, update that root entrypoint to trigger the hook. xmake owns
+the native rebuild once invoked. See the package cache details in
+[native-project.md](native-project.md).
 
 ## Expose and run the API
 

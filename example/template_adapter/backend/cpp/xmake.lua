@@ -1,0 +1,17 @@
+set_project("template_adapter")
+set_version("1.0.0")
+set_languages("cxx17")
+add_rules("mode.debug", "mode.release")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
+
+add_repositories("dart-native ../../../..", {rootdir = os.scriptdir()})
+add_requires("dart_native 1.0.0", {system = false})
+
+target("template_adapter")
+    set_kind("shared")
+    add_packages("dart_native")
+    add_rules("@dart_native/library", {kind = "shared"})
+    add_defines("TEMPLATE_ADAPTER_BUILDING")
+    add_includedirs("include", {public = true})
+    add_headerfiles("include/(**.h)")
+    add_files("src/*.cpp")

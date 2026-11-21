@@ -84,7 +84,8 @@ This example uses the public `dart_native 1.0.0` package recipe from the current
 checkout:
 
 ```lua
-add_repositories("dart-native ../..", {rootdir = os.scriptdir()})
+-- backend/cpp/xmake.lua
+add_repositories("dart-native ../../../..", {rootdir = os.scriptdir()})
 add_requires("dart_native 1.0.0", {system = false})
 ```
 
@@ -108,8 +109,15 @@ macOS, and Windows.
 
 ## Layout
 
-- `include/template_adapter.h`: stable C ABI
-- `src/template_adapter.cpp`: template, type erasure, adapters, and factory table
+`backend/cpp/` is a self-contained native project. The root `xmake.lua` includes
+it so the Dart build hook can build and install the same target. From
+`backend/cpp/`, it can also be built directly with `xmake -P .`.
+
+- `backend/cpp/include/template_adapter.h`: stable C ABI
+- `backend/cpp/include/accumulator.hpp`: original C++ template
+- `backend/cpp/src/template_adapter.cpp`: type erasure, adapters, and factory table
+- `backend/cpp/xmake.lua`: native library build and installation
+- `xmake.lua`: Dart package's Xmake entry point
 - `lib/src/accumulator.dart`: type-safe Dart facade and ownership
 - `lib/src/binding/`: generated FFI declarations
 - `hook/build.dart`: native-assets/xmake integration

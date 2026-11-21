@@ -11,7 +11,7 @@ Future<void> main() async {
       ),
     ),
     input: Input(
-      entryPoints: [packageRoot.resolve('include/callable.h')],
+      entryPoints: [packageRoot.resolve('backend/cpp/include/callable.h')],
       include: (header) => header.path.contains('callable'),
     ),
     visitors: [

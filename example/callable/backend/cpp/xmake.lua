@@ -1,0 +1,13 @@
+set_project("callable_listener_benchmark")
+set_version("1.0.0")
+set_languages("cxx17")
+add_rules("mode.debug", "mode.release")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "build/"})
+
+target("callable")
+    set_kind("shared")
+    add_defines("CALLABLE_BUILDING")
+    add_includedirs("include", {public = true})
+    add_headerfiles("include/(**.h)")
+    add_files("src/*.cpp")
+    add_syslinks("pthread")

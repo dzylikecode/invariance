@@ -11,7 +11,9 @@ Future<void> main() async {
       ),
     ),
     input: Input(
-      entryPoints: [packageRoot.resolve('include/template_adapter.h')],
+      entryPoints: [
+        packageRoot.resolve('backend/cpp/include/template_adapter.h'),
+      ],
       include: (header) => header.path.contains('template_adapter'),
     ),
     visitors: [
