@@ -1,36 +1,19 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
-
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/tools/pub/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+### Run the C++ example
 
-```dart
-const like = 'sample';
+From `example/multi_lang`, run:
+
+```sh
+cd backend/cpp
+xmake -P .
+xmake run -P . main
 ```
+
+`-P .` selects the C++ project's `xmake.lua`. Without it, Xmake can select the
+parent `xmake.lua` used by the Dart hooks. If Xmake reads the C++ project's
+cached configuration with that parent script, the package install rule reports
+`Package is not attached to target: multi_lang`.
 
 ## Additional information
 
