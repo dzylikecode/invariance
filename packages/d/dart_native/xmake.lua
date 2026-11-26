@@ -4,6 +4,7 @@ package("dart_native")
     set_license("MIT")
 
     -- Keep released version-to-commit mappings immutable; bump the version for new sources.
+    add_versions("1.0.1", "5ccf9aa1d1e145c3a7ea192f12ad840ecea5a63e")
     add_versions("1.0.0", "c241d2c9efcf6fbd1ab5d47614cb8614fec14fc2")
     add_configs("local_source", {
         description = "Use rules from the current repository checkout",
