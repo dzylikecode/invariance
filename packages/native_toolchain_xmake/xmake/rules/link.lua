@@ -25,8 +25,29 @@ rule("link")
     on_config(function(target)
         local symbols = target:extraconf("rules", "utils.symbols.export_list", "symbols")
         local linkerName = target:linker():name()
-        assert(table.contains({"gcc", "gxx", "clang", "clangxx", "link"}, linkerName),
+        local zigLinux = linkerName == "zig_cc" and target:is_plat("linux")
+        assert(zigLinux or table.contains({"gcc", "gxx", "clang", "clangxx", "link"}, linkerName),
             "Symbol export control is not supported for linker: " .. linkerName)
+        if zigLinux then
+            -- Xmake's built-in export list can skip zig_cc on ELF targets.
+            local exportfile = path.join(target:autogendir(), "rules", "symbols", "dart_native.map")
+            local script = "{\n    global:\n        " .. table.concat(symbols, ";\n        ")
+                .. ";\n    local:\n        *;\n};\n"
+            if not os.isfile(exportfile) or io.readfile(exportfile) ~= script then
+                io.writefile(exportfile, script)
+            end
+            target:add("shflags", "-Wl,--version-script=" .. exportfile, {force = true})
+            target:data_add("linkdepfiles", exportfile)
+
+            -- With only -l inputs, Zig can fall back to the host linker.
+            if #target:objectfiles() == 0 then
+                local source = path.join(target:autogendir(), "dart_native_link.cpp")
+                if not os.isfile(source) then
+                    io.writefile(source, "// Empty translation unit for the Zig link driver.\n")
+                end
+                target:add("files", source)
+            end
+        end
         if target:has_tool("ld", "link") then
             -- The generated .def exports also pull the required archive members.
             target:add("shflags", "/OPT:REF", {force = true})
