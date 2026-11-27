@@ -111,3 +111,114 @@ jobs:
           "$CC" --version
           "$CXX" --version
           dart test test/embed --concurrency=1 --reporter=expanded
+
+  build-linux:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: ${{ matrix.os }} to Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-26.04, macos-latest, windows-latest]
+        arch: [x64, arm64]
+        include:
+          # Dart 3.14 copies the host runtime when cross-compiling on Linux.
+          # https://github.com/dart-lang/sdk/issues/64942
+          - os: ubuntu-26.04
+            arch: arm64
+            sdk: "3.15.0-185.0.dev"
+
+    env:
+      DASH__SUPPRESS_ANALYTICS: "true"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk || '3.14.0' }}
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "3.1.1"
+
+      - name: Set up Zig
+        if: runner.os != 'Linux' || matrix.arch != 'x64'
+        uses: mlugg/setup-zig@v2
+        with:
+          version: "0.16.0"
+
+      - name: Install Dart dependencies
+        shell: bash
+        run: |
+          cat > pubspec_overrides.yaml <<'YAML'
+          workspace:
+            - packages/native_toolchain_xmake
+            - example/project_xmake
+          YAML
+          dart pub get
+
+      # Use the runner's native shell for Dart and the Xmake subprocesses.
+      - name: Build Linux CLI
+        working-directory: example/project_xmake
+        run: dart build cli --target=example/call.dart --target-os=linux --target-arch=${{ matrix.arch }}
+
+      - name: Verify and archive Linux bundle
+        working-directory: example/project_xmake
+        shell: bash
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+          ARCHIVE_NAME: call-${{ matrix.os }}-linux-${{ matrix.arch }}.tar.gz
+        run: |
+          python=python3
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            python=python
+          fi
+          "$python" - <<'PY'
+          import os
+          from pathlib import Path
+          import subprocess
+          import tarfile
+
+          arch = os.environ["TARGET_ARCH"]
+          # ELF e_machine values for x86-64 and AArch64.
+          machine = {"x64": 62, "arm64": 183}[arch]
+          bundle = Path("build/cli") / f"linux_{arch}" / "bundle"
+          executable = bundle / "bin/call"
+          library = bundle / "lib/libproject_xmake.so"
+          for binary in (executable, library, *bundle.glob("lib/libdartaot*.so")):
+              with binary.open("rb") as stream:
+                  header = stream.read(20)
+              actual_machine = int.from_bytes(header[18:20], "little")
+              if not header.startswith(b"\x7fELF\x02\x01") or actual_machine != machine:
+                  raise SystemExit(f"Expected Linux {arch} ELF in {binary}")
+              print(f"Verified Linux {arch} ELF in {binary}")
+
+          nm = {
+              "Linux": ["nm"],
+              "macOS": ["xcrun", "llvm-nm"],
+              "Windows": ["llvm-nm"],
+          }[os.environ["RUNNER_OS"]]
+          exports = subprocess.check_output(
+              [*nm, "-D", "--defined-only", "-j", str(library)], text=True
+          ).split()
+          if exports != ["add"]:
+              raise SystemExit(f"Expected only the add export, got {exports}")
+
+          def preserve_executable(member):
+              if member.name == "bundle/bin/call":
+                  member.mode = 0o755
+              return member
+
+          with tarfile.open(bundle.parent / os.environ["ARCHIVE_NAME"], "w:gz") as archive:
+              archive.add(bundle, arcname="bundle", filter=preserve_executable)
+          PY
+
+      - name: Upload Linux bundle
+        uses: actions/upload-artifact@v7
+        with:
+          archive: false
+          path: example/project_xmake/build/cli/linux_${{ matrix.arch }}/call-${{ matrix.os }}-linux-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
